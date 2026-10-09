@@ -35,7 +35,9 @@ def main():
 
     models = [MODEL_ID] + ([] if args.skip_grader else ["openai/gpt-oss-safeguard-20b"])
     for m in models:
-        print(m, snapshot_download(m, allow_patterns=MODEL_FILES), flush=True)
+        # the model repos also ship duplicate "original/" and "metal/" weights (13 GB) that nothing here loads
+        path = snapshot_download(m, allow_patterns=MODEL_FILES, ignore_patterns=["original/*", "metal/*"])
+        print(m, path, flush=True)
     for layer in args.sae_layers:
         for trainer in (0, 1):
             for f in ("ae.pt", "config.json", "eval_results.json"):
