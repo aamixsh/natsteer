@@ -32,7 +32,7 @@ Large disks: put data and temp files wherever the machine has room, then either 
 Copy from the lab server (`data/` is a symlink there; `-L` follows it):
 
 ```bash
-rsync -avPL lab-server:natsteer/data/pools lab-server:natsteer/data/runs  natsteer/data/
+rsync -avPL lab-server:natsteer/data/pools lab-server:natsteer/data/runs lab-server:natsteer/data/handoff natsteer/data/
 ```
 
 | Path | Size | If not copied |
@@ -40,6 +40,7 @@ rsync -avPL lab-server:natsteer/data/pools lab-server:natsteer/data/runs  natste
 | `data/runs/` | 0.5 MB | Run reports behind the deck and PLAN.md. **Copy**; not reproducible bit for bit. |
 | `data/pools/*/*.jsonl` | 55 MB | Rebuild: `build_intent_pool.py`, `build_aegis_pool.py` (deterministic, seconds). Sycophancy natural and steered answers were sampled, so **copy** `syco_v0/*.jsonl`. |
 | `data/pools/*/*.feats.npz` | 4.6 GB | Rebuild with `extract_features.py` (about 10 min on one GPU) and `syco_pipeline.py --stage features`. |
+| `data/handoff/claude_session/` | 6 MB | The Claude Code session for this work; see docs/HANDOFF.md to resume it. Recopy right before moving so it is current. |
 | `scratch/` | 3.5 GB | Not needed. |
 
 To rebuild everything instead of copying, follow the appendix of `docs/presentation.md`.
