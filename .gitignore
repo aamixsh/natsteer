@@ -1,0 +1,15 @@
+
+# init_project: private lab artifacts
+/data
+/scratch
+/.venv
+/.env
+/.env.*
+/.secrets
+/secrets
+/*.pem
+/*.key
+
+# caches
+__pycache__/
+.pytest_cache/

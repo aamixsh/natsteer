@@ -1,0 +1,30 @@
+[project]
+name = "natsteer"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "accelerate>=1.15.0",
+    "datasets>=5.1",
+    "einops>=0.8.2",
+    "huggingface-hub>=1.33.0",
+    "kernels>=0.17.2",
+    "matplotlib>=3.11.2",
+    "numpy>=2.4",
+    "pandas>=3.0.6",
+    "pyyaml>=6.0.3",
+    "safetensors>=0.8.0",
+    "scikit-learn>=1.9.1",
+    "torch>=2.13",
+    "tqdm>=4.70.1",
+    "transformers>=5.17",
+    "vllm>=0.31.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
