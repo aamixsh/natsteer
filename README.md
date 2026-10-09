@@ -37,9 +37,9 @@ scratch/   job temp files; not in git
 New machine: `./scripts/setup_machine.sh` (environment, downloads, tests). Moving
 existing results: see [docs/MIGRATION.md](docs/MIGRATION.md).
 
-In every shell: `source env.sh` (project-local data, temp files and caches). Outputs go to
-`data/` and temp files to `scratch/` (override with `NATSTEER_DATA`, `NATSTEER_SCRATCH`). On the lab server both are symlinks to the large disks, and
-non-login shells need `source /etc/profile.d/lab-storage.sh` for the shared caches.
+In every shell: `source env.sh` (shared HF/uv caches in `/workspace/cache`, compiler caches in
+`.cache/`, and `uv` on PATH). Outputs go to `data/` and scratch dirs to `scratch/` (override with
+`NATSTEER_DATA`, `NATSTEER_SCRATCH`).
 
 ```bash
 .venv/bin/python -m pytest -q tests

@@ -19,15 +19,16 @@ This creates `data/` and `scratch/`, builds `.venv` from `uv.lock`, downloads ab
 from Hugging Face (`scripts/prefetch.py`), runs the CPU tests and lists the GPUs.
 
 Requirements:
-- `curl`. If `uv` is missing it is installed into `.cache/bin`; Python 3.13 is fetched by uv into `.cache/uv-python`.
+- `curl`. If `uv` is missing it is installed into `.cache/bin`; Python 3.13 is fetched by uv into the uv-python cache (`/workspace/cache/uv-python` on the /workspace server).
 - NVIDIA driver with CUDA 13 support (driver 580 or newer). The lock pins torch 2.13 (cu130) and vLLM 0.31.
 - A Hugging Face login if you will use gated data later: `.venv/bin/hf auth login`.
 - About 60 GB of disk: 40 GB of models, 5 GB of features, 8 GB for `.venv`.
 
-Everything stays inside the project directory: outputs in `data/`, temp files in `scratch/`,
-and all caches (Hugging Face, uv, the uv-managed Python, vLLM, Triton, torch) in `.cache/`.
-`env.sh` sets this up; **source it in every new shell**: `source env.sh`. It only fills in
-variables that are not already set, so on the lab server the lab profile still wins.
+Outputs go in `data/` and scratch dirs in `scratch/`. `env.sh` points the Hugging Face cache
+(models, token), uv cache and uv-managed Python at the shared `/workspace/cache/{hf,uv,uv-python}`
+and keeps the vLLM, Triton and TorchInductor caches in the project's `.cache/`. **Source it in
+every new shell**: `source env.sh`. It only fills in variables that are not already set. On a
+machine without `/workspace/cache`, edit the `SHARED` path at the top of `env.sh`.
 
 ## 3. Results and features
 
@@ -66,7 +67,7 @@ Activation-level numbers can differ by about 2% on another GPU (see the noise-fl
 | `NATSTEER_SCRATCH` | `<repo>/scratch` | temp space lives elsewhere |
 | `NATSTEER_VLLM_ATTENTION` | `TRITON_ATTN` | FlashInfer failed on the RTX PRO 6000 (sm_120); on H100/A100 try `FLASH_ATTN` or `FLASHINFER` for speed |
 | `CUDA_VISIBLE_DEVICES` | all | scripts use device `cuda:0` |
-| `HF_HOME` / `HF_HUB_CACHE` | `~/.cache/huggingface` | put the 40 GB cache on a large disk |
+| `HF_HOME` / `HF_HUB_CACHE` | `/workspace/cache/hf` | shared model cache lives elsewhere |
 
 ## Not in the repo
 
