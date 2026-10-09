@@ -4,17 +4,19 @@
 #   2. builds .venv from uv.lock,
 #   3. downloads models, SAEs and datasets (unless --no-prefetch),
 #   4. runs the CPU tests and reports the GPUs.
-# Requirements: uv, an NVIDIA driver that supports CUDA 13 (driver >= 580), a Hugging
+# Requirements: curl (uv is installed into .cache/bin if missing), an NVIDIA driver that supports CUDA 13 (driver >= 580), a Hugging
 # Face login (`uv run hf auth login`) for gated content, about 60 GB of disk.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source env.sh  # project-local data, temp, caches and Python (keeps existing settings)
+mkdir -p "$NATSTEER_DATA"/{runs,pools,models,checkpoints}
 
-for d in data scratch; do
-  if [ ! -e "$d" ]; then mkdir -p "$d"; echo "created $d/ (or point NATSTEER_DATA / NATSTEER_SCRATCH elsewhere)"; fi
-done
-mkdir -p "${NATSTEER_DATA:-data}"/{runs,pools,models,checkpoints}
-
-command -v uv >/dev/null || { echo "install uv first: https://docs.astral.sh/uv/"; exit 1; }
+if ! command -v uv >/dev/null; then
+  # Install uv into the project so it survives restarts of machines where only the
+  # project volume persists.
+  curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="$NATSTEER_ROOT/.cache/bin" UV_NO_MODIFY_PATH=1 sh
+  export PATH="$NATSTEER_ROOT/.cache/bin:$PATH"
+fi
 uv sync --locked
 
 if [ "${1:-}" != "--no-prefetch" ]; then

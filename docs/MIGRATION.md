@@ -19,13 +19,15 @@ This creates `data/` and `scratch/`, builds `.venv` from `uv.lock`, downloads ab
 from Hugging Face (`scripts/prefetch.py`), runs the CPU tests and lists the GPUs.
 
 Requirements:
-- `uv` on PATH. Python 3.13 is fetched by uv.
+- `curl`. If `uv` is missing it is installed into `.cache/bin`; Python 3.13 is fetched by uv into `.cache/uv-python`.
 - NVIDIA driver with CUDA 13 support (driver 580 or newer). The lock pins torch 2.13 (cu130) and vLLM 0.31.
 - A Hugging Face login if you will use gated data later: `.venv/bin/hf auth login`.
 - About 60 GB of disk: 40 GB of models, 5 GB of features, 8 GB for `.venv`.
 
-Large disks: put data and temp files wherever the machine has room, then either symlink
-`data/` and `scratch/` to them or export `NATSTEER_DATA` and `NATSTEER_SCRATCH`.
+Everything stays inside the project directory: outputs in `data/`, temp files in `scratch/`,
+and all caches (Hugging Face, uv, the uv-managed Python, vLLM, Triton, torch) in `.cache/`.
+`env.sh` sets this up; **source it in every new shell**: `source env.sh`. It only fills in
+variables that are not already set, so on the lab server the lab profile still wins.
 
 ## 3. Results and features
 
