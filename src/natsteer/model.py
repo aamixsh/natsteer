@@ -68,13 +68,16 @@ class Steerer:
     Segments come from a SegmentTracker per batch row, fed with every forward
     call's input_ids, so the same mask logic covers teacher-forced passes and
     cached generation (prefill sees the prompt, decode steps one token each).
-    segments=None steers every non-pad position.
+    segments=None steers every non-pad position. prefill_only=True steers every non-pad
+    token of the first forward call after reset (the prompt prefill in generate), which
+    is the "prompt" condition of natsteer.vllm_steer.
     """
 
-    def __init__(self, model, tokenizer, layer: int, vector: torch.Tensor, segments=None):
+    def __init__(self, model, tokenizer, layer: int, vector: torch.Tensor, segments=None, prefill_only: bool = False):
         self.model, self.tokenizer, self.layer = model, tokenizer, layer
         self.vector = vector
         self.segments = None if segments is None else frozenset(segments)
+        self.prefill_only = prefill_only
         self.trackers: list[SegmentTracker] | None = None
         self.mask: torch.Tensor | None = None
         self.last_labels: list[list[str]] = []
@@ -85,11 +88,15 @@ class Steerer:
         ids = kwargs.get("input_ids", args[0] if args else None)
         if ids is None:
             raise ValueError("Steerer needs input_ids, not inputs_embeds")
-        if self.trackers is None:
+        first = self.trackers is None
+        if first:
             self.trackers = [SegmentTracker(self.tokenizer, pad_id=self.tokenizer.pad_token_id) for _ in range(ids.shape[0])]
         labels = [tr.feed_many(row.tolist()) for tr, row in zip(self.trackers, ids)]
         self.last_labels = labels
-        keep = [[(lab != "pad") if self.segments is None else (lab in self.segments) for lab in row] for row in labels]
+        if self.prefill_only:
+            keep = [[first and lab != "pad" for lab in row] for row in labels]
+        else:
+            keep = [[(lab != "pad") if self.segments is None else (lab in self.segments) for lab in row] for row in labels]
         self.steered.update(lab for row, krow in zip(labels, keep) for lab, k in zip(row, krow) if k)
         self.mask = torch.tensor(keep, dtype=torch.bool, device=ids.device)
 

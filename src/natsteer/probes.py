@@ -8,7 +8,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-POOLINGS = ("user_mean", "prompt_last", "cot_mean", "final_mean")
+POOLINGS = ("user_mean", "prompt_last", "eop_mean", "cot_mean", "cot_first32", "final_mean")
 
 
 def pool(acts: torch.Tensor, labels: list[str], how: str) -> torch.Tensor:
@@ -16,8 +16,15 @@ def pool(acts: torch.Tensor, labels: list[str], how: str) -> torch.Tensor:
     lab = np.asarray(labels)
     if how == "user_mean":
         idx = np.flatnonzero(lab == "user")
+    elif how == "eop_mean":
+        # End-of-prompt template tokens `<|end|><|start|>assistant` after the user turn
+        # (the prompt-level refusal direction of arXiv 2507.03167).
+        user = np.flatnonzero(lab == "user")
+        idx = np.arange(user[-1] + 1, min(user[-1] + 4, len(lab))) if len(user) else np.array([], dtype=int)
     elif how == "cot_mean":
         idx = np.flatnonzero(lab == "cot")
+    elif how == "cot_first32":
+        idx = np.flatnonzero(lab == "cot")[:32]
     elif how == "final_mean":
         idx = np.flatnonzero(lab == "final")
     elif how == "prompt_last":
