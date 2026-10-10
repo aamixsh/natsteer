@@ -1,4 +1,5 @@
-"""Figures for docs/presentation.md, read from the run reports under data/runs/ (CPU only).
+"""Figures for docs/presentation.md, read from the run reports under data/runs/ and the committed
+refusal results under docs/results/refusal_v0 (CPU only).
 
 Usage: .venv/bin/python scripts/make_presentation_figures.py
 """
@@ -15,6 +16,7 @@ import numpy as np
 from natsteer.config import RUNS_DIR
 
 OUT = Path(__file__).resolve().parents[1] / "docs" / "figures"
+REFUSAL = Path(__file__).resolve().parents[1] / "docs" / "results" / "refusal_v0"
 RUNS = {
     "smoke": RUNS_DIR / "e0_smoke/20261008T183341Z/report.json",
     "noise": RUNS_DIR / "e0_noise_floor/20261008T183545Z/report.json",
@@ -150,9 +152,76 @@ def syco_budget():
     fig.savefig(OUT / "syco_budget.png", dpi=130)
 
 
+def _refusal(name):
+    return json.load(open(REFUSAL / name))
+
+
+def refusal_steering():
+    t = _refusal("sweep_table.json")
+    base = t["base"]
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.2), sharey=True)
+    for ax, pos, title in ((axes[0], "all", "all positions"), (axes[1], "prompt", "prompt tokens only")):
+        for kind, L, col in (("eop", 15, "#1f77b4"), ("cot", 11, "#d62728"), ("eop", 11, "#7f7f7f")):
+            pts = sorted((s["coeff"], s["refusal_rate"], s["incomplete_rate"]) for s in t.values() if s.get("kind") == kind and s.get("layer") == L and s.get("positions") == pos)
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], "o-", color=col, label=f"{kind} direction, L{L}: refusal")
+            ax.plot([p[0] for p in pts], [p[2] for p in pts], "x--", color=col, alpha=0.6)
+        rnd = sorted((s["coeff"], s["refusal_rate"]) for s in t.values() if s.get("kind") == "random" and s.get("layer") == 15 and s.get("positions") == pos)
+        ax.plot([p[0] for p in rnd], [p[1] for p in rnd], "s:", color="k", label="random direction, L15: refusal")
+        ax.set_title(f"Steering {title}")
+        ax.set_xlabel("coefficient (multiples of the difference of means)")
+        ax.grid(alpha=0.3)
+    axes[0].set_ylabel("share of 192 samples on harmless prompts")
+    axes[0].legend(fontsize=9, loc="center left")
+    axes[1].text(0.02, 0.95, "dashed x: incomplete (no final answer)", transform=axes[1].transAxes, fontsize=9, va="top")
+    fig.tight_layout()
+    fig.savefig(OUT / "refusal_steering.png", dpi=130)
+
+
+def refusal_latents():
+    t = _refusal("latents_table.json")
+    base = t["base"]
+    fams = [("attr", "attribution\nlatents (12 per layer)"), ("act", "activation-difference\nlatents"), ("randlat", "random\nlatents"), ("bundle", "attribution\nbundles")]
+    best, n_good, n_all = [], [], []
+    for f, _ in fams:
+        rows = [s for s in t.values() if s.get("family") == f]
+        ok = [s for s in rows if s["incomplete_rate"] <= base["incomplete_rate"] + 0.15 and s["rep4"] <= base["rep4"] + 0.05]
+        best.append(max(s["refusal_rate"] for s in ok))
+        n_good.append(sum(s["refusal_rate"] >= 0.2 for s in ok))
+        n_all.append(len(rows))
+    fig, ax = plt.subplots(figsize=(8.5, 4.2))
+    bars = ax.bar([n for _, n in fams], best, color=["#1f77b4", "#ff7f0e", "#888", "#2ca02c"])
+    for b, g, n in zip(bars, n_good, n_all):
+        ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.02, f"{g} of {n} settings\nreach 20%", ha="center", fontsize=9)
+    ax.set_ylabel("best refusal rate (generation intact)")
+    ax.set_ylim(0, 1.2)
+    ax.set_title("Steering with SAE latents, harmless prompts (96 prompts per setting)")
+    ax.grid(alpha=0.3, axis="y")
+    fig.tight_layout()
+    fig.savefig(OUT / "refusal_latents.png", dpi=130)
+
+
+def refusal_probes():
+    r = _refusal("probes_report.json")["features"]
+    arms = [("natural", "natural"), ("synthetic_dom_all", "difference of\nmeans"), ("synthetic_prompted", "prompted"), ("synthetic_bundle", "latent\nbundle"), ("synthetic_diverse", "2-latent\nmix")]
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
+    for ax, (key, sl, title) in zip(axes, (("L15_cot_mean", "harmful_prompts", "whole CoT, natural refusals on harmful prompts"), ("L15_cot_first32", "harmful_prompts", "first 32 CoT tokens, harmful prompts"), ("L15_cot_first32", "harmless_prompts", "first 32 CoT tokens, harmless prompts"))):
+        x = np.arange(len(arms))
+        for j, (b, col) in enumerate((("64", "#9ecae1"), ("256", "#3182bd"))):
+            vals = [r[key]["arms"][a][b][sl]["tpr@0.01"] for a, _ in arms]
+            ax.bar(x + (j - 0.5) * 0.38, vals, 0.38, color=col, label=f"{b} labels")
+        ax.set_xticks(x)
+        ax.set_xticklabels([n for _, n in arms], fontsize=8)
+        ax.set_title(title, fontsize=10)
+        ax.grid(alpha=0.3, axis="y")
+    axes[0].set_ylabel("TPR at 1% FPR (natural held-out)")
+    axes[0].legend()
+    fig.tight_layout()
+    fig.savefig(OUT / "refusal_probes.png", dpi=130)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in (noise_floor, sae_fve, laser_curves, syco_steering, syco_budget):
+    for f in (noise_floor, sae_fve, laser_curves, syco_steering, syco_budget, refusal_steering, refusal_latents, refusal_probes):
         f()
         print("wrote", f.__name__)
 

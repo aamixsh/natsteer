@@ -16,6 +16,9 @@ src/natsteer/
   laser.py       LASER active learning (uncertainty band plus farthest-point), uncertainty-only and random arms
   grader.py      policy grader: gpt-oss-safeguard-20b on vLLM, policy file in, 0/1 labels out
   vllm_utils.py  vLLM engine with Triton attention (FlashInfer fails on this GPU)
+  vllm_steer.py  activation addition inside vLLM (all-position and prompt-only), for fast steered generation
+  attribution.py SAE-latent delta-attribution on paired refuse/comply (or behavior/no-behavior) completions
+  refusal.py     refusal testbed: prompt sets, behavior labels from the model's own answer, quality and diversity metrics
   data.py        loaders: XSTest, Aegis 2.0, hh-rlhf red-team, HarmfulQA, WildChat-1M, sycophancy evals
 scripts/
   setup_machine.sh, prefetch.py                       new-machine setup and downloads
@@ -26,8 +29,10 @@ scripts/
   grade.py, validate_grader.py                        policy labels and agreement with human labels
   laser_baseline.py                                   LASER vs random vs uncertainty curves (data/runs/laser_baseline)
   syco_pipeline.py                                    sycophancy proxy end to end, staged
+  refusal_pipeline.py, run_refusal_overnight.sh       refusal testbed: steering sweeps, latent attribution, synthetic data, probes
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
+docs/results/  small run reports behind the deck (committed); see docs/results/README.md
 data/      outputs (pools, features, runs); not in git
 scratch/   job temp files; not in git
 ```
@@ -50,6 +55,16 @@ CUDA_VISIBLE_DEVICES=0 .venv/bin/python scripts/e0_smoke.py --keep-model
 ```
 
 The deck with current results is [docs/presentation.md](docs/presentation.md).
+
+Refusal testbed (the steering vector defines the behavior, no written-policy grader), on one GPU:
+
+```bash
+GPU=1 ./scripts/run_refusal_overnight.sh          # about 3 hours; add --smoke for a tiny check run
+```
+
+Current state: steering induces refusal on harmless prompts (100% at the best setting) and
+delta-attribution finds the latents that do it, but synthetic positives do not yet beat natural
+data for probes at 1% FPR. Numbers: the deck and `docs/results/refusal_v0/`.
 
 ## Conventions
 

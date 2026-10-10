@@ -49,7 +49,28 @@ thought, latent bundling via an autoencoder, and dynamic per-token steering. A s
   natural per-token spread, applied at all positions, breaks generation; lambda 4 works.
 - `pkill -f <pattern>` can match the invoking shell; kill by PID.
 
+## Update 2026-10-10: refusal testbed (new direction)
+
+The researchers' intent policy is no longer on the critical path. Work moved to a testbed where
+the steering vector defines the behavior (refusal first, sycophancy second) and labels come from
+the model's own output. Code: `scripts/refusal_pipeline.py`, `src/natsteer/{vllm_steer,attribution,refusal}.py`;
+results: `docs/results/refusal_v0/` and the last slides of [presentation.md](presentation.md); plan:
+section 10 of [PLAN.md](../PLAN.md). Run on one GPU in `data/pools/refusal_v0` (not in git; rebuild with
+`GPU=1 ./scripts/run_refusal_overnight.sh`, about 3 hours).
+
+Gotchas from this run:
+- vLLM hooks need `enforce_eager=True`, prefix caching off, and `VLLM_ALLOW_INSECURE_SERIALIZATION=1`
+  (`natsteer.vllm_steer.make_steerable_llm` sets them). vLLM generates about 6,500 tok/s here against
+  about 120 tok/s for HF steered generation.
+- A vLLM engine once hung at start-up (waiting on a lock, before loading weights). The overnight runner
+  has a watchdog that kills a stage with no output for 20 minutes and retries it.
+- The all-position steering window is narrow: coefficient 3 (times the raw difference of means) breaks generation.
+- `prefetch.py` now skips the `original/` and `metal/` weights (13 GB of duplicate weights per repo).
+
 ## Next steps
+
+Refusal track first (see the update above): sycophancy testbed, wider latent search for diversity,
+sharper probe evaluation. The intent-label steps below stay valid if the policy arrives.
 
 1. Researchers write the intent policy, then grade the 41k intent prompts and validate the grader
    against Aegis and XSTest human labels (`scripts/grade.py`, `scripts/validate_grader.py`).

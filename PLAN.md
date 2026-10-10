@@ -224,3 +224,41 @@ E0 completion (2026-10-08, runs under data/runs/):
   0.85). Prompt-only steering is the most natural by far.
 - vLLM needs Triton attention on this GPU (natsteer.vllm_utils). HF steered generation
   runs at about 120 tok/s at batch 96, so steered generation is the slowest step.
+
+## 10. Direction change and refusal testbed (2026-10-10)
+
+Decision (2026-10-10): drop the written-policy grader. The steering vector defines the behavior,
+the label is read from the model's own output, and the first testbed is refusal (sycophancy
+second). Delta-attribution chooses which SAE latents compose the vector. Positives come from
+steering harmless prompts toward refusal (addition); no compliance is induced on harmful prompts,
+which would need handling rules from Isak. Probes read the CoT or answer of the generated text,
+recomputed without steering; prompt-reading probes cannot use steered data because steering
+leaves the prompt tokens unchanged.
+
+Literature check (arXiv 2605.28664, 2511.17408, 2507.03167, 2605.26772, OpenAI Dec 2025
+attribution post, and others; read second-hand through a summarizer): no published test of
+steering-generated data for activation probes; in 2605.28664 only about a quarter of steered
+settings beat prompting for text classifiers, and steering success was anti-correlated with
+downstream accuracy; refusal is text-evident and generalizes across data sources, while
+sycophancy and deception, which are intent-defined, generalize worst (2511.17408).
+
+Results (docs/results/refusal_v0, deck slides on the refusal testbed; one GPU, 2 h 46 min):
+- Steering: the end-of-prompt direction at layer 15 (all positions, coefficient 2.0) gives 100%
+  refusal on harmless prompts with no cut-off outputs; the CoT direction at layer 11 gives 99%
+  at 1.5. Generation breaks at coefficient 3. Random directions give 0 to 4%. CoT-only steering
+  (HF, 32 samples) gives 97 to 100%; final-answer-only 12 to 16%.
+- Attribution: the delta-attribution ranking finds latents that cause refusal (layer 15 latent
+  68915: 91% alone; a bundle of the top 8: 99%); the activation-difference ranking and random
+  latents give at most 2%.
+- Probes: AUROC is saturated (0.996 or more) because refusal is stated in the text. At 1% FPR,
+  natural-trained probes beat synthetic-trained ones on natural refusals to harmful prompts (TPR
+  0.92 to 0.98 against 0.56 to 0.73 on the whole CoT; 0.46 to 0.64 against 0.11 to 0.36 on the
+  first 32 CoT tokens). Mixing synthetic into natural data never helped.
+- Diversity: dense-direction steering collapses it (final-answer compression 99.7 against 29 for
+  natural refusals); the latent bundle (25.8) and prompting (35.3) are close to natural. The
+  naturalness discriminator is at AUC 1.0 for every generator and cannot rank them.
+- Open: only 2 latents in the "diverse" generator; the projection-out-the-direction control is
+  ambiguous (the natural-trained comparison was not saved); 3 seeds, no confidence intervals.
+
+Next: sycophancy testbed (sampling and attribution done), a wider latent search for diversity,
+sharper probe evaluation (8 to 32 labels, first 8 to 32 CoT tokens, per-prompt intervals).

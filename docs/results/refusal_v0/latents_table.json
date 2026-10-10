@@ -1,0 +1,2571 @@
+{
+ "base": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04335,
+  "gen_tokens": 699.6979166666666,
+  "final_distinct2": 0.8681192660550459,
+  "final_compression": 2.3846073563835337,
+  "kind": null,
+  "layer": null,
+  "positions": null,
+  "coeff": null,
+  "latents": null,
+  "lam": null,
+  "family": "base"
+ },
+ "attr_L15_37100_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.043240625,
+  "gen_tokens": 651.1979166666666,
+  "final_distinct2": 0.8662353353860545,
+  "final_compression": 2.386582952296458,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_37100_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.037682291666666666,
+  "gen_tokens": 595.0833333333334,
+  "final_distinct2": 0.8641838058180471,
+  "final_compression": 2.3830096134981362,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_37100_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.10416666666666667,
+  "rep4": 0.03158645833333333,
+  "gen_tokens": 493.2083333333333,
+  "final_distinct2": 0.8523072073137092,
+  "final_compression": 2.4063880394155626,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_113769_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.046835416666666664,
+  "gen_tokens": 697.34375,
+  "final_distinct2": 0.8683571948556176,
+  "final_compression": 2.37271161038197,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   113769
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_113769_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.07291666666666667,
+  "rep4": 0.039745833333333334,
+  "gen_tokens": 656.5416666666666,
+  "final_distinct2": 0.8686962490410627,
+  "final_compression": 2.3912483183459603,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   113769
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_113769_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.052083333333333336,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.4479166666666667,
+  "rep4": 0.03295208333333333,
+  "gen_tokens": 565.8229166666666,
+  "final_distinct2": 0.8495449949443883,
+  "final_compression": 2.4561025008805917,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   113769
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_114055_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.07291666666666667,
+  "rep4": 0.035866666666666665,
+  "gen_tokens": 517.09375,
+  "final_distinct2": 0.8453176615195513,
+  "final_compression": 2.492688365710365,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   114055
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_114055_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.22916666666666666,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.07291666666666667,
+  "rep4": 0.024512500000000003,
+  "gen_tokens": 221.5625,
+  "final_distinct2": 0.8434025203854707,
+  "final_compression": 2.5390987645504537,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   114055
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_114055_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 1.0,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.0015645833333333334,
+  "gen_tokens": 10.229166666666666,
+  "final_distinct2": 0.0,
+  "final_compression": 0.0,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   114055
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_46708_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.045768750000000004,
+  "gen_tokens": 669.9791666666666,
+  "final_distinct2": 0.8601007049345418,
+  "final_compression": 2.408809102547505,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   46708
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_46708_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.0625,
+  "rep4": 0.04655520833333334,
+  "gen_tokens": 648.6875,
+  "final_distinct2": 0.851903511650804,
+  "final_compression": 2.4378812103985315,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   46708
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_46708_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.07291666666666667,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.25,
+  "rep4": 0.027844791666666664,
+  "gen_tokens": 315.9895833333333,
+  "final_distinct2": 0.8201101518309021,
+  "final_compression": 2.5494709221071847,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   46708
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_46591_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.045936458333333326,
+  "gen_tokens": 719.9479166666666,
+  "final_distinct2": 0.8635489819137667,
+  "final_compression": 2.395222343708912,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   46591
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_46591_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.09375,
+  "rep4": 0.04705208333333333,
+  "gen_tokens": 701.28125,
+  "final_distinct2": 0.8689441966032715,
+  "final_compression": 2.4031009883025662,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   46591
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_46591_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0625,
+  "cot_refusal_rate": 0.28125,
+  "rep4": 0.04497916666666666,
+  "gen_tokens": 718.8645833333334,
+  "final_distinct2": 0.8633318105679915,
+  "final_compression": 2.4200409267938476,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   46591
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_113022_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.04182604166666667,
+  "gen_tokens": 658.03125,
+  "final_distinct2": 0.8651184250999693,
+  "final_compression": 2.3678011004687183,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   113022
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_113022_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.04175729166666667,
+  "gen_tokens": 617.5833333333334,
+  "final_distinct2": 0.8622711724241627,
+  "final_compression": 2.375029761117431,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   113022
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_113022_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.02848125,
+  "gen_tokens": 473.9895833333333,
+  "final_distinct2": 0.8754252249924643,
+  "final_compression": 2.348009957709727,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   113022
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_11388_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.047935416666666675,
+  "gen_tokens": 688.9791666666666,
+  "final_distinct2": 0.86732830488289,
+  "final_compression": 2.3848405356896314,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   11388
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_11388_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.08333333333333333,
+  "rep4": 0.04002083333333333,
+  "gen_tokens": 700.5729166666666,
+  "final_distinct2": 0.8705297379996175,
+  "final_compression": 2.389840363674807,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   11388
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_11388_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.2604166666666667,
+  "rep4": 0.03728125,
+  "gen_tokens": 688.6875,
+  "final_distinct2": 0.8709291794964681,
+  "final_compression": 2.4348779038090047,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   11388
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_96315_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.03948229166666667,
+  "gen_tokens": 653.4791666666666,
+  "final_distinct2": 0.8624952308279282,
+  "final_compression": 2.376405694900767,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   96315
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_96315_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.0625,
+  "rep4": 0.03944166666666667,
+  "gen_tokens": 593.0833333333334,
+  "final_distinct2": 0.8544407595028973,
+  "final_compression": 2.433901932890461,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   96315
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_96315_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.125,
+  "rep4": 0.03399479166666666,
+  "gen_tokens": 410.2395833333333,
+  "final_distinct2": 0.8371062518061844,
+  "final_compression": 2.483650526688501,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   96315
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_57146_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.08333333333333333,
+  "rep4": 0.04414895833333333,
+  "gen_tokens": 703.5208333333334,
+  "final_distinct2": 0.8691739536463198,
+  "final_compression": 2.3642313009206153,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   57146
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_57146_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.11458333333333333,
+  "rep4": 0.046951041666666665,
+  "gen_tokens": 693.2291666666666,
+  "final_distinct2": 0.8676653680870717,
+  "final_compression": 2.3815568493534123,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   57146
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_57146_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.052083333333333336,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.4270833333333333,
+  "rep4": 0.03926875,
+  "gen_tokens": 582.7291666666666,
+  "final_distinct2": 0.7822748508256626,
+  "final_compression": 2.58536628172277,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   57146
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_67564_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.052083333333333336,
+  "cot_refusal_rate": 0.07291666666666667,
+  "rep4": 0.0555125,
+  "gen_tokens": 697.125,
+  "final_distinct2": 0.853944339820046,
+  "final_compression": 2.4413011662819293,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   67564
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_67564_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.052083333333333336,
+  "cot_refusal_rate": 0.10416666666666667,
+  "rep4": 0.053536458333333335,
+  "gen_tokens": 657.1458333333334,
+  "final_distinct2": 0.8384988216461381,
+  "final_compression": 2.500954933824761,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   67564
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_67564_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.03125,
+  "incomplete_rate": 0.96875,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.5043708333333333,
+  "gen_tokens": 828.03125,
+  "final_distinct2": 0.625,
+  "final_compression": 1.7538461538461538,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   67564
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_68915_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.04144791666666666,
+  "gen_tokens": 668.8125,
+  "final_distinct2": 0.8615734005180795,
+  "final_compression": 2.400916868118792,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   68915
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_68915_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.09375,
+  "rep4": 0.03469375,
+  "gen_tokens": 591.5208333333334,
+  "final_distinct2": 0.8557412015641663,
+  "final_compression": 2.435110242813285,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   68915
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_68915_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.90625,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.65625,
+  "rep4": 0.01674270833333333,
+  "gen_tokens": 88.29166666666667,
+  "final_distinct2": 0.4525043177892919,
+  "final_compression": 3.688702516033547,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   68915
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L15_116539_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.038450000000000005,
+  "gen_tokens": 583.3229166666666,
+  "final_distinct2": 0.8549199428700294,
+  "final_compression": 2.3840721222011183,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   116539
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L15_116539_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.027619791666666667,
+  "gen_tokens": 449.0729166666667,
+  "final_distinct2": 0.8567725210628645,
+  "final_compression": 2.3998009857424942,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   116539
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L15_116539_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.03125,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.02685,
+  "gen_tokens": 83.70833333333333,
+  "final_distinct2": 0.9085782131196201,
+  "final_compression": 2.139813219693535,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   116539
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "act_L15_89137_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.08333333333333333,
+  "rep4": 0.04607395833333333,
+  "gen_tokens": 713.8229166666666,
+  "final_distinct2": 0.8614617302896604,
+  "final_compression": 2.4144479010949054,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   89137
+  ],
+  "lam": 2.0,
+  "family": "act"
+ },
+ "act_L15_89137_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.4375,
+  "rep4": 0.046855208333333336,
+  "gen_tokens": 742.1875,
+  "final_distinct2": 0.847124359021655,
+  "final_compression": 2.4701615693790093,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   89137
+  ],
+  "lam": 5.0,
+  "family": "act"
+ },
+ "act_L15_73639_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0625,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.046376041666666666,
+  "gen_tokens": 715.8229166666666,
+  "final_distinct2": 0.8716622008685208,
+  "final_compression": 2.375504689238595,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   73639
+  ],
+  "lam": 2.0,
+  "family": "act"
+ },
+ "act_L15_73639_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.04883333333333334,
+  "gen_tokens": 769.6666666666666,
+  "final_distinct2": 0.8461476205891875,
+  "final_compression": 2.3863738624323263,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   73639
+  ],
+  "lam": 5.0,
+  "family": "act"
+ },
+ "act_L15_91358_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.0491,
+  "gen_tokens": 673.8229166666666,
+  "final_distinct2": 0.8545791144022972,
+  "final_compression": 2.3818438432040905,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   91358
+  ],
+  "lam": 2.0,
+  "family": "act"
+ },
+ "act_L15_91358_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.049860416666666664,
+  "gen_tokens": 582.5416666666666,
+  "final_distinct2": 0.8434031606027196,
+  "final_compression": 2.4146205134347425,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   91358
+  ],
+  "lam": 5.0,
+  "family": "act"
+ },
+ "act_L15_115292_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.020833333333333332,
+  "incomplete_rate": 0.08333333333333333,
+  "cot_refusal_rate": 0.09375,
+  "rep4": 0.04122395833333333,
+  "gen_tokens": 717.625,
+  "final_distinct2": 0.8471185428486115,
+  "final_compression": 2.449412018889472,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   115292
+  ],
+  "lam": 2.0,
+  "family": "act"
+ },
+ "act_L15_115292_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.03125,
+  "incomplete_rate": 0.3125,
+  "cot_refusal_rate": 0.6145833333333334,
+  "rep4": 0.036884375000000004,
+  "gen_tokens": 702.7604166666666,
+  "final_distinct2": 0.8538334648210572,
+  "final_compression": 2.5682464331359713,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   115292
+  ],
+  "lam": 5.0,
+  "family": "act"
+ },
+ "randlat_L15_35498_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.10416666666666667,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.050037500000000006,
+  "gen_tokens": 784.6979166666666,
+  "final_distinct2": 0.8764480709176992,
+  "final_compression": 2.353062077614436,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   35498
+  ],
+  "lam": 2.0,
+  "family": "randlat"
+ },
+ "randlat_L15_35498_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.4791666666666667,
+  "cot_refusal_rate": 0.125,
+  "rep4": 0.05865208333333333,
+  "gen_tokens": 891.9479166666666,
+  "final_distinct2": 0.9084591421040019,
+  "final_compression": 2.24860199367858,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   35498
+  ],
+  "lam": 5.0,
+  "family": "randlat"
+ },
+ "randlat_L15_66933_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.04115625,
+  "gen_tokens": 711.6770833333334,
+  "final_distinct2": 0.8607399794450155,
+  "final_compression": 2.3746829829399783,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   66933
+  ],
+  "lam": 2.0,
+  "family": "randlat"
+ },
+ "randlat_L15_66933_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.04581770833333334,
+  "gen_tokens": 726.4375,
+  "final_distinct2": 0.8476823737412561,
+  "final_compression": 2.3697674733549112,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   66933
+  ],
+  "lam": 5.0,
+  "family": "randlat"
+ },
+ "randlat_L15_111734_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.04510833333333333,
+  "gen_tokens": 716.3541666666666,
+  "final_distinct2": 0.8657541989664083,
+  "final_compression": 2.369234437011794,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   111734
+  ],
+  "lam": 2.0,
+  "family": "randlat"
+ },
+ "randlat_L15_111734_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04458333333333333,
+  "gen_tokens": 730.2083333333334,
+  "final_distinct2": 0.8625583203732504,
+  "final_compression": 2.4028780929887676,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   111734
+  ],
+  "lam": 5.0,
+  "family": "randlat"
+ },
+ "randlat_L15_83460_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.04346979166666667,
+  "gen_tokens": 706.0625,
+  "final_distinct2": 0.8575235931492485,
+  "final_compression": 2.3711732532162393,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   83460
+  ],
+  "lam": 2.0,
+  "family": "randlat"
+ },
+ "randlat_L15_83460_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.04748333333333333,
+  "gen_tokens": 722.9375,
+  "final_distinct2": 0.874691538751098,
+  "final_compression": 2.352072505103444,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   83460
+  ],
+  "lam": 5.0,
+  "family": "randlat"
+ },
+ "bundle4_L15_all_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.11458333333333333,
+  "rep4": 0.034240625000000004,
+  "gen_tokens": 465.0729166666667,
+  "final_distinct2": 0.8406197654941373,
+  "final_compression": 2.518520832031982,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708
+  ],
+  "lam": 1.0,
+  "family": "bundle"
+ },
+ "bundle4_L15_prompt_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.04913645833333333,
+  "gen_tokens": 686.6666666666666,
+  "final_distinct2": 0.868173334415321,
+  "final_compression": 2.391614452353551,
+  "kind": null,
+  "layer": 15,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708
+  ],
+  "lam": 1.0,
+  "family": "bundle"
+ },
+ "bundle4_L15_all_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.5416666666666666,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.3020833333333333,
+  "rep4": 0.007834375,
+  "gen_tokens": 83.57291666666667,
+  "final_distinct2": 0.7831529093369418,
+  "final_compression": 2.444288269869665,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708
+  ],
+  "lam": 2.0,
+  "family": "bundle"
+ },
+ "bundle4_L15_prompt_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.14583333333333334,
+  "rep4": 0.041621874999999996,
+  "gen_tokens": 692.2708333333334,
+  "final_distinct2": 0.8642121931908155,
+  "final_compression": 2.349710104914412,
+  "kind": null,
+  "layer": 15,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708
+  ],
+  "lam": 2.0,
+  "family": "bundle"
+ },
+ "bundle4_L15_all_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 1.0,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.054934375,
+  "gen_tokens": 29.354166666666668,
+  "final_distinct2": 0.0,
+  "final_compression": 0.0,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708
+  ],
+  "lam": 5.0,
+  "family": "bundle"
+ },
+ "bundle4_L15_prompt_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.3020833333333333,
+  "incomplete_rate": 0.052083333333333336,
+  "cot_refusal_rate": 0.4583333333333333,
+  "rep4": 0.04612604166666667,
+  "gen_tokens": 483.15625,
+  "final_distinct2": 0.857288741383712,
+  "final_compression": 2.3973677965792306,
+  "kind": null,
+  "layer": 15,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708
+  ],
+  "lam": 5.0,
+  "family": "bundle"
+ },
+ "bundle8_L15_all_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.041666666666666664,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.16666666666666666,
+  "rep4": 0.02728333333333333,
+  "gen_tokens": 374.1145833333333,
+  "final_distinct2": 0.8474144951140065,
+  "final_compression": 2.535495773640317,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708,
+   46591,
+   113022,
+   11388,
+   96315
+  ],
+  "lam": 1.0,
+  "family": "bundle"
+ },
+ "bundle8_L15_prompt_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04736041666666666,
+  "gen_tokens": 698.75,
+  "final_distinct2": 0.8621029489803654,
+  "final_compression": 2.383202801315121,
+  "kind": null,
+  "layer": 15,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708,
+   46591,
+   113022,
+   11388,
+   96315
+  ],
+  "lam": 1.0,
+  "family": "bundle"
+ },
+ "bundle8_L15_all_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.9895833333333334,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.78125,
+  "rep4": 0.00198125,
+  "gen_tokens": 35.71875,
+  "final_distinct2": 0.08985507246376812,
+  "final_compression": 12.088642659279778,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708,
+   46591,
+   113022,
+   11388,
+   96315
+  ],
+  "lam": 2.0,
+  "family": "bundle"
+ },
+ "bundle8_L15_prompt_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.2604166666666667,
+  "rep4": 0.044196875000000004,
+  "gen_tokens": 671.0520833333334,
+  "final_distinct2": 0.8663032780679839,
+  "final_compression": 2.3945768498457096,
+  "kind": null,
+  "layer": 15,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708,
+   46591,
+   113022,
+   11388,
+   96315
+  ],
+  "lam": 2.0,
+  "family": "bundle"
+ },
+ "bundle8_L15_all_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 1.0,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.48418541666666665,
+  "gen_tokens": 514.59375,
+  "final_distinct2": 0.0,
+  "final_compression": 0.0,
+  "kind": null,
+  "layer": 15,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708,
+   46591,
+   113022,
+   11388,
+   96315
+  ],
+  "lam": 5.0,
+  "family": "bundle"
+ },
+ "bundle8_L15_prompt_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.4895833333333333,
+  "incomplete_rate": 0.11458333333333333,
+  "cot_refusal_rate": 0.3333333333333333,
+  "rep4": 0.04419583333333333,
+  "gen_tokens": 358.5,
+  "final_distinct2": 0.8471272229822161,
+  "final_compression": 2.382598593318262,
+  "kind": null,
+  "layer": 15,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   37100,
+   113769,
+   114055,
+   46708,
+   46591,
+   113022,
+   11388,
+   96315
+  ],
+  "lam": 5.0,
+  "family": "bundle"
+ },
+ "attr_L19_52587_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.04040833333333333,
+  "gen_tokens": 692.9479166666666,
+  "final_distinct2": 0.8573310885001098,
+  "final_compression": 2.371813818448138,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_52587_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.03959895833333333,
+  "gen_tokens": 656.65625,
+  "final_distinct2": 0.8609392202270225,
+  "final_compression": 2.3641626242864415,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_52587_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.020833333333333332,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.14583333333333334,
+  "rep4": 0.042889583333333335,
+  "gen_tokens": 657.9375,
+  "final_distinct2": 0.84012871612974,
+  "final_compression": 2.3883491274472015,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_50223_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.044652083333333335,
+  "gen_tokens": 721.6875,
+  "final_distinct2": 0.8608513779527559,
+  "final_compression": 2.413589939353779,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   50223
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_50223_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.16666666666666666,
+  "rep4": 0.03844895833333333,
+  "gen_tokens": 731.5833333333334,
+  "final_distinct2": 0.8590291984377906,
+  "final_compression": 2.416032090484645,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   50223
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_50223_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.10416666666666667,
+  "incomplete_rate": 0.0625,
+  "cot_refusal_rate": 0.9270833333333334,
+  "rep4": 0.08065729166666667,
+  "gen_tokens": 797.4375,
+  "final_distinct2": 0.5514201762977473,
+  "final_compression": 3.3518598192983142,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   50223
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_71280_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.039559375,
+  "gen_tokens": 712.6979166666666,
+  "final_distinct2": 0.8674871549766997,
+  "final_compression": 2.387711043454193,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   71280
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_71280_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.039,
+  "gen_tokens": 700.0208333333334,
+  "final_distinct2": 0.8674583183399305,
+  "final_compression": 2.356524402127008,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   71280
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_71280_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.020833333333333332,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.14583333333333334,
+  "rep4": 0.040203125,
+  "gen_tokens": 695.53125,
+  "final_distinct2": 0.8633243187018931,
+  "final_compression": 2.3708841310185385,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   71280
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_25820_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.052083333333333336,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04744479166666667,
+  "gen_tokens": 732.4583333333334,
+  "final_distinct2": 0.8698255662587868,
+  "final_compression": 2.3859785900626704,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   25820
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_25820_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.07291666666666667,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.047825000000000006,
+  "gen_tokens": 721.65625,
+  "final_distinct2": 0.869894099848714,
+  "final_compression": 2.3858303024263865,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   25820
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_25820_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.020833333333333332,
+  "incomplete_rate": 0.21875,
+  "cot_refusal_rate": 0.3333333333333333,
+  "rep4": 0.056298958333333336,
+  "gen_tokens": 765.1458333333334,
+  "final_distinct2": 0.8818083182640145,
+  "final_compression": 2.402710013398387,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   25820
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_27956_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.052083333333333336,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.047177083333333335,
+  "gen_tokens": 711.96875,
+  "final_distinct2": 0.8630937978869264,
+  "final_compression": 2.366699225662151,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   27956
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_27956_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.07291666666666667,
+  "rep4": 0.045840624999999996,
+  "gen_tokens": 698.0208333333334,
+  "final_distinct2": 0.8689414145130139,
+  "final_compression": 2.371298296136309,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   27956
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_27956_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.09375,
+  "cot_refusal_rate": 0.2604166666666667,
+  "rep4": 0.04681458333333333,
+  "gen_tokens": 729.9583333333334,
+  "final_distinct2": 0.8644266811181863,
+  "final_compression": 2.376584966806154,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   27956
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_108049_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04138541666666667,
+  "gen_tokens": 701.2291666666666,
+  "final_distinct2": 0.8684179199238126,
+  "final_compression": 2.356051459261418,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   108049
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_108049_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.04348333333333334,
+  "gen_tokens": 690.03125,
+  "final_distinct2": 0.8766029100643323,
+  "final_compression": 2.356469923918212,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   108049
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_108049_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.17708333333333334,
+  "rep4": 0.04212291666666667,
+  "gen_tokens": 675.53125,
+  "final_distinct2": 0.8673095383541322,
+  "final_compression": 2.384108580210283,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   108049
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_1094_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.047005208333333326,
+  "gen_tokens": 728.21875,
+  "final_distinct2": 0.8679230405298849,
+  "final_compression": 2.400929301790071,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   1094
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_1094_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.10416666666666667,
+  "rep4": 0.04700104166666667,
+  "gen_tokens": 720.7083333333334,
+  "final_distinct2": 0.863599348534202,
+  "final_compression": 2.3871422067945143,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   1094
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_1094_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.041666666666666664,
+  "incomplete_rate": 0.052083333333333336,
+  "cot_refusal_rate": 0.7291666666666666,
+  "rep4": 0.045440625000000005,
+  "gen_tokens": 734.4479166666666,
+  "final_distinct2": 0.844018101253889,
+  "final_compression": 2.4666621959193256,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   1094
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_40466_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.048021875,
+  "gen_tokens": 715.3125,
+  "final_distinct2": 0.865966880139452,
+  "final_compression": 2.4039313547560583,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   40466
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_40466_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.04348125,
+  "gen_tokens": 704.7708333333334,
+  "final_distinct2": 0.8682616245417711,
+  "final_compression": 2.3656426315363226,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   40466
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_40466_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.13541666666666666,
+  "rep4": 0.04492708333333334,
+  "gen_tokens": 718.4270833333334,
+  "final_distinct2": 0.8502391617948524,
+  "final_compression": 2.394095168155794,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   40466
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_77134_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.046528125,
+  "gen_tokens": 735.2604166666666,
+  "final_distinct2": 0.8627354828163949,
+  "final_compression": 2.347448332834822,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   77134
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_77134_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0625,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.05287083333333334,
+  "gen_tokens": 755.9375,
+  "final_distinct2": 0.8610107517520568,
+  "final_compression": 2.4079405154099573,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   77134
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_77134_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.09375,
+  "cot_refusal_rate": 0.22916666666666666,
+  "rep4": 0.0558875,
+  "gen_tokens": 766.9270833333334,
+  "final_distinct2": 0.8630816170861938,
+  "final_compression": 2.3720626631853787,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   77134
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_62167_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.044378125,
+  "gen_tokens": 701.2916666666666,
+  "final_distinct2": 0.8603422346868268,
+  "final_compression": 2.369262330113685,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   62167
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_62167_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.07291666666666667,
+  "rep4": 0.04432708333333333,
+  "gen_tokens": 688.5520833333334,
+  "final_distinct2": 0.8687765666428181,
+  "final_compression": 2.3505501941861833,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   62167
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_62167_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.07291666666666667,
+  "cot_refusal_rate": 0.09375,
+  "rep4": 0.05881979166666667,
+  "gen_tokens": 711.6979166666666,
+  "final_distinct2": 0.8456375838926175,
+  "final_compression": 2.377630474911898,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   62167
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_24353_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.03843125,
+  "gen_tokens": 695.6666666666666,
+  "final_distinct2": 0.8655511579607351,
+  "final_compression": 2.3737166885102665,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   24353
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_24353_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.03976458333333333,
+  "gen_tokens": 677.4583333333334,
+  "final_distinct2": 0.8683171869393613,
+  "final_compression": 2.3581373484314296,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   24353
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_24353_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.03794583333333334,
+  "gen_tokens": 636.8020833333334,
+  "final_distinct2": 0.8686872457168452,
+  "final_compression": 2.3599075752546788,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   24353
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "attr_L19_51261_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.04530208333333333,
+  "gen_tokens": 608.15625,
+  "final_distinct2": 0.8201092971776425,
+  "final_compression": 2.524835617523568,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   51261
+  ],
+  "lam": 1.0,
+  "family": "attr"
+ },
+ "attr_L19_51261_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0625,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.11458333333333333,
+  "rep4": 0.040404166666666665,
+  "gen_tokens": 346.78125,
+  "final_distinct2": 0.7919407369563829,
+  "final_compression": 2.6194731646490363,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   51261
+  ],
+  "lam": 2.0,
+  "family": "attr"
+ },
+ "attr_L19_51261_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 1.0,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.180559375,
+  "gen_tokens": 178.10416666666666,
+  "final_distinct2": 0.0,
+  "final_compression": 0.0,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   51261
+  ],
+  "lam": 5.0,
+  "family": "attr"
+ },
+ "act_L19_13325_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.04288333333333333,
+  "gen_tokens": 704.7291666666666,
+  "final_distinct2": 0.8663044810261019,
+  "final_compression": 2.3759982763573686,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   13325
+  ],
+  "lam": 2.0,
+  "family": "act"
+ },
+ "act_L19_13325_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.033011458333333334,
+  "gen_tokens": 687.7291666666666,
+  "final_distinct2": 0.8376429339814335,
+  "final_compression": 2.4167316298541937,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   13325
+  ],
+  "lam": 5.0,
+  "family": "act"
+ },
+ "act_L19_86127_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04418333333333333,
+  "gen_tokens": 715.4895833333334,
+  "final_distinct2": 0.8657434042902934,
+  "final_compression": 2.4164584566947327,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   86127
+  ],
+  "lam": 2.0,
+  "family": "act"
+ },
+ "act_L19_86127_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.04714791666666666,
+  "gen_tokens": 722.0416666666666,
+  "final_distinct2": 0.8477217765152969,
+  "final_compression": 2.4553775103211812,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   86127
+  ],
+  "lam": 5.0,
+  "family": "act"
+ },
+ "act_L19_39155_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 1.0,
+  "cot_refusal_rate": 0.052083333333333336,
+  "rep4": 0.019660416666666666,
+  "gen_tokens": 1024.0,
+  "final_distinct2": 0.0,
+  "final_compression": 0.0,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   39155
+  ],
+  "lam": 2.0,
+  "family": "act"
+ },
+ "act_L19_39155_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 1.0,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.034279166666666666,
+  "gen_tokens": 1024.0,
+  "final_distinct2": 0.0,
+  "final_compression": 0.0,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   39155
+  ],
+  "lam": 5.0,
+  "family": "act"
+ },
+ "act_L19_95891_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.96875,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.024294791666666666,
+  "gen_tokens": 1012.7291666666666,
+  "final_distinct2": 0.6938775510204082,
+  "final_compression": 2.7689614935822635,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   95891
+  ],
+  "lam": 2.0,
+  "family": "act"
+ },
+ "act_L19_95891_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 1.0,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.004498958333333334,
+  "gen_tokens": 1024.0,
+  "final_distinct2": 0.0,
+  "final_compression": 0.0,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   95891
+  ],
+  "lam": 5.0,
+  "family": "act"
+ },
+ "randlat_L19_2128_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.0406375,
+  "gen_tokens": 701.8229166666666,
+  "final_distinct2": 0.8712913636893883,
+  "final_compression": 2.3210967352684855,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   2128
+  ],
+  "lam": 2.0,
+  "family": "randlat"
+ },
+ "randlat_L19_2128_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.03300729166666667,
+  "gen_tokens": 751.7395833333334,
+  "final_distinct2": 0.9095810668956962,
+  "final_compression": 2.135246126799253,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   2128
+  ],
+  "lam": 5.0,
+  "family": "randlat"
+ },
+ "randlat_L19_106411_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.04496041666666667,
+  "gen_tokens": 707.53125,
+  "final_distinct2": 0.8671784876088946,
+  "final_compression": 2.3623622925672847,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   106411
+  ],
+  "lam": 2.0,
+  "family": "randlat"
+ },
+ "randlat_L19_106411_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0625,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.038821875,
+  "gen_tokens": 717.8333333333334,
+  "final_distinct2": 0.8670589238509423,
+  "final_compression": 2.3737501865393225,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   106411
+  ],
+  "lam": 5.0,
+  "family": "randlat"
+ },
+ "randlat_L19_22977_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04035625,
+  "gen_tokens": 706.6875,
+  "final_distinct2": 0.8705563659095645,
+  "final_compression": 2.334724552671282,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   22977
+  ],
+  "lam": 2.0,
+  "family": "randlat"
+ },
+ "randlat_L19_22977_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.010416666666666666,
+  "rep4": 0.0352375,
+  "gen_tokens": 783.125,
+  "final_distinct2": 0.8852893235533822,
+  "final_compression": 2.2796995257163952,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   22977
+  ],
+  "lam": 5.0,
+  "family": "randlat"
+ },
+ "randlat_L19_84853_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04709791666666666,
+  "gen_tokens": 714.3645833333334,
+  "final_distinct2": 0.8633096320472472,
+  "final_compression": 2.3636487480587416,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   84853
+  ],
+  "lam": 2.0,
+  "family": "randlat"
+ },
+ "randlat_L19_84853_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.04466562500000001,
+  "gen_tokens": 712.3854166666666,
+  "final_distinct2": 0.8595512431776835,
+  "final_compression": 2.369647373057142,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   84853
+  ],
+  "lam": 5.0,
+  "family": "randlat"
+ },
+ "bundle4_L19_all_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.03125,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.19791666666666666,
+  "rep4": 0.04278437499999999,
+  "gen_tokens": 694.0,
+  "final_distinct2": 0.868547832071576,
+  "final_compression": 2.4016917797579542,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820
+  ],
+  "lam": 1.0,
+  "family": "bundle"
+ },
+ "bundle4_L19_prompt_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.03125,
+  "rep4": 0.04797916666666666,
+  "gen_tokens": 712.21875,
+  "final_distinct2": 0.8642151047844998,
+  "final_compression": 2.376907426246185,
+  "kind": null,
+  "layer": 19,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820
+  ],
+  "lam": 1.0,
+  "family": "bundle"
+ },
+ "bundle4_L19_all_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.10416666666666667,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.6458333333333334,
+  "rep4": 0.04849895833333332,
+  "gen_tokens": 683.1770833333334,
+  "final_distinct2": 0.8354024500534407,
+  "final_compression": 2.477595220313667,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820
+  ],
+  "lam": 2.0,
+  "family": "bundle"
+ },
+ "bundle4_L19_prompt_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.041666666666666664,
+  "rep4": 0.04530833333333333,
+  "gen_tokens": 718.4583333333334,
+  "final_distinct2": 0.8644205312153045,
+  "final_compression": 2.3521248657037126,
+  "kind": null,
+  "layer": 19,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820
+  ],
+  "lam": 2.0,
+  "family": "bundle"
+ },
+ "bundle4_L19_all_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.9166666666666666,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.37876562499999994,
+  "gen_tokens": 1000.1666666666666,
+  "final_distinct2": 0.13725992317541613,
+  "final_compression": 7.886699507389163,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820
+  ],
+  "lam": 5.0,
+  "family": "bundle"
+ },
+ "bundle4_L19_prompt_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.010416666666666666,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.07291666666666667,
+  "rep4": 0.04687812499999999,
+  "gen_tokens": 724.875,
+  "final_distinct2": 0.8581724069281306,
+  "final_compression": 2.3809570752591256,
+  "kind": null,
+  "layer": 19,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820
+  ],
+  "lam": 5.0,
+  "family": "bundle"
+ },
+ "bundle8_L19_all_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.041666666666666664,
+  "incomplete_rate": 0.041666666666666664,
+  "cot_refusal_rate": 0.40625,
+  "rep4": 0.04450416666666666,
+  "gen_tokens": 685.7916666666666,
+  "final_distinct2": 0.8597213809812235,
+  "final_compression": 2.421208076562633,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820,
+   27956,
+   108049,
+   1094,
+   40466
+  ],
+  "lam": 1.0,
+  "family": "bundle"
+ },
+ "bundle8_L19_prompt_x1.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.020833333333333332,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.04386458333333334,
+  "gen_tokens": 706.6354166666666,
+  "final_distinct2": 0.8658347606231139,
+  "final_compression": 2.3655553026854803,
+  "kind": null,
+  "layer": 19,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820,
+   27956,
+   108049,
+   1094,
+   40466
+  ],
+  "lam": 1.0,
+  "family": "bundle"
+ },
+ "bundle8_L19_all_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.9479166666666666,
+  "incomplete_rate": 0.010416666666666666,
+  "cot_refusal_rate": 1.0,
+  "rep4": 0.127284375,
+  "gen_tokens": 279.3541666666667,
+  "final_distinct2": 0.2698412698412698,
+  "final_compression": 5.475829383886256,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820,
+   27956,
+   108049,
+   1094,
+   40466
+  ],
+  "lam": 2.0,
+  "family": "bundle"
+ },
+ "bundle8_L19_prompt_x2.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.03125,
+  "cot_refusal_rate": 0.020833333333333332,
+  "rep4": 0.04379791666666666,
+  "gen_tokens": 713.0104166666666,
+  "final_distinct2": 0.8652166816289888,
+  "final_compression": 2.358670412521859,
+  "kind": null,
+  "layer": 19,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820,
+   27956,
+   108049,
+   1094,
+   40466
+  ],
+  "lam": 2.0,
+  "family": "bundle"
+ },
+ "bundle8_L19_all_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 1.0,
+  "cot_refusal_rate": 0.0,
+  "rep4": 0.27447604166666667,
+  "gen_tokens": 1024.0,
+  "final_distinct2": 0.0,
+  "final_compression": 0.0,
+  "kind": null,
+  "layer": 19,
+  "positions": "all",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820,
+   27956,
+   108049,
+   1094,
+   40466
+  ],
+  "lam": 5.0,
+  "family": "bundle"
+ },
+ "bundle8_L19_prompt_x5.0": {
+  "n": 96,
+  "refusal_rate": 0.0,
+  "incomplete_rate": 0.0,
+  "cot_refusal_rate": 0.16666666666666666,
+  "rep4": 0.04817083333333333,
+  "gen_tokens": 657.7916666666666,
+  "final_distinct2": 0.8539653477096261,
+  "final_compression": 2.413308891365036,
+  "kind": null,
+  "layer": 19,
+  "positions": "prompt",
+  "coeff": null,
+  "latents": [
+   52587,
+   50223,
+   71280,
+   25820,
+   27956,
+   108049,
+   1094,
+   40466
+  ],
+  "lam": 5.0,
+  "family": "bundle"
+ }
+}

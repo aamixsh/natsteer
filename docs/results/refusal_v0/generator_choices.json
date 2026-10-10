@@ -1,0 +1,9 @@
+{
+ "dom_all": "eop_L15_all_c2.0",
+ "dom_prompt": "eop_L11_prompt_c8.0",
+ "bundle": "bundle8_L15_all_x2.0",
+ "diverse": [
+  "attr_L15_114055_x2.0",
+  "attr_L15_68915_x5.0"
+ ]
+}
