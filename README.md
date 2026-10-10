@@ -16,12 +16,14 @@ src/natsteer/
   laser.py       LASER active learning (uncertainty band plus farthest-point), uncertainty-only and random arms
   grader.py      policy grader: gpt-oss-safeguard-20b on vLLM, policy file in, 0/1 labels out
   vllm_utils.py  vLLM engine with Triton attention (FlashInfer fails on this GPU)
-  vllm_steer.py  activation addition inside vLLM (all-position and prompt-only), for fast steered generation
-  attribution.py SAE-latent delta-attribution on paired refuse/comply (or behavior/no-behavior) completions
-  refusal.py     refusal testbed: prompt sets, behavior labels from the model's own answer, quality and diversity metrics
+  vllm_steer.py  activation addition inside vLLM (all-position, prompt-only)
+  attribution.py SAE-latent delta-attribution on paired behavior / no-behavior completions
+  refusal.py     refusal testbed: prompt sets, labels from the model's own answer, quality and diversity metrics
   data.py        loaders: XSTest, Aegis 2.0, hh-rlhf red-team, HarmfulQA, WildChat-1M, sycophancy evals
 scripts/
-  setup_machine.sh, prefetch.py                       new-machine setup and downloads
+  check_machine.sh, setup_machine.sh, prefetch.py,    new-machine setup (docs/HANDOFF.md): check, install, download,
+  pull_data.sh, claude_session.sh, verify_machine.sh  copy results, carry Claude sessions, verify
+  check_vllm_steering.py, compare_e0.py               verification helpers (vLLM vs HF steering, e0 reference)
   make_presentation_figures.py                        figures for docs/presentation.md
   e0_smoke.py, e0_noise_floor.py, e0_mxfp4_check.py   infrastructure checks (data/runs/e0_*)
   build_intent_pool.py, build_aegis_pool.py           pools under data/pools/
@@ -29,7 +31,7 @@ scripts/
   grade.py, validate_grader.py                        policy labels and agreement with human labels
   laser_baseline.py                                   LASER vs random vs uncertainty curves (data/runs/laser_baseline)
   syco_pipeline.py                                    sycophancy proxy end to end, staged
-  refusal_pipeline.py, run_refusal_overnight.sh       refusal testbed: steering sweeps, latent attribution, synthetic data, probes
+  refusal_pipeline.py, run_refusal_overnight.sh       refusal testbed: steering, attribution, synthetic data, probes
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
 docs/results/  small run reports behind the deck (committed); see docs/results/README.md
@@ -39,12 +41,8 @@ scratch/   job temp files; not in git
 
 ## Setup and runs
 
-New machine: `./scripts/setup_machine.sh` (environment, downloads, tests). Moving
-existing results: see [docs/MIGRATION.md](docs/MIGRATION.md).
-
-In every shell: `source env.sh` (shared HF/uv caches in `/workspace/cache`, compiler caches in
-`.cache/`, and `uv` on PATH). Outputs go to `data/` and scratch dirs to `scratch/` (override with
-`NATSTEER_DATA`, `NATSTEER_SCRATCH`).
+New machine (vast.ai, RunPod, lab server): [docs/HANDOFF.md](docs/HANDOFF.md). In every shell: `source env.sh`
+(shared caches, `uv` on PATH). Outputs go to `data/`, scratch dirs to `scratch/` (`NATSTEER_DATA`, `NATSTEER_SCRATCH`).
 
 ```bash
 .venv/bin/python -m pytest -q tests
@@ -54,17 +52,11 @@ In every shell: `source env.sh` (shared HF/uv caches in `/workspace/cache`, comp
 CUDA_VISIBLE_DEVICES=0 .venv/bin/python scripts/e0_smoke.py --keep-model
 ```
 
-The deck with current results is [docs/presentation.md](docs/presentation.md).
-
-Refusal testbed (the steering vector defines the behavior, no written-policy grader), on one GPU:
-
 ```bash
-GPU=1 ./scripts/run_refusal_overnight.sh          # about 3 hours; add --smoke for a tiny check run
+GPU=1 ./scripts/run_refusal_overnight.sh          # refusal testbed, about 3 h; --smoke for a tiny check run
 ```
 
-Current state: steering induces refusal on harmless prompts (100% at the best setting) and
-delta-attribution finds the latents that do it, but synthetic positives do not yet beat natural
-data for probes at 1% FPR. Numbers: the deck and `docs/results/refusal_v0/`.
+Current results: [docs/presentation.md](docs/presentation.md) and `docs/results/`; plan and next todo: [PLAN.md](PLAN.md).
 
 ## Conventions
 

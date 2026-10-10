@@ -181,13 +181,33 @@ Pipeline check, not a result: 96 items per condition, one weak direction.
 
 ---
 
+## Steering vector as the policy: refusal
+
+![w:1100](figures/refusal_steering.png)
+
+- **No written-policy grader.** The label is read from the model's own answer (a refusal phrase, "I'm sorry, but I can't help with that."). Positives: harmless prompts steered toward refusal (addition only); negatives: natural unsteered answers; probes read clean activations of the CoT or answer.
+- **Narrow window.** End-of-prompt direction at layer 15, coefficient 2.0: **100% refusal**, no cut-off outputs; CoT direction at layer 11: 99% at 1.5. At 3 generation breaks; random directions give 0 to 4%; layer 19 gives at most 7%; prompt-only reaches 60 to 70% with 16 to 20% cut off. CoT-only masks (HF, 32 samples) give 97 to 100%, final-answer-only 12 to 16%.
+- **Delta-attribution** (325 same-prompt refuse/comply pairs) finds causal latents: layer 15 latent 68915 alone gives **91%**, the top-8 bundle **99%** with less repetition than the dense direction; activation-difference and random latents give at most 2%. Only 2 of 24 attributed latents work alone, one prompt set.
+
+---
+
+## Synthetic positives vs natural data (refusal probes)
+
+![w:1100](figures/refusal_probes.png)
+
+- **AUROC is saturated** (0.996 or more for every arm from 64 labels): refusal is stated in the text. **At 1% FPR natural labels win**: TPR 0.92 to 0.98 vs 0.56 to 0.73 for synthetic-only on harmful prompts (whole CoT); 0.46 to 0.64 vs 0.11 to 0.36 on the first 32 CoT tokens. On harmless prompts the dense direction comes close (0.37 to 0.42 vs 0.44 to 0.65). Mixing synthetic into natural never beat natural alone.
+- **Diversity** (final-answer compression, higher = less diverse): dense direction **99.7**, prompted 35.3, latent bundle 25.8, natural refusals 29.0, 2-latent mix 6.4. The "diverse" generator has only 2 latents, so it does not yet test the idea. The naturalness discriminator is at AUC 0.996 to 1.0 for every generator, so it cannot rank them.
+- **Unresolved control:** projecting the CoT direction out drops the synthetic-trained probe to AUROC 0.52 to 0.54; the natural-trained comparison was not saved, so circularity is not separated from "the concept is one direction".
+
+---
+
 ## Takeaways
 
-1. **The infrastructure works.** Hooks, segment-aware steering, SAEs, gradients, features, probes, LASER, grader and vLLM all run on one GPU.
+1. **The infrastructure works.** Hooks (HF and vLLM), segment-aware steering, SAEs, gradients, features, probes, LASER, grader all run on one GPU.
 2. **Activations wobble about 2%** between identical computations, from MoE routing flips. Per-token naturalness metrics must report against this floor.
 3. **LASER is a strong baseline.** On human labels at 2% positives it hits the all-label ceiling with about 300 labels.
-4. **Steering before the CoT looks most natural.** On the proxy, prompt-only steering is close to natural, while CoT or all-position steering is perfectly separable.
-5. **A plain difference-of-means direction is too weak** to make useful synthetic data. That motivates E2 and E3: attribution-picked latents and naturalness-constrained steering.
+4. **The steering vector can be the policy.** Refusal is induced grader-free (100%) and delta-attribution finds the latents that cause it, but synthetic positives still do not beat natural data at 1% FPR, and dense steering collapses diversity.
+5. **Sycophancy is harder:** a difference-of-means direction barely moves it (+2 to +5 points); prompt-only steering is the most natural there, CoT or all-position steering is perfectly separable.
 
 ---
 
@@ -197,85 +217,9 @@ Pipeline check, not a result: 96 items per condition, one weak direction.
 - The safeguard grader refused about 2% of harmful-looking inputs even under a harmless toy policy, so the real run needs a retry or fallback.
 - Aegis "unsafe" is broader than harmful intent (it includes hate speech and profanity), so the LASER baseline uses a related label, not ours.
 - Sycophancy steering used 96 items per condition, one direction and one strength.
-- Refusal testbed: refusal is defined by a phrase in the first 300 characters of the final answer; samples cut off inside the CoT are unlabeled. The probe test is saturated by AUROC, so it only separates arms at 1% FPR.
+- Refusal pilot: label is a refusal phrase in the first 300 characters of the final answer (cut-off samples unlabeled); 3 seeds, no intervals, 4 correlated samples per prompt, over-refusal positives only (ablation-based compliance data needs Isak's handling rules).
 - Steered generation in HF is slow (about 120 tok/s at batch 96). It is the bottleneck for E1.
 - WildGuardMix (human-labeled test set) needs its terms accepted on the Hub.
-
----
-
-## New direction: the steering vector is the policy
-
-- **No written-policy grader.** The behavior is what the model does, and the label is read from its own output: a refusal phrase at the start of the final answer ("I'm sorry, but I can't help with that."). Natural evaluation labels need no policy either.
-- **Positives** come from steering *harmless* prompts toward refusal (addition only; no compliance is induced on harmful prompts). **Negatives** are natural unsteered answers. Probes read activations recomputed **without** steering.
-- **First testbed: refusal.** gpt-oss-20b refuses 90% of harmful training prompts (5,275 of 5,827 labeled samples) and 0.8% of harmless ones. Sycophancy comes next.
-- **Delta-attribution** (OpenAI, Dec 2025) picks which SAE latents make up the steering vector: 325 same-prompt pairs where one sample refused and one complied.
-- **Prompt-reading probes cannot use steered data:** steering leaves the prompt tokens unchanged, so their clean activations equal the unsteered ones. Only probes that read the CoT or the answer gain anything.
-
-Pipeline: `scripts/refusal_pipeline.py`, one GPU, 2 h 46 min. Result files: `docs/results/refusal_v0/`.
-
----
-
-## Refusal steering works, in a narrow window
-
-![w:1150](figures/refusal_steering.png)
-
-- Difference of means (two directions, end-of-prompt and CoT, at layers 11, 15 and 19; 192 samples each): the end-of-prompt direction at layer 15 gives **100% refusal** at coefficient 2.0 with no cut-off outputs; the CoT direction at layer 11 gives 99% at 1.5. Unsteered baseline: 0%.
-- **The window is narrow.** At coefficient 3 generation breaks (38 to 79% of outputs lose their final answer). A random direction of the same size gives 0 to 4% refusal and breaks generation at larger sizes.
-- Layer 19 is weak: at most 7% with generation intact.
-- **Prompt-only steering needs larger coefficients** and is weaker: about 60 to 70% at best (layer 11, coefficients 6 to 8), with 16 to 20% of outputs cut off.
-- HF runs with CoT-only masks (32 samples): 97 to 100% at coefficient 2. Final-answer-only: 12 to 16%. The refusal is decided in the reasoning.
-
-Earlier gpt-oss work (arXiv 2507.03167) only *removed* the refusal direction; this is addition.
-
----
-
-## Delta-attribution finds causal latents
-
-![w:850](figures/refusal_latents.png)
-
-- Steering a single latent (12 per layer, 96 prompts each): the attribution ranking gives 2 settings above 20%, the strongest being layer 15 latent 68915 at **91% refusal alone**. The 16 settings of the activation-difference ranking and the 16 random-latent settings reach at most 2%.
-- A weighted bundle of the top 8 latents (layer 15, all positions) reaches **99%** with less repetition than the dense direction.
-- The top 8 attributed decoder rows span 23% of the end-of-prompt direction and 55% of the CoT direction (R²); the top 64 span 75% and 79%.
-- Small counts (2 latents), one prompt set. The gain over the activation-difference baseline is clear; how many distinct latents work is not yet known.
-
----
-
-## Synthetic data: yield and diversity
-
-| Generator (about 1,050 samples) | Verified refusals | Final-answer compression (higher = less diverse) |
-|---|---|---|
-| difference of means, all positions | 100% | **99.7** |
-| latent bundle | 97.7% | 25.8 |
-| prompted ("politely decline") | 90.0% | 35.3 |
-| prompt-only difference of means | 67.2% (865 samples) | 10.4 |
-| 2-latent mix | 53.7% | 6.4 |
-| random direction | 0.2% (665 samples) | |
-| *natural refusals* | | *29.0* |
-
-- A dense direction produces near-identical refusals. Prompted data and the latent bundle are close to natural text diversity.
-- The "diverse" generator ended up with only **2 latents**, so it does not yet test the diversity idea.
-- **The naturalness discriminator cannot rank generators:** AUC 0.996 to 1.0 against natural refusals for every generator, including plain prompting.
-
----
-
-## Do synthetic positives train good probes?
-
-![w:1150](figures/refusal_probes.png)
-
-- **By AUROC the task is saturated.** Whole-CoT and final-answer probes reach 0.996 or more on all held-out samples for every arm from 64 labels, because the refusal is stated in the text.
-- **At 1% FPR a gap appears.** Natural labels: TPR 0.92 to 0.98 on natural refusals to harmful prompts, against 0.56 to 0.73 for synthetic-only data. On the first 32 CoT tokens: 0.46 to 0.64 against 0.11 to 0.36. On harmless prompts (the case synthetic data targets) the difference-of-means data comes close: 0.37 to 0.42 against 0.44 to 0.65.
-- **Mixing half-synthetic into natural data never beat natural alone** (first-32-token AUROC 0.981 to 0.985 against 0.984 to 0.988).
-- **Control that is not yet interpretable.** Projecting the CoT direction out of the features drops the synthetic-trained probe to AUROC 0.52 to 0.54 (whole CoT) and 0.52 to 0.76 (first 32 tokens). The same projection on a natural-trained probe was only run ad hoc and not saved, so it cannot yet separate circularity from "the concept is one direction".
-
----
-
-## Refusal testbed: what we know
-
-1. **Steering with the vector as the policy works for refusal**, including from a handful of attributed SAE latents, with no grader.
-2. **Delta-attribution beats the activation-difference ranking** on picking latents that cause the behavior.
-3. **Synthetic positives do not beat natural data** on held-out natural refusals at 1% FPR. They roughly match it on harmless prompts for the dense direction.
-4. **Dense steering collapses diversity**; the latent bundle and prompting keep it. The diversity hypothesis for latents is untested at more than 2 latents.
-5. Pilot only: 3 seeds, no confidence intervals, one refusal definition, over-refusal positives only, 4 samples per prompt (correlated).
 
 ---
 
@@ -283,11 +227,9 @@ Earlier gpt-oss work (arXiv 2507.03167) only *removed* the refusal direction; th
 
 | Step | What |
 |---|---|
-| Sycophancy testbed | sampling and attribution already ran (4,800 samples, 374 pairs); steer with attributed latents, build data, exact oracle labels |
-| Diversity | wider latent search (top 64 per layer, layers 11 and 23) so the "diverse" generator has many latents; more harmless prompts (about 1,000 now) |
-| Sharper probe evaluation | 8 to 32 labels, first 8 to 32 CoT tokens, per-prompt confidence intervals, topic-matched naturalness check, saved natural-trained projection control |
-| Intent label (optional track) | needs the researchers' policy, then grading and the LASER baseline on the intent pool |
-| Open question for Isak | positives from ablating refusal on harmful prompts (compliance data) need his handling rules |
+| Sharper probes, more diversity | 8 to 32 labels, first 8 to 32 CoT tokens, per-prompt intervals, saved natural-trained control; top-64 latents per layer for a many-latent "diverse" generator; more harmless prompts |
+| Sycophancy testbed | sampling and attribution ran (4,800 samples, 374 pairs); steer with attributed latents, exact-oracle labels |
+| Intent label (optional) | needs the researchers' policy, then grading and the LASER baseline on the intent pool |
 
 ---
 

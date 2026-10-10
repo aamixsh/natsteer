@@ -177,29 +177,6 @@ def refusal_steering():
     fig.savefig(OUT / "refusal_steering.png", dpi=130)
 
 
-def refusal_latents():
-    t = _refusal("latents_table.json")
-    base = t["base"]
-    fams = [("attr", "attribution\nlatents (12 per layer)"), ("act", "activation-difference\nlatents"), ("randlat", "random\nlatents"), ("bundle", "attribution\nbundles")]
-    best, n_good, n_all = [], [], []
-    for f, _ in fams:
-        rows = [s for s in t.values() if s.get("family") == f]
-        ok = [s for s in rows if s["incomplete_rate"] <= base["incomplete_rate"] + 0.15 and s["rep4"] <= base["rep4"] + 0.05]
-        best.append(max(s["refusal_rate"] for s in ok))
-        n_good.append(sum(s["refusal_rate"] >= 0.2 for s in ok))
-        n_all.append(len(rows))
-    fig, ax = plt.subplots(figsize=(8.5, 4.2))
-    bars = ax.bar([n for _, n in fams], best, color=["#1f77b4", "#ff7f0e", "#888", "#2ca02c"])
-    for b, g, n in zip(bars, n_good, n_all):
-        ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.02, f"{g} of {n} settings\nreach 20%", ha="center", fontsize=9)
-    ax.set_ylabel("best refusal rate (generation intact)")
-    ax.set_ylim(0, 1.2)
-    ax.set_title("Steering with SAE latents, harmless prompts (96 prompts per setting)")
-    ax.grid(alpha=0.3, axis="y")
-    fig.tight_layout()
-    fig.savefig(OUT / "refusal_latents.png", dpi=130)
-
-
 def refusal_probes():
     r = _refusal("probes_report.json")["features"]
     arms = [("natural", "natural"), ("synthetic_dom_all", "difference of\nmeans"), ("synthetic_prompted", "prompted"), ("synthetic_bundle", "latent\nbundle"), ("synthetic_diverse", "2-latent\nmix")]
@@ -221,7 +198,7 @@ def refusal_probes():
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in (noise_floor, sae_fve, laser_curves, syco_steering, syco_budget, refusal_steering, refusal_latents, refusal_probes):
+    for f in (noise_floor, sae_fve, laser_curves, syco_steering, syco_budget, refusal_steering, refusal_probes):
         f()
         print("wrote", f.__name__)
 

@@ -1,92 +1,113 @@
-# Handoff: context for continuing this project
+# Setting up a new machine (vast.ai, RunPod, lab server)
 
-Written 2026-10-09 when the work moved off the lab server. Read this first, then
-[PLAN.md](../PLAN.md) (full plan, E0 status in section 9) and [presentation.md](presentation.md)
-(current results). The full original Claude session can be resumed; see the end of this file.
+Point a fresh Claude Code session (or a person) at this file: "set up this machine following
+docs/HANDOFF.md". It covers only moving the project to a new server. For the project itself read
+[PLAN.md](../PLAN.md) (current plan and next todo) and [presentation.md](presentation.md) (results).
 
-## Project in one paragraph
+Everything needed is in git or downloadable. Nothing secret is stored in the repo; the Hugging Face
+token stays on the machine.
 
-MATS project 1 with Isak Etinger: natural synthetic data for active learning of activation
-classifiers. Steer a reasoning model (gpt-oss-20b) to generate positives for a rare safety
-label, retrain probes on activations recomputed **without** intervention, and beat LASER
-(Isak's active-learning method) on held-out natural data at a fixed false-positive rate and
-equal labeling budget. The proposal compares steering before, during and after the chain of
-thought, latent bundling via an autoencoder, and dynamic per-token steering. A second project
-(looped models, `~/loop_steer`) is separate; do not mix them.
+## What the project needs from a machine
 
-## Decisions already made
+| Need | Detail |
+|---|---|
+| GPU | NVIDIA, driver 580 or newer (the locked torch 2.13 and vLLM 0.31 are CUDA 13 builds). bf16 gpt-oss-20b needs about 42 GB; vLLM runs at 85% of one GPU. Developed on RTX PRO 6000 (sm_120, 95 GiB) |
+| Disk | about 120 GB: models and datasets 70 GB (grader included), `.venv` 8 GB, `data/` 10 GB, headroom. Put them on the persistent volume |
+| Network | Hugging Face, PyPI, GitHub (raw files) |
+| Tools | `curl`, `git`; `rsync` for copying data; `tmux` for long runs |
+| Python | uv fetches Python 3.14 (the lock resolves `requires-python >=3.13` to it); nothing to install by hand |
 
-- Model gpt-oss-20b, bf16 with dequantized experts for anything needing gradients or hooks.
-  SAEs: andyrdt BatchTopK (layers 15 and 19 downloaded). The Goodfire SAE is too weak (FVE 0.48).
-- Label: harmful intent of the **user turn**. The generator writes simulated user messages.
-  Assistant-side harmful-output labels are out of scope unless Isak asks and sets handling rules.
-- The harmful-intent grading policy (`configs/policies/harmful_intent.md`) is written by the
-  researchers, not by Claude. Grading of the intent pool waits on it.
-- Method debugging happens on a low-hazard sycophancy proxy first.
-- Non-commercial datasets are excluded. WildGuardMix needs its terms accepted by the user.
-- Every prompt is rendered with `harmony.render` and a fixed date (`config.FIXED_DATE`).
+## Steps
 
-## State at handoff (E0 done except intent grading)
+Run from the repo root. Each script is safe to rerun.
 
-- Pools and features: `data/pools/{intent_v0,aegis_v0,syco_v0}`; reports in `data/runs/`.
-- LASER on Aegis human labels (2% positives): reaches the all-label ceiling (TPR at 1% FPR about
-  0.30) by about 300 labels; random reaches 0.23 at 2,000.
-- Sycophancy proxy: difference-of-means steering at layer 15 barely moves the rate (+2 to +5
-  points); prompt-only steering is the most natural (discriminator AUC 0.64 vs 1.00 for CoT or
-  all positions); steered data did not help the probe at equal budgets.
-- Noise floor: identical computations differ by about 2% (median) at layer 15 because MoE
-  routing flips; per-token naturalness metrics must be reported against it.
+1. **Clone and look.**
+   ```bash
+   git clone git@github.com:aamixsh/natsteer.git && cd natsteer
+   source env.sh && ./scripts/check_machine.sh
+   ```
+   Fix any FAIL. A WARN for a busy GPU means choose another GPU index below. `env.sh` puts the shared caches
+   (Hugging Face models and token, uv wheels, uv Pythons) in `/workspace/cache` when `/workspace` exists
+   (the persistent volume on vast.ai and RunPod), else in `.cache/shared`. Set `NATSTEER_CACHE` before
+   sourcing to put them elsewhere. Compiler caches stay in `.cache/`.
 
-## Gotchas learned the hard way
+2. **Hugging Face login** (ask the user for a token; never write it into the repo):
+   `HF_TOKEN=...` for one shell, or `.venv/bin/hf auth login` after step 3. Checks and downloads read
+   `$HF_HOME/token`.
 
-- vLLM 0.31 on the RTX PRO 6000 (sm_120) crashed with FlashInfer; `natsteer.vllm_utils.make_llm`
-  forces Triton attention (override with `NATSTEER_VLLM_ATTENTION`).
-- gpt-oss answers multiple-choice questions in many formats; `syco_pipeline.parse_answer` handles
-  them. About half of unparsed sycophancy answers are refusals or "no opinion".
-- gpt-oss-safeguard refused about 2% of harmful-looking inputs even under a harmless toy policy;
-  the real grading run needs a retry or fallback.
-- HF steered generation is slow (about 120 tok/s at batch 96). Steering at lambda 8 of the
-  natural per-token spread, applied at all positions, breaks generation; lambda 4 works.
-- `pkill -f <pattern>` can match the invoking shell; kill by PID.
+3. **Environment and downloads** (about 40 GB with the grader):
+   ```bash
+   ./scripts/setup_machine.sh                 # add --skip-grader to save 13 GB, --no-prefetch to skip downloads
+   ```
+   It checks the machine, installs uv if missing, runs `uv sync --locked`, downloads the models, SAEs,
+   datasets and the refusal prompt sets (public GitHub repo, pinned commit), rebuilds the prompt pools
+   (`data/pools/{intent_v0,aegis_v0}/*.jsonl`, deterministic) and runs the CPU tests.
 
-## Update 2026-10-10: refusal testbed (new direction)
+4. **Results and sampled data** from the old machine (skip on a fresh start; everything is rebuildable
+   except sampled data and reports):
+   ```bash
+   ./scripts/pull_data.sh user@old-host:/path/to/natsteer         # add --big for the 8 GB of pooled features
+   ```
+   | Path | Size | Without it |
+   |---|---|---|
+   | `data/runs/` | under 1 MB | the reports behind the deck are lost; the key ones are also in `docs/results/` |
+   | `data/pools/syco_v0/*.jsonl`, `data/pools/refusal_v0/*.jsonl` | 80 MB | sampled generations; rerun the pipelines (refusal about 3 GPU-hours) |
+   | `data/pools/*/*.feats.npz` | 8 GB | rebuild: `extract_features.py`, `syco_pipeline.py --stage features`, `refusal_pipeline.py --stage features` |
+   | `data/pools/{intent,aegis}_v0/*.jsonl` | 55 MB | rebuilt by step 3 |
+   | `scratch/` | any | never needed |
 
-The researchers' intent policy is no longer on the critical path. Work moved to a testbed where
-the steering vector defines the behavior (refusal first, sycophancy second) and labels come from
-the model's own output. Code: `scripts/refusal_pipeline.py`, `src/natsteer/{vllm_steer,attribution,refusal}.py`;
-results: `docs/results/refusal_v0/` and the last slides of [presentation.md](presentation.md); plan:
-section 10 of [PLAN.md](../PLAN.md). Run on one GPU in `data/pools/refusal_v0` (not in git; rebuild with
-`GPU=1 ./scripts/run_refusal_overnight.sh`, about 3 hours).
+5. **Verify** (about 10 minutes, one free GPU):
+   ```bash
+   GPU=0 ./scripts/verify_machine.sh
+   ```
+   Runs the tests, `e0_smoke.py --keep-model` compared with the first machine's numbers
+   (`docs/results/e0_reference.json`: SAE variance explained on CoT 0.74 at layer 15 and 0.83 at layer 19,
+   exactly 690 CoT-masked steering tokens, 37,807 CoT tokens, zero-vector logit difference 0), and
+   `check_vllm_steering.py` (vLLM hook steering against the HF `Steerer`). Activation-level numbers can
+   differ by about 2% on another GPU (MoE routing flips), hence the tolerances. Look for `VERIFY PASSED`.
 
-Gotchas from this run:
-- vLLM hooks need `enforce_eager=True`, prefix caching off, and `VLLM_ALLOW_INSECURE_SERIALIZATION=1`
-  (`natsteer.vllm_steer.make_steerable_llm` sets them). vLLM generates about 6,500 tok/s here against
-  about 120 tok/s for HF steered generation.
-- A vLLM engine once hung at start-up (waiting on a lock, before loading weights). The overnight runner
-  has a watchdog that kills a stage with no output for 20 minutes and retries it.
-- The all-position steering window is narrow: coefficient 3 (times the raw difference of means) breaks generation.
-- `prefetch.py` now skips the `original/` and `metal/` weights (13 GB of duplicate weights per repo).
+6. **Optional: carry Claude Code conversations over.** On the old machine
+   `./scripts/claude_session.sh export` (writes `data/handoff/claude_session/`, copied by step 4), on the new
+   one `./scripts/claude_session.sh import`, then `claude --resume <session id>` from the repo root.
+   Sessions can contain file contents; keep them out of git.
 
-## Next steps
+7. **Run.** Long jobs under `tmux` or `setsid nohup`; pick the GPU explicitly:
+   ```bash
+   GPU=1 ./scripts/run_refusal_overnight.sh          # refusal testbed, resumable, about 3 h on one RTX PRO 6000
+   ```
+   Outputs go to `data/pools/refusal_v0/` and `data/runs/refusal_pipeline/<stamp>/`.
 
-Refusal track first (see the update above): sycophancy testbed, wider latent search for diversity,
-sharper probe evaluation. The intent-label steps below stay valid if the policy arrives.
+## Machine-specific settings
 
-1. Researchers write the intent policy, then grade the 41k intent prompts and validate the grader
-   against Aegis and XSTest human labels (`scripts/grade.py`, `scripts/validate_grader.py`).
-2. LASER baseline on the graded intent pool (`scripts/laser_baseline.py --pool-grades ...`).
-3. E1 steering timing on the intent label; E2 attribution-ranked latents and reachability.
+| Setting | Default | Change when |
+|---|---|---|
+| `NATSTEER_CACHE` | `/workspace/cache` if `/workspace` exists, else `.cache/shared` | the volume is mounted elsewhere |
+| `NATSTEER_DATA`, `NATSTEER_SCRATCH` | `<repo>/data`, `<repo>/scratch` | bulk storage lives elsewhere (symlinks also work) |
+| `NATSTEER_BIN` | `/workspace/bin` if `/workspace` exists, else `.cache/bin` | uv should live elsewhere |
+| `NATSTEER_VLLM_ATTENTION` | `TRITON_ATTN` | FlashInfer fails on sm_120; on H100 or A100 try `FLASH_ATTN` or `FLASHINFER` for speed |
+| `GPU` / `CUDA_VISIBLE_DEVICES` | none (scripts require `GPU=`) | always choose a free GPU; scripts use the first visible device |
+| `IDLE` (overnight runner) | 1200 s | a stage legitimately goes quiet for longer |
 
-## Resuming the original session
+## Gotchas
 
-The raw session is copied (not in git) to `data/handoff/claude_session/`. On the new machine:
+- **Non-interactive shells (nohup, cron, agent tools) do not read `~/.bashrc`.** Always `source env.sh`;
+  otherwise caches silently fall back to the home directory and models download again.
+- **vLLM on sm_120 crashes with FlashInfer**; `natsteer.vllm_utils.make_llm` forces Triton attention.
+- **vLLM hooks** need `enforce_eager=True`, prefix caching off and `VLLM_ALLOW_INSECURE_SERIALIZATION=1`;
+  `natsteer.vllm_steer.make_steerable_llm` sets them. vLLM generates about 6,500 tok/s here against about
+  120 tok/s for HF steered generation.
+- **A vLLM engine once hung at start-up** (waiting on a lock before loading weights). The overnight runner
+  kills a stage with no output for `IDLE` seconds and retries it up to three times.
+- **Model repos ship duplicate `original/` and `metal/` weights** (13 GB each); `prefetch.py` skips them.
+- **Activations reproduce only to about 2%** between identical computations (MoE routing flips), so exact
+  comparisons across machines or batch compositions fail; compare against the noise floor.
+- `pkill -f <pattern>` can match the invoking shell; kill by PID. Do not recreate `.venv` while a job runs.
+- The harmful-intent grading policy (`configs/policies/harmful_intent.md`) does not exist; the researchers
+  write it, and only the optional intent track needs it.
 
-```bash
-DEST=~/.claude/projects/$(pwd | sed 's#[^A-Za-z0-9]#-#g')
-mkdir -p "$DEST" && cp -r data/handoff/claude_session/* "$DEST"/
-claude --resume 89a507b9-13d0-4669-bb87-0b0267ce3443
-```
+## Checklist for the agent doing the setup
 
-Run these from the repo root on the new machine. The session's file paths refer to the lab
-server (`/home/amishr24/natsteer`, `/data/amishr24/...`); on the new machine the same files
-live under the repo's `data/`.
+Ask the user, then proceed: (1) the Hugging Face token or whether the machine is already logged in,
+(2) the old machine to pull results from, if any, (3) which GPU to use and whether another job is running
+on the others, (4) whether to download the 13 GB grader. After step 5 passes, report the GPU, driver,
+free disk and the verify output, then read PLAN.md and continue with its next todo.

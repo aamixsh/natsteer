@@ -10,7 +10,7 @@ PROJECT = "natsteer"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Persistent outputs and job temp space. Defaults are the repo's `data/` and `scratch/`
-# entries (symlinks to large disks on the lab server); override per machine with
+# directories (symlink them to a bulk disk if needed); override per machine with
 # NATSTEER_DATA and NATSTEER_SCRATCH.
 DATA_ROOT = Path(os.environ.get("NATSTEER_DATA", REPO_ROOT / "data"))
 RUNS_DIR = DATA_ROOT / "runs"

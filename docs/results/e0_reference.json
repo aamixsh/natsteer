@@ -1,0 +1,10 @@
+{
+  "source": "data/runs/e0_smoke/20261008T183341Z/report.json on the first machine (RTX PRO 6000, 2026-10-08); reproduced on the second machine on 2026-10-09",
+  "checks": {
+    "sae.andyrdt_L15_k64.cot.frac_variance_explained": {"value": 0.7398, "tolerance": 0.01},
+    "sae.andyrdt_L19_k64.cot.frac_variance_explained": {"value": 0.8337, "tolerance": 0.01},
+    "steering.n_cot_tokens": {"value": 690, "tolerance": 0},
+    "collect.tokens_by_segment.cot": {"value": 37807, "tolerance": 0},
+    "steering.zero_vector_max_logit_diff": {"value": 0.0, "tolerance": 0.0}
+  }
+}

@@ -1,4 +1,5 @@
-"""Download every Hugging Face model, SAE and dataset file this repo uses (about 40 GB).
+"""Download every Hugging Face model, SAE and dataset file this repo uses (about 40 GB) and the
+refusal prompt sets (public GitHub repo, pinned commit) into data/prompts/refusal_2507.03167.
 
 Uses the normal HF cache (HF_HOME / HF_HUB_CACHE). Run once on a new machine.
 WildGuardMix is gated and not used yet, so it is not fetched.
@@ -6,6 +7,7 @@ Usage: .venv/bin/python scripts/prefetch.py [--skip-grader] [--sae-layers 15 19]
 """
 
 import argparse
+import urllib.request
 
 from huggingface_hub import hf_hub_download, snapshot_download
 
@@ -24,6 +26,24 @@ DATASET_FILES = [
     ("Anthropic/model-written-evals", "sycophancy/sycophancy_on_nlp_survey.jsonl"),
     ("Anthropic/model-written-evals", "sycophancy/sycophancy_on_political_typology_quiz.jsonl"),
 ]
+
+
+REFUSAL_PROMPTS_REPO = "kureha-yamaguchi/reasoning-manipulation"  # Apache-2.0, prompt sets of arXiv 2507.03167
+REFUSAL_PROMPTS_COMMIT = "56a763d837cc63f30a13f830ad4ebd05890c7455"
+
+
+def fetch_refusal_prompts():
+    from natsteer.refusal import PROMPTS_DIR
+
+    PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
+    for split in ("train", "test"):
+        for kind in ("harmful", "harmless"):
+            name = f"{split}_{kind}_prompts.csv"
+            if not (PROMPTS_DIR / name).exists():
+                url = f"https://raw.githubusercontent.com/{REFUSAL_PROMPTS_REPO}/{REFUSAL_PROMPTS_COMMIT}/dataset/{name}"
+                urllib.request.urlretrieve(url, PROMPTS_DIR / name)
+    (PROMPTS_DIR / "SOURCE_COMMIT").write_text(REFUSAL_PROMPTS_COMMIT + "\n")
+    print("refusal prompts", PROMPTS_DIR, flush=True)
 
 
 def main():
@@ -47,6 +67,7 @@ def main():
         print(hf_hub_download(GOODFIRE_SAE_REPO, GOODFIRE_SAE_FILE), flush=True)
     for repo, f in DATASET_FILES:
         print(hf_hub_download(repo, f, repo_type="dataset"), flush=True)
+    fetch_refusal_prompts()
     print("prefetch done")
 
 
