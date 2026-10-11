@@ -1,27 +1,33 @@
 ---
 marp: true
 paginate: true
-title: Natural synthetic data for activation probes (E0, refusal and sycophancy testbeds)
+title: Steering-generated positives for activation probes
 ---
 
-# Natural synthetic data for activation probes
+# Steering-generated positives for activation probes
 
-E0: infrastructure and baselines on gpt-oss-20b. Then refusal and sycophancy testbeds where the steering vector defines the behavior (2026-10-11).
+MATS project 1 (with Isak Etinger), gpt-oss-20b. Status 2026-10-11: infrastructure (E0), a LASER baseline, and three passes of refusal and sycophancy testbeds where the steering vector defines the behavior.
 
-Method anchors: *LASER* (Etinger, OpenAI alignment blog) for active learning, *SAE latent attribution* (OpenAI) for picking latents
-
-Slides are separated by `---` (Marp format). Figures: `scripts/make_presentation_figures.py`.
+Slides separated by `---` (Marp). Figures: `scripts/make_presentation_figures.py`. Run summaries: `docs/results/*/SUMMARY.md`.
 
 ---
 
-## Question
+## Motivation and question
 
-- Activation probes for rare safety labels need many positive examples. Natural positives are rare (LASER: about 1 in 20,000 conversations).
-- **Idea:** steer the model to *generate* positives, then train the probe on clean activations of that text.
-- **Risk:** steered text may be unnatural, so a probe trained on it fails on real data.
-- Success = better detection at a fixed false-positive rate on held-out **natural** data, against LASER on natural data, at equal labeling budgets.
+- Probes on activations are a cheap monitor for rare misaligned behavior, but training them needs positives, and natural positives are rare (LASER: about 1 in 20,000 conversations) and expensive to label.
+- **Idea:** let a steering vector *define* the behavior and *generate* positives; label them by reading the model's own answer, recompute clean activations of the text, and train the probe on those.
+- **Risk:** steered text may be unnatural or narrow, so a probe trained on it fails on real data.
+- **Success:** better detection on held-out **natural** data at a fixed false-positive rate (TPR at 1% FPR) than natural labels, prompted generation or fixed dense steering at the same label budget, or a better warm start for active learning (LASER).
 
-E0 builds the pipeline and the baselines it has to beat.
+---
+
+## Bottom line so far
+
+1. **Steering is easy to get:** dense directions refuse 100% on harmless prompts; delta-attribution finds 23 refusal and 39 sycophancy SAE latents that work alone; activation-difference and random latents do not.
+2. **Synthetic positives do not beat natural labels** at 1% FPR on early-CoT features (refusal: natural 0.66 vs 0.37 to 0.58 at 64 labels), and mixing them in never helps. Whole-CoT probes are saturated, so only early tokens or strict FPRs separate the arms.
+3. **The gap is mostly topic:** positives steered on the *same prompts* that natural refusals come from match natural data (0.41 vs 0.40); on harmless prompts they reach 0.15 to 0.24. Keeping natural-looking synthetic text helps (0.28 to 0.46).
+4. **Steering has no demonstrated edge over prompting:** prompted positives do about as well as the best steering wherever both were tested (within intervals; better on matched prompts); with an exact label (sycophancy) a **random** direction gives equally good probes.
+5. Diversity from many latents did **not** help; closeness to the natural activation manifold did not predict usefulness.
 
 ---
 
@@ -29,264 +35,173 @@ E0 builds the pipeline and the baselines it has to beat.
 
 | Piece | Choice |
 |---|---|
-| Model | gpt-oss-20b: 24 layers, d = 2880, 32 experts (4 per token), chain of thought (CoT) before the answer |
-| SAEs | andyrdt BatchTopK, 131k latents, k = 64 or 128, layers 3, 7, 11, 15, 19, 23 |
-| Probe | logistic regression on pooled clean activations |
-| Poolings | `user_mean` (mean over the user prompt), `prompt_last` (token before generation), `cot_mean`, `final_mean` |
-| Grader | gpt-oss-safeguard-20b on vLLM, with a written policy |
-| Main metric | TPR at 1% FPR; AUROC and TPR at 5% FPR as secondary |
+| Model | gpt-oss-20b: 24 layers, d = 2880, 32 experts (4 per token), reasoning (CoT) before the answer; bf16 with dequantized experts for hooks and gradients; medium reasoning effort |
+| SAEs | andyrdt BatchTopK, 131k latents, k = 64, residual stream at layers 11, 15, 19, 23 (CoT variance explained 0.74 at L15, 0.83 at L19; Goodfire L15: 0.48) |
+| Steering | addition at one layer: difference-of-means directions (end of prompt, CoT, answer) or SAE decoder rows scaled to a latent's mean activation; all positions, or prompt / CoT / answer only |
+| Generation | vLLM with steering hooks (about 6,500 tok/s); HF for segment masks (about 120 tok/s) |
+| Labels | read from the output: refusal phrase in the answer; sycophancy = answer matches the user's stated view (answer key). Never from the steering vector |
+| Probe | logistic regression on pooled clean activations: first 8/16/32 CoT tokens, whole CoT, answer, prompt (L7 to L23) |
+| Evaluation | held-out natural data, TPR at 1% FPR (AUROC secondary), 10 seeds, 95% bootstrap intervals that resample whole prompts, paired differences against the natural arm |
 
-Every prompt is rendered with a **fixed date**. The stock chat template stamps today's date into the system message, which shifts activations day to day.
-
----
-
-## Pipeline
-
-```
-natural pool ──► clean features ──► probe ──► LASER picks prompts to label ──► grader labels
-                                      ▲                                            │
-                                      └────────────── retrain ◄────────────────────┘
-
-steered generation ──► text ──► clean forward (no steering) ──► features ──► same probe
-   (prompt / CoT / answer positions)                               ▲
-                                                  "naturalness": can a probe tell these apart?
-```
-
-- Steering only produces **text**. The probe always reads activations recomputed **without** intervention.
-- Steering can target the prompt, the CoT, the final answer, or every position. The mask is the same in teacher-forced passes and in cached generation.
+Every prompt is rendered with a fixed date (the stock template stamps today's date and shifts activations). Compute: one RTX PRO 6000 (96 GB).
 
 ---
 
-## E0 checks: does the machinery work?
+## Method
 
-| Check | Result |
-|---|---|
-| Model in bf16 (experts dequantized) | 39 GB; 41.8 GB with a layer-15 SAE; 100 conversations (93k tokens) in 13 s |
-| Our rendering vs official chat template | identical token for token |
-| Zero steering vector | logit difference exactly 0 |
-| "CoT only" steering mask | hits exactly the 690 CoT tokens, nothing else |
-| SAE codes depend on the rest of the batch? | no (fixed threshold, difference exactly 0) |
-| Gradient to layer-15 activations (for attribution) | 0.2 s per 1k-token conversation; exactly 0 after the last scored token |
-| MXFP4 kernel vs bf16 | 12.9 GB; next-token KL 0.005, same top token 98% of the time |
+![w:1150](figures/method.png)
 
----
-
-## Finding: activations are only reproducible to about 2%
-
-![w:1100](figures/noise_floor.png)
-
-- Same prefix, run alone vs inside a longer sequence. Mathematically identical; the difference is numerics.
-- It starts as bf16 rounding (0.3% at layer 0). **MoE routing flips** amplify it: 9% of tokens pick different experts by layer 15.
-- Pooled features barely move (median 2%). Single tokens can move 25% or more.
-
-**Consequence:** any per-token "distance to natural" claim needs to beat this floor.
-
----
-
-## SAEs reconstruct CoT as well as anything else
-
-![w:1050](figures/sae_fve.png)
-
-- The andyrdt SAEs were trained partly on gpt-oss's own rollouts, CoT included.
-- Layer 19 reconstructs better than layer 15.
-- The Goodfire layer-15 SAE is much weaker (0.48), so we use the k = 128 sibling as the second SAE.
+- **Generators:** dense direction (one strength, or several layers and strengths), single attributed latents (one per prompt group), validated bundles, random 3-latent bundles, prompted ("politely decline"), random direction (control).
+- **Latent choice:** delta-attribution (OpenAI, Dec 2025) on same-prompt behavior / no-behavior pairs, screened on 64 prompts, validated on 96 fresh ones.
+- **Naturalness and diversity:** text compression, precision/recall coverage of natural positives, prompt-matched discriminator, SAE reconstruction error and nearest-neighbor distance of steered activations.
 
 ---
 
 ## Data
 
-| Set | Size | Labels |
+| Dataset | Role | Size |
 |---|---|---|
-| Intent pool | 33,000 prompts: 30k WildChat (real traffic), 3k from Aegis, red-team attempts, HarmfulQA | grader (pending the policy) |
-| Intent held-out | 5,600 prompts, same mix | grader (pending) |
-| Human-labeled eval | Aegis 2.0 test (1,796) + XSTest (450) | human |
-| Aegis train | 22,424 prompts | human |
-| Sycophancy | 20,184 multiple-choice items, user states a view first | exact: did the answer match the user's view? |
+| Refusal prompt sets (arXiv 2507.03167) | natural refusal/compliance samples, directions, attribution; test set | train 1,459 harmful + 1,174 harmless prompts; test 487 + 250 |
+| XSTest | borderline prompts in the refusal test set | 450 prompts |
+| Aegis 2.0 | refusal training prompts (600); LASER baseline with human labels | 22,424 train, 1,796 test |
+| WildChat-1M, benign open release | synthetic-data prompts, natural over-refusals, LASER pool, prompt-matched test | 4,000 prompts x 2 samples, 356 natural refusals (4.7%); 178 naturally refused training prompts |
+| Model-written evals, sycophancy (NLP survey, political typology) | sycophancy natural data and steering items | 6,000 train + 2,000 held-out items |
+| Intent pool (WildChat 30k + red-team, Aegis, HarmfulQA 3k) | optional harmful-intent track | 33,000 + 5,600 held-out; grading blocked on the policy |
 
-WildChat's open release already removed everything the OpenAI moderation API or Detoxify flagged. Harmful intent that remains is the polite, hard kind.
-
----
-
-## Baseline: LASER on natural data
-
-![w:1100](figures/laser_aegis.png)
-
-Aegis human labels. Pool subsampled to **2% positives** (224 of 11,202) to match LASER's rare-positive setting. Eval: Aegis test.
+Natural refusal samples: 28,889 labeled (24,200 train, 4,689 test). Synthetic: 3,000 harmless prompts per refusal generator (about 33,000 samples), 1,500 items per sycophancy generator.
 
 ---
 
-## Baseline: LASER numbers
+## Experiments run
 
-| Labels | LASER: TPR at 1% FPR | Random: TPR at 1% FPR | LASER: positives found | Random: positives found |
-|---|---|---|---|---|
-| 300 | 0.27 | 0.13 | 54 | 7 |
-| 1,000 | 0.30 | 0.17 | 124 | 23 |
-| 2,000 | 0.30 | 0.23 | 158 | 41 |
-| all 11,202 | 0.32 | | 224 | |
-
-- LASER reaches the all-label ceiling by **about 300 labels**. Random needs far more.
-- LASER and uncertainty-only sampling are identical here. Farthest-point diversity adds nothing on this pool.
-- **This is the bar.** Steered data has to beat LASER at small budgets, or raise the ceiling.
+| Run | Date | GPU time | What it tested |
+|---|---|---|---|
+| E0 | 10-08 | not logged | hooks, masks, SAEs, gradients, noise floor, LASER baseline (Aegis), sycophancy proxy |
+| Refusal pilot (`refusal_pipeline.py`) | 10-10 | 2.8 h | directions, steering sweep, attribution (325 pairs), first synthetic data and probes (3 seeds) |
+| Second pass (`steer_v1.py`, `steer_v1_extra.py`) | 10-10 | 7.2 h | 1,500-pair attribution on 4 layers, 288-condition latent screen, 7 generators x 3,000 prompts, probes with intervals; sycophancy testbed; LASER warm start, WildChat probes, reachability, steering timing |
+| Third pass (`steer_v2.py`) | 10-11 | 7.1 h | 501-condition wider latent screen, many-latent generators, prompt-matched positives, naturalness filter, multi-layer and layer sweep; sycophancy wider screen, random-direction control, budgets to 2,048 |
 
 ---
 
-## Which layer and pooling?
+## E0: the machinery works, activations wobble about 2%
 
-All 11,202 labels, Aegis test:
+![w:1000](figures/noise_floor.png)
 
-| Feature | AUROC | TPR at 1% FPR (95% CI) |
-|---|---|---|
-| layer 15, `user_mean` | 0.849 | **0.32** (0.24–0.41) |
-| layer 19, `user_mean` | 0.853 | 0.29 (0.21–0.35) |
-| layer 11, `user_mean` | 0.847 | 0.28 (0.21–0.33) |
-| layer 15, `prompt_last` | 0.834 | 0.25 (0.16–0.34) |
-| layer 3, `prompt_last` | 0.774 | 0.10 (0.04–0.14) |
-
-- Mean over the prompt beats the single last token at every layer.
-- Middle layers (11 to 19) are best. Intervals overlap, so pick layer 15 and move on.
+- Checks pass exactly: rendering equals the official template; zero vector changes nothing; a CoT-only mask hits exactly the 690 CoT tokens; SAE codes do not depend on the batch; gradients to layer 15 take 0.2 s per 1k-token conversation; MXFP4 vs bf16 next-token KL 0.005.
+- The same prefix alone vs inside a longer sequence differs by about 2% (median) at layer 15, from MoE routing flips (9% of tokens pick other experts). Per-token distance claims must beat this floor.
 
 ---
 
-## Sycophancy proxy: setup
+## Baseline: LASER on natural labels
 
-A low-hazard task to debug the whole loop before the intent label.
+![w:1000](figures/laser_aegis.png)
 
-1. **Natural data.** gpt-oss-20b answers 8,000 opinion questions (temperature 1, medium reasoning). 69% of parsed answers side with the user.
-2. **Direction.** Mean layer-15 answer activation of sycophantic minus non-sycophantic answers.
-3. **Steer.** Add `λ · σ · direction` at layer 15 (σ = natural per-token spread, λ = 4) at one of four position sets. 96 items each, plus a random-direction control.
-4. **Recompute.** Clean features of the steered text, labeled by the exact oracle.
-5. **Compare.** Probe on held-out natural answers at equal label budgets.
+- Aegis human labels, pool at 2% positives (224 of 11,202). LASER reaches the all-label ceiling (TPR 0.32 at 1% FPR) by **about 300 labels** (random: 0.13); it finds 54 positives in 300 labels vs 7.
+- Mean over the prompt beats the last token; layers 11 to 19 are best (layer 15 picked). This is the bar steered data has to beat.
 
 ---
 
-## Sycophancy: where you steer matters
+## Refusal: steering the model toward refusal
 
-![w:1150](figures/syco_steering.png)
+![w:1150](figures/refusal_steering.png)
 
-- **Effect is small:** +2 to +5 points over the same items unsteered, whatever the positions.
-- **Damage:** steering the CoT or the answer doubles the "no clear choice" rate. The random control broke generation (95 of 96).
-- **Naturalness:** prompt-only steering gives text a probe can barely tell from natural (AUC 0.64). Steering the CoT or all positions gives text that is **perfectly separable** (AUC 1.00).
-
----
-
-## Sycophancy: does steered data help the probe?
-
-![w:800](figures/syco_budget.png)
-
-- **No.** At every budget, half-steered training data does no better than natural data alone.
-- LASER is no clear win either (higher AUROC at 400 labels, lower TPR at 1% FPR). Sycophancy is the **majority** class (69%), not a rare one.
-- All 4,750 natural labels give AUROC 0.95, TPR at 1% FPR 0.40.
-
-Pipeline check, not a result: 96 items per condition, one weak direction.
+- **(a)** The end-of-prompt direction at layer 15 gives 100% refusal on harmless prompts at strength 2; at 3 outputs get cut off; random directions do nothing.
+- **(b)** Attribution finds causal latents, but most need strength 8 to 12: 4 work in the first screen, 23 in the wider one (up to 100% alone; a 4-latent bundle 98%). Activation-difference and random latents: 0 of 32.
+- **(c)** Steering acts through the chain of thought: CoT-only masks give 97 to 100% for the dense direction and a bundle (22 to 78% for single latents); prompt-only gives at most 19%, answer-only at most 38%.
 
 ---
 
-## Steering vector as the policy: refusal
+## Refusal: synthetic positives vs natural labels
 
-![w:1100](figures/refusal_steering.png)
+![w:1150](figures/refusal_probes.png)
 
-- **No written-policy grader.** The label is read from the model's own answer (a refusal phrase). Positives: harmless prompts steered toward refusal (addition only); negatives: natural unsteered answers; probes read clean activations of the CoT or answer.
-- **Narrow window.** End-of-prompt direction at layer 15, coefficient 2.0: **100% refusal**; coefficient 3 breaks generation; random directions 0 to 4%. **CoT-only masks do the work** (HF, 32 prompts): dense direction 100%, 3-latent bundle 97%; prompt-only 3 to 19%, answer-only 3 to 38%.
-- **Delta-attribution** (1,500 same-prompt pairs, layers 11/15/19/23): at strengths 2 and 5 only **4** single latents pass (288 conditions); screening ranks 33 to 128 and strengths 8 and 12 (501 more conditions) finds **23** (60 to 100% on 96 fresh prompts: 14 at layer 11, 8 at layer 15, 1 at layer 19; 27857, 88510, 98869 reach 100% at strength 12), a 4-latent bundle **98%**; the 16 activation-difference and 16 random latents give 0. Latents sit near the natural manifold (SAE reconstruction error 0.11, natural 0.09, dense direction 0.30).
-
----
-
-## Synthetic positives vs natural data (refusal probes)
-
-![w:1100](figures/refusal_probes.png)
-
-- **Natural labels win at 1% FPR** (10 seeds, 3,000 prompts per generator, prompt-clustered 95% intervals; first-32-CoT-token features, 64 labels, all prompts): natural **0.66**, dense direction 0.58, prompted 0.53, bundle 0.42, random bundles 0.41, 4-latent mix 0.34. Mixing synthetic into natural never beats natural (-0.02 to -0.12). Whole-CoT probes are saturated (0.99; synthetic 0.93 to 0.99); on held-out WildChat refusals natural is 0.38 to 0.40 vs 0.15 to 0.30 synthetic-only (first 32 tokens).
-- **Latent generators are the least useful** although the most natural by activation: positives that all share a few latents are narrow. Coverage of natural refusals is 0.00 to 0.09 recall for every generator; diversity (final-answer compression, lower = more diverse): dense 134, bundle 60, latent mix 19, prompted 14.5, natural 9.
-- **Controls:** random-direction projection changes nothing; projecting the CoT direction out collapses the **natural-trained** probe too (whole-CoT AUROC 1.00 to 0.61), so the control cannot show circularity.
-- **Topic matters most.** Positives on the **same prompts** as natural refusals (178 WildChat prompts the model naturally refuses, 12 samples each) match natural data on held-out WildChat refusals (first 32 tokens, 128 labels, natural 0.40): two strength-12 latents 0.41, prompted 0.45, dense direction 0.30, bundle 0.22; the same generators on harmless prompts 0.15 to 0.24. Keeping only the 30% most natural-looking synthetic positives (cross-fitted discriminator) lifts the union from 0.28 to 0.46 and the dense direction from 0.48 to 0.56 (256 labels); 23 distinct latents (0.17 to 0.37) do **not** beat the dense direction. The gap is largest at the layer where natural is best: layer 15 natural 0.70 vs dense 0.48; layer 7 0.60 vs 0.60.
+- On the first 32 CoT tokens natural labels win at every budget (0.66 at 64 labels, 0.70 at 256); the best synthetic arms reach 0.53 to 0.58, the 23-latent mix 0.37 and falls to 0.17 with more labels. Half-natural mixes stay below natural (-0.02 to -0.12).
+- Whole-CoT probes are saturated (0.97 to 0.99 for every arm): gpt-oss states refusal in the CoT, so separation needs early tokens and 1% FPR. First 8 tokens: natural 0.50 to 0.55, synthetic 0.08 to 0.30.
+- Projecting the CoT direction out collapses the natural-trained probe as well (whole-CoT AUROC 1.00 to 0.61): refusal is one direction for every arm, so this control cannot show circularity.
 
 ---
 
-## Sycophancy testbed: steering and probes
+## Why the gap: topic, then naturalness
 
-- **Steering** (64 low-sycophancy items, baseline 0.20 sycophantic answers): the CoT direction at layer 11 (coefficient 8) reaches **64%** (the E0 proxy: +2 to +5 points); attributed latents reach 81% on the screen (44332 at strength 8) and **39 of 40 survive fresh items** at strengths 5 to 12 (best bundle 74%). **Caveat:** random latents reached 38% in the first screen, and the strongest steering shortens the CoT (540 to 160 tokens).
-- **Probes detect sycophancy poorly:** natural at 256 labels gives AUROC 0.85, TPR at 1% FPR 0.23 (final answer; 0.03 at 8 labels, 0.38 at 1,024, 0.46 at 2,048). Synthetic-only trails natural at every budget: 39-latent mix 0.18 at 256, 0.22 at 1,024, dense direction 0.11 to 0.13. **A random steering direction gives the same probe quality** (0.13 at 256, 0.23 at 1,024): with an exact answer-key label the vector is only a sampler. CoT-length matching changes nothing; half-natural mixes track natural (-0.03 to -0.05).
-- **Naturalness here is measurable** (prompt-only AUC 0.5 after matching): latent mixes are hardest to tell apart (AUC 0.84 to 0.88; dense direction 0.97 to 0.999) and cover the most natural answers (recall 0.69 to 0.84 vs 0.52 to 0.56).
+![w:1150](figures/refusal_topic.png)
 
----
-
-## Where synthetic data helps, and why
-
-- **LASER warm start** (benign WildChat traffic, 4.7% natural refusals, whole-CoT features): 64 free synthetic positives raise TPR at 1% FPR after 32 natural labels from 0.49 to 0.86 to 0.91, and at 256 from 0.76 to 0.94 to 0.95. **Prompted generation gives the same gain**, and on the first 32 CoT tokens there is none (0.23 to 0.30 at best): the gain is more labels, not steering.
-- **Reachability:** nearest-neighbor distance to a 60k-token natural bank (relative to token norm): single latent 0.56, bundle 0.53, dense direction 0.64, natural floor 0.53; so latent steering stays inside the natural spread while the dense direction leaves it. Closeness does not predict probe transfer.
+- **(a)** On held-out WildChat refusals, positives steered on the 178 prompts the model naturally refuses match natural data (prompted 0.45, two latents 0.41, natural 0.40); the same generators on harmless prompts lose 0.15 to 0.25. Dense and bundle steering still lose on matched prompts: their text is the least natural.
+- **(b)** Keeping the 30% of synthetic positives a cross-fitted discriminator finds most natural lifts every generator (pooled 0.28 to 0.46, dense 0.48 to 0.56, prompted 0.41 to 0.53), still below natural (0.70).
+- Diversity is not the lever: final-answer compression (lower = more diverse) is natural 9, prompted 15, latent mixes 19 to 35, dense 134, yet the most diverse latent mixes are the worst arms; coverage of natural refusals is low for all (recall 0.00 to 0.09).
 
 ---
 
-## Takeaways
+## Why the gap: probe layer and activation manifold
 
-1. **The infrastructure works.** Hooks (HF and vLLM), segment-aware steering, SAEs, gradients, features, probes, LASER, grader all run on one GPU.
-2. **Activations wobble about 2%** between identical computations, from MoE routing flips. Per-token naturalness metrics must report against this floor.
-3. **LASER is a strong baseline.** On human labels at 2% positives it hits the all-label ceiling with about 300 labels.
-4. **The steering vector can be the policy.** Refusal is induced grader-free (100%) and delta-attribution finds many causal latents (23 at strengths up to 12), but with 10 seeds and intervals **synthetic positives still do not beat natural data at 1% FPR** (natural 0.66 vs 0.34 to 0.58 on the first 32 CoT tokens), and more distinct latents did not help.
-5. **Topic mismatch is the main reason.** Synthetic positives on the same prompts as natural refusals match natural data (0.41 vs 0.40), on harmless prompts they lose by 0.15 to 0.25; selecting the most natural-looking synthetic text also helps. Prompted generation does as well as the best steering, so steering has no demonstrated edge.
-6. **Sycophancy steers far better than the proxy suggested** (64% with a CoT direction, 39 validated latents) but is **hard to detect** (natural TPR 0.23 at 256 labels, 0.46 at 2,048) and a **random** direction gives the same probe quality: synthetic data plateaus (0.22) while natural keeps scaling.
+![w:1150](figures/refusal_layers.png)
+
+- **(a)** The gap is largest where natural probes are best (layer 15: 0.70 vs 0.48 for dense) and vanishes at layer 7 (0.60 vs 0.60); consistent with prompt topic being read at middle layers. Concatenating layers 11, 15 and 19 adds 3 to 5 points to dense arms only.
+- **(b)** During generation, latent steering keeps activations close to natural (reconstruction error 0.11, nearest natural neighbor 0.53 to 0.56 of the norm, natural 0.53), the dense direction does not (0.30, 0.64). Yet latent data trains worse probes: closeness to the manifold does not predict transfer.
 
 ---
 
-## Caveats and open items
+## Where synthetic positives help: LASER warm start
 
-- **Intent labels are blocked** on the grading policy (`configs/policies/harmful_intent.md`). The researchers write it; it defines the label.
-- The safeguard grader refused about 2% of harmful-looking inputs even under a harmless toy policy, so the real run needs a retry or fallback.
-- Aegis "unsafe" is broader than harmful intent (it includes hate speech and profanity), so the LASER baseline uses a related label, not ours.
-- Sycophancy: 64 items per screening condition; random latents also raise the rate (38%) and random directions train equally good probes; strongest steering shortens the CoT.
-- Prompt-matched positives cover 178 WildChat prompts that the model naturally refuses; held-out prompts differ but cluster by topic.
-- Refusal: label is a refusal phrase in the final answer (cut-off samples unlabeled); synthetic positives sit on harmless prompts and natural refusals mostly on harmful ones (topic confound the matched discriminator cannot remove); over-refusal positives only (ablation-based compliance data needs Isak's handling rules).
-- Steered generation in HF is slow (about 120 tok/s at batch 96). It is the bottleneck for E1.
-- WildGuardMix (human-labeled test set) needs its terms accepted on the Hub.
+![w:1100](figures/laser_warmstart.png)
+
+- Benign WildChat traffic, 4.7% natural refusals. On whole-CoT features, 64 free synthetic positives lift TPR at 1% FPR after 32 natural labels from 0.49 to 0.86 to 0.91, and at 256 labels from 0.76 to 0.94. **Prompted positives give the same gain**; on the first 32 tokens there is no gain.
+- Here LASER on natural labels alone plateaus below random sampling (0.76 vs 0.89 at 256): its selected pool is skewed. The warm start fixes that, whatever the source.
+
+---
+
+## Sycophancy: easy to steer, hard to detect
+
+![w:1150](figures/syco.png)
+
+- **(a)** Low-sycophancy items (baseline 20%): the CoT direction at layer 11 reaches 64%, the best attributed latent 81% on screening items (39 of 40 latents hold up on fresh items, best 69%, bundle 74%). Random latents reach 38%, so part of the effect is non-specific. The E0 proxy (one answer direction) gave only +2 to +5 points.
+- **(b)** Natural probes keep improving with labels (0.23 at 256, 0.46 at 2,048); synthetic-only plateaus near 0.2. A **random direction** trains probes as well as the chosen ones: with an exact answer-key label the vector is only a sampler. Length matching changes nothing (length-only probe AUROC 0.66).
+
+---
+
+## What we learned
+
+1. **The steering vector can define a behavior and generate it reliably,** and delta-attribution picks causal latents that activation differences miss.
+2. **What makes steered data useful is where it comes from, not how it is steered:** shared prompts with natural positives close the gap; natural-looking text helps; more latents, more diversity or closeness to the activation manifold do not.
+3. **Prompting is a strong baseline.** No experiment shows steering beating a one-line instruction on the same prompts.
+4. **Where labels are exact, the vector does not matter** (sycophancy): the case for steering is behaviors that cannot be elicited or verified otherwise.
+5. **Evaluation must be strict:** whole-CoT probes saturate for refusal; differences appear only at 1% FPR on early CoT tokens, with intervals over prompts.
+
+---
+
+## Caveats
+
+- Refusal positives are over-refusals on harmless or naturally refused prompts; steering harmful prompts (ablation, compliance data) waits for Isak's handling rules.
+- The refusal label is a phrase in the final answer (cut-off samples unlabeled); prompt-matched positives cover 178 WildChat prompts, and held-out prompts differ but cluster by topic.
+- Sycophancy is a majority behavior naturally (69%), its items have exact keys, and the strongest steering shortens the CoT (540 to 160 tokens).
+- Screening values are best-of-N on 64 items; validation on 96 fresh items is the number to trust.
+- Intent labels are blocked on the researcher-written policy; the safeguard grader refused about 2% of harmful-looking inputs under a toy policy.
 
 ---
 
 ## Next steps
 
-| Step | What |
-|---|---|
-| Topic-matched positives at scale | steer the prompts natural refusals come from (borderline and harmful prompts); needs Isak's handling rules for harmful-prompt data; test whether steering beats prompted generation there |
-| Naturalness-selected generation | select or constrain steered text to look natural (discriminator filter at generation time, per-token strength under a reconstruction cap) |
-| Sycophancy | drop it as a steering testbed unless the label is not an exact key; keep it for the sampler-only control |
-| LASER with warm start | prompted warm start as reference, rare-positive pool near 1% |
-| Intent label (optional) | needs the researchers' policy, then grading and the LASER baseline on the intent pool |
+| Step | What | Needs |
+|---|---|---|
+| Topic-matched positives at scale | steer the prompts natural positives come from (borderline and harmful), compare steered, prompted and natural on the same prompts and budgets | Isak's handling rules |
+| A behavior prompting cannot elicit | a testbed where the label exists only through the vector (no answer key, hard to prompt), where steering could add something | choice of behavior |
+| Naturalness-constrained generation (E3) | discriminator filter at generation time, per-token strength under a reconstruction cap | none (GPU) |
+| LASER with a warm start | prompted warm start as reference, rare-positive pools near 1% | none (CPU) |
+| Intent label (optional) | grading, validation against human labels, LASER on the graded pool | the policy |
 
 ---
 
 ## Appendix: reproduce
 
 ```bash
-# infrastructure checks (one GPU)
-.venv/bin/python scripts/e0_smoke.py --keep-model
-.venv/bin/python scripts/e0_noise_floor.py
-.venv/bin/python scripts/e0_mxfp4_check.py
-
-# pools and features
-.venv/bin/python scripts/build_intent_pool.py && .venv/bin/python scripts/build_aegis_pool.py
-.venv/bin/python scripts/extract_features.py data/pools/intent_v0/*.jsonl data/pools/aegis_v0/train.jsonl
-
-# LASER baseline on Aegis human labels (CPU)
+source env.sh                                                    # shared caches; see docs/HANDOFF.md for a new machine
+.venv/bin/python scripts/e0_smoke.py --keep-model                # E0 checks (also e0_noise_floor.py, e0_mxfp4_check.py)
 .venv/bin/python scripts/laser_baseline.py --name aegis_human_rare2pct --pool data/pools/aegis_v0/train.jsonl \
     --eval data/pools/intent_v0/human_eval.jsonl --eval-source aegis --pos-rate 0.02
-
-# sycophancy proxy
-for s in natural features; do .venv/bin/python scripts/syco_pipeline.py --stage $s; done
-.venv/bin/python scripts/syco_pipeline.py --stage steer --lam 4 --batch-size 96 --max-new-tokens 600
-.venv/bin/python scripts/syco_pipeline.py --stage train
-
-# refusal testbed (steering vector as the policy); one GPU, about 3 hours
-GPU=1 ./scripts/run_refusal_overnight.sh        # stages in data/pools/refusal_v0, reports in data/runs/refusal_pipeline/
-cp data/runs/refusal_pipeline/<stamp>/*.json docs/results/refusal_v0/
-
-# second pass (wider search, sycophancy, extras); about 7 hours; data/pools/steer_v1/SUMMARY.md is the readable summary
-GPU=1 PIPELINE=steer_v1.py ./scripts/run_refusal_overnight.sh
-GPU=1 PIPELINE=steer_v1_extra.py ./scripts/run_refusal_overnight.sh
-
-# third pass (wider latent search, prompt-matched positives, probe controls, layer sweep); about 7 hours
-GPU=1 PIPELINE=steer_v2.py ./scripts/run_refusal_overnight.sh
-
-# figures for this deck (CPU)
-.venv/bin/python scripts/make_presentation_figures.py
+GPU=1 ./scripts/run_refusal_overnight.sh                         # refusal pilot, about 3 h
+GPU=1 PIPELINE=steer_v1.py ./scripts/run_refusal_overnight.sh     # second pass, about 6 h
+GPU=1 PIPELINE=steer_v1_extra.py ./scripts/run_refusal_overnight.sh   # extras, about 1 h
+GPU=1 PIPELINE=steer_v2.py ./scripts/run_refusal_overnight.sh     # third pass, about 7 h
+.venv/bin/python scripts/make_presentation_figures.py            # figures (CPU)
 ```
 
-Results: `data/runs/<experiment>/<UTC stamp>/report.json`.
+Every runner stage is resumable; `--smoke` runs tiny sizes. Readable summaries: `data/pools/steer_v*/SUMMARY.md`, copied with the report JSONs to `docs/results/`.
