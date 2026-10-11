@@ -3,6 +3,7 @@
 #   GPU=1 ./scripts/run_refusal_overnight.sh                  first refusal pass (refusal_pipeline.py), outputs in data/pools/refusal_v0
 #   GPU=1 PIPELINE=steer_v1.py ./scripts/run_refusal_overnight.sh   second pass: refusal v1 and sycophancy, data/pools/steer_v1
 #   GPU=1 PIPELINE=steer_v2.py ./scripts/run_refusal_overnight.sh   third pass: wider latent search, prompt-matched positives, probe controls, data/pools/steer_v2
+#   GPU=1 PIPELINE=steer_e3.py ./scripts/run_refusal_overnight.sh   E3 naturalness-constrained generation and E2 at scale, data/pools/steer_e3
 #   GPU=1 PIPELINE=steer_v1_extra.py ./scripts/run_after.sh   extras (reachability, timing, LASER warm start) once the running chain ends
 #   add --smoke for a tiny run (outputs in data/pools/<name>_smoke)
 #   GPU=1 STAGES="latents generate" ./scripts/run_refusal_overnight.sh --smoke   only these stages
@@ -25,6 +26,9 @@ elif [ "$PIPELINE" = "steer_v1_extra.py" ]; then
 elif [ "$PIPELINE" = "steer_v2.py" ]; then
   OUTDIR=data/pools/steer_v2; SMOKE_DIR=data/pools/steer_v2_smoke
   DEFAULT_STAGES="init syco_probes2 screen2 validate2 generate2 matched_gen features2 probes2 probes2_extra probes_matched summary2 syco_screen2 syco_validate2 syco_generate2 syco_features2 syco_probes3 features_layers probes_layers summary2 report2"
+elif [ "$PIPELINE" = "steer_e3.py" ]; then
+  OUTDIR=data/pools/steer_e3; SMOKE_DIR=data/pools/steer_e3_smoke
+  DEFAULT_STAGES="init e3_floor reach2 e3_gen e3_features e3_select e3_probes e2_usefulness summary_e3 report_e3"
 else
   OUTDIR=data/pools/refusal_v0; SMOKE_DIR=data/pools/refusal_smoke
   DEFAULT_STAGES="natural directions sweep attribution latents generate features probes sweep_hf syco_natural syco_attr report"

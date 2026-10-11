@@ -50,8 +50,16 @@ the expensive resource; synthetic labels from steering are free but noisy.
 
 ## 3. Next todo (pick up here)
 
-Nothing is running. Code for the second and third passes is in git (`steer_v1*.py`, `steer_v2.py`,
-`morning_summary*.py`, `probe_eval.py`, `run_after.sh`).
+**In progress (started 2026-10-11 18:14 UTC on GPU 1, expected about 3 hours):**
+`GPU=1 PIPELINE=steer_e3.py ./scripts/run_refusal_overnight.sh` (`scripts/steer_e3.py`, output `data/pools/steer_e3`)
+runs E3 and E2 at scale on the refusal testbed. E3a: per-token strength kept under the natural 90th-percentile SAE
+reconstruction error (`natsteer.vllm_steer` `cap`), at the usual and 1.5x strength. E3b: K = 8 samples per prompt,
+keep the most natural-looking verified positive under a discriminator (128 labeled natural refusals, or label-free);
+baselines: a random one of the same K, prompted with the same selection, natural. Both on 1,500 harmless prompts
+(refusal test set) and on the naturally refused WildChat prompts (held-out WildChat). E2: distance from natural
+activations for every validated refusal and sycophancy condition against yield, and per-latent usefulness of its
+data. When it ends read `data/pools/steer_e3/SUMMARY.md`, check `timings.log`, copy the JSONs to
+`docs/results/steer_e3/`, update the deck and this plan. Log: `scratch/steer_e3_full.log`.
 
 Decisions already made by the user: positives are over-refusal (addition on harmless prompts; ablation on
 harmful prompts is out until Isak sets handling rules); the probe reads the CoT or its first tokens; the
