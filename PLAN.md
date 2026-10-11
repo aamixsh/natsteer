@@ -21,67 +21,68 @@ the expensive resource; synthetic labels from steering are free but noisy.
 
 - **E0 infrastructure** done: hooked bf16 gpt-oss-20b, harmony rendering with a fixed date, segment-aware
   steering, andyrdt SAEs, features, probes, LASER, vLLM grader. Activations reproduce only to about 2%.
-- **Refusal testbed, second pass** done (`scripts/steer_v1.py`, `steer_v1_extra.py`, 7.2 GPU-hours, no failed
-  stage; numbers in the deck and `docs/results/steer_v1/SUMMARY.md`). Steering induces refusal on harmless
-  prompts (CoT-only masks do the work: 97 to 100%). Delta-attribution finds causal latents (4 single latents
-  validated, 99% for a 3-latent bundle; activation-difference and random latents 0 of 32). **Synthetic positives
-  do not beat natural data at 1% FPR** with 10 seeds and prompt-clustered intervals: on the first 32 CoT tokens
-  natural 0.66, dense steering 0.58, prompted 0.53, latent bundles 0.34 to 0.42; mixing synthetic into natural
-  is never better (-0.02 to -0.12). Whole-CoT probes are saturated (0.99). Latent generators are the most
-  natural by activation (reconstruction error 0.11 vs 0.30 for the dense direction, natural 0.09) yet give the
-  worst probes, so closeness to the natural manifold does not predict probe transfer here.
-- **Where synthetic data helps**: a few points at the smallest budgets (dense direction, whole CoT, held-out
-  WildChat refusals: +0.03 at 8 to 16 labels), and as free warm-start labels for LASER on whole-CoT features
-  (TPR at 1% FPR 0.49 to 0.90 after 32 natural labels), but prompted generation gives the same warm start, so
-  the gain is "more labels", not steering. No gain on the first-32-token features.
+- **Refusal testbed, three passes** (`refusal_pipeline.py`, `steer_v1.py` + `steer_v1_extra.py`, `steer_v2.py`;
+  numbers in the deck and `docs/results/steer_v*/SUMMARY.md`). Steering induces refusal on harmless prompts
+  (CoT-only masks do the work). Delta-attribution finds causal latents: 4 at strengths 2 and 5, **23** once
+  strengths 8 and 12 and ranks to 128 are screened (14 at layer 11, 8 at layer 15), a 4-latent bundle 98%;
+  activation-difference and random latents 0 of 32. **Synthetic positives do not beat natural data at 1% FPR**
+  (10 seeds, prompt-clustered intervals; first 32 CoT tokens, 64 labels: natural 0.66, dense 0.58, prompted 0.53,
+  bundles 0.42 to 0.55, 23-latent mix 0.37); mixing synthetic into natural never beats natural; more distinct
+  latents did not help. Whole-CoT probes are saturated (0.99).
+- **What explains the gap (second and third pass):** topic. Positives steered on the *same prompts* as natural
+  refusals (178 WildChat prompts, 12 samples each) match natural data on held-out WildChat refusals (two
+  strength-12 latents 0.41, prompted 0.45, natural 0.40; dense direction 0.30, bundle 0.22 still lose), while
+  the same generators on harmless prompts reach 0.15 to 0.24. Keeping the 30% most natural-looking synthetic
+  positives (cross-fitted discriminator) lifts the union 0.28 to 0.46 and dense 0.48 to 0.56. The gap is largest
+  at the layer where natural is best (layer 15: 0.70 vs 0.48; layer 7: 0.60 vs 0.60); layers concatenated do not
+  help. Latent steering stays near the natural manifold (reconstruction error 0.11 vs 0.30 dense, natural 0.09)
+  but closeness does not predict probe transfer. Prompted generation matches the best steering, so steering has no
+  demonstrated edge; as free LASER warm-start labels, synthetic positives help whole-CoT features (0.49 to 0.90
+  after 32 natural labels, prompted equally) and not the first-32-token features.
 - **Sycophancy testbed** done: baseline 0.20 sycophantic answers; the CoT direction at layer 11 reaches 64%
-  (the E0 proxy gave +2 to +5 points); attributed latents reach 70% (4-latent bundle), 8 single latents survive
-  validation; random latents reach 38% at the largest strength, so part of the effect is non-specific. Probes
-  detect sycophancy poorly (natural at 256 labels: AUROC 0.85, TPR at 1% FPR 0.23): synthetic-only probes
-  trail natural at 256 labels, mixes add 0.03 to 0.05 at 64 labels (final-answer features) and trail on the
-  first 32 CoT tokens.
+  (E0 proxy +2 to +5 points); 39 of 40 attributed latents survive fresh items (best bundle 74%); random latents
+  reached 38% in the first screen. Probes detect it poorly (natural: TPR at 1% FPR 0.23 at 256 labels, 0.46 at
+  2,048; AUROC 0.85 at 256) and synthetic-only plateaus at 0.22 (39-latent mix, dense 0.13). **A random steering
+  direction gives the same probe quality**, CoT-length matching changes nothing: with an exact answer-key label
+  the vector is only a sampler.
 - **Intent label** (harmful intent of the user turn, graded against a researcher-written policy): pools and
   features built, grading blocked on the policy. Optional track.
 
 ## 3. Next todo (pick up here)
 
-Nothing is running. All second-pass code is committed once the user says so (uncommitted until then:
-`steer_v1.py`, `steer_v1_extra.py`, `morning_summary.py`, `run_after.sh`, `probe_eval.py`, streaming
-`attribution.py`, LASER `extra` warm start, `docs/results/steer_v1/`).
+Nothing is running. Code for the second and third passes is in git (`steer_v1*.py`, `steer_v2.py`,
+`morning_summary*.py`, `probe_eval.py`, `run_after.sh`).
 
 Decisions already made by the user: positives are over-refusal (addition on harmless prompts; ablation on
 harmful prompts is out until Isak sets handling rules); the probe reads the CoT or its first tokens; the
 label is the steering condition plus the cheap verifier (refusal phrase, or exact answer agreement);
 the sycophancy add-on is included.
 
-1. **Decide with Isak what the null means** and where to push (the next items depend on it). The refusal result
-   is tight: synthetic positives on harmless prompts do not reach natural data at 1% FPR on early-CoT features.
-   Likely causes to test: topic shift (synthetic refusals sit on harmless prompts, natural refusals mostly on
-   harmful ones; the prompt-matched discriminator cannot check this for refusal because the topics differ),
-   and recall (precision/recall coverage of natural refusals is 0.00 to 0.09 for every generator).
-2. **Make the topic confound testable** (needs Isak's handling rules for harmful-prompt data): positives from
-   steering on matched prompts (same prompts for steered and natural samples), or natural over-refusals only
-   (XSTest-style borderline prompts), so the synthetic and natural positives share topics.
-3. **Wider latent search for more distinct latents** (about 1.5 h GPU): only 4 refusal latents passed (most
-   near misses at 0.17 to 0.19 needed more than strength 5). Rescreen the top near misses at strengths 8 and 12
-   and grow bundles from co-activation; goal 10 or more validated latents for the "diverse" generator.
-4. **Sycophancy follow-ups**: a non-specificity control (random-latent baseline reaches 38%; compare effects
-   after matching generation length, since the strongest steering shortens the CoT from 540 to 160 tokens), and
-   a larger label budget (natural keeps improving, 0.03 at 8 labels to 0.23 at 256).
-5. **LASER with synthetic warm start as the main comparison** if the lab wants one headline: add the prompted
-   warm start as the reference arm in every table (done in the extras), extend to rare-positive pools with
-   about 1% positives, and report positives found per label.
-6. **Dynamic steering (E3)**: per-token strength that keeps the SAE reconstruction error under the natural
-   quantile (reachability data are in `docs/results/steer_v1/reach_table.json`).
-7. Optional, when the policy arrives: grade the intent pool (`scripts/grade.py`), validate against Aegis
+1. **Decide with Isak where to push** (the next items depend on it). The null holds on harmless-prompt positives,
+   but on prompts shared with natural refusals the best latents and prompted generation match natural data.
+   The open question is whether steering gives anything prompted generation does not. Needs the harmful-prompt
+   data rules (item 2) to test where it matters.
+2. **Topic-matched positives at scale** (needs Isak's handling rules for harmful-prompt data): steer the prompts
+   natural refusals come from (borderline and harmful), compare steered, prompted and natural positives with
+   the same prompts and equal label budgets; XSTest-style borderline prompts are the harmless version.
+3. **Naturalness-constrained generation (E3)**: filter or select steered text by the natural-vs-synthetic
+   discriminator at generation time, or per-token strength that keeps the SAE reconstruction error under a
+   natural quantile (reachability data are in `docs/results/steer_v1/reach_table.json`). The filtered-subset
+   result (0.28 to 0.46) is the pilot for this.
+4. **LASER with a synthetic warm start as the main comparison** if the lab wants one headline: prompted warm
+   start as the reference arm, rare-positive pools near 1% positives, positives found per label.
+5. **Sycophancy**: treat it as the sampler-only control (random direction equals chosen direction); a testbed
+   where the label comes from the steering vector rather than an answer key is needed for a fair test of the
+   core idea.
+6. Optional, when the policy arrives: grade the intent pool (`scripts/grade.py`), validate against Aegis
    and XSTest human labels (`scripts/validate_grader.py`), LASER on the graded pool
    (`scripts/laser_baseline.py --pool-grades ...`).
-8. Keep committed: after each run copy the report JSONs to `docs/results/<run>/`, update the deck in place,
+7. Keep committed: after each run copy the report JSONs to `docs/results/<run>/`, update the deck in place,
    and rewrite sections 2 and 3 here.
 
-Open questions for Isak: handling rules for assistant-side compliance data (needed for ablation-based
-positives and for item 2); grader and API budget; whether sycophancy is accepted as the second testbed given
-that probes barely detect it.
+Open questions for Isak: handling rules for assistant-side compliance data and harmful-prompt steering (needed
+for items 1 and 2); grader and API budget; whether sycophancy stays as a second testbed given that random
+directions work as well and probes barely detect it.
 
 ## 4. Design decisions
 

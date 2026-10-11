@@ -34,6 +34,7 @@ scripts/
   syco_pipeline.py                                    sycophancy proxy end to end, staged
   refusal_pipeline.py, run_refusal_overnight.sh       refusal testbed (first pass): steering, attribution, synthetic data, probes
   steer_v1.py, steer_v1_extra.py, morning_summary.py   second pass: wider latent search, sycophancy testbed, LASER warm start, reachability
+  steer_v2.py, morning_summary_v2.py                   third pass: wider latent search, prompt-matched positives, probe controls, layer sweep
   run_after.sh                                         run a pipeline after a running chain finishes
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
@@ -58,6 +59,7 @@ CUDA_VISIBLE_DEVICES=0 .venv/bin/python scripts/e0_smoke.py --keep-model
 ```bash
 GPU=1 ./scripts/run_refusal_overnight.sh          # refusal testbed, about 3 h; --smoke for a tiny check run
 GPU=1 PIPELINE=steer_v1.py ./scripts/run_refusal_overnight.sh   # second pass, about 6 h (steer_v1_extra.py: 1 h more)
+GPU=1 PIPELINE=steer_v2.py ./scripts/run_refusal_overnight.sh   # third pass, about 7 h
 ```
 
 Current results: [docs/presentation.md](docs/presentation.md) and `docs/results/`; plan and next todo: [PLAN.md](PLAN.md).

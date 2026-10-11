@@ -187,7 +187,7 @@ Pipeline check, not a result: 96 items per condition, one weak direction.
 
 - **No written-policy grader.** The label is read from the model's own answer (a refusal phrase). Positives: harmless prompts steered toward refusal (addition only); negatives: natural unsteered answers; probes read clean activations of the CoT or answer.
 - **Narrow window.** End-of-prompt direction at layer 15, coefficient 2.0: **100% refusal**; coefficient 3 breaks generation; random directions 0 to 4%. **CoT-only masks do the work** (HF, 32 prompts): dense direction 100%, 3-latent bundle 97%; prompt-only 3 to 19%, answer-only 3 to 38%.
-- **Delta-attribution** (1,500 same-prompt pairs, layers 11/15/19/23; 288-condition screen): **4** single latents pass (68915 at layer 15, 34425, 61796, 123080 at layer 11; 60 to 92% on 96 fresh prompts), a 3-latent bundle gives **99%**; the 16 activation-difference and 16 random latents give 0. Latents sit near the natural manifold (SAE reconstruction error 0.11, natural 0.09, dense direction 0.30).
+- **Delta-attribution** (1,500 same-prompt pairs, layers 11/15/19/23): at strengths 2 and 5 only **4** single latents pass (288 conditions); screening ranks 33 to 128 and strengths 8 and 12 (501 more conditions) finds **23** (60 to 100% on 96 fresh prompts: 14 at layer 11, 8 at layer 15, 1 at layer 19; 27857, 88510, 98869 reach 100% at strength 12), a 4-latent bundle **98%**; the 16 activation-difference and 16 random latents give 0. Latents sit near the natural manifold (SAE reconstruction error 0.11, natural 0.09, dense direction 0.30).
 
 ---
 
@@ -197,15 +197,16 @@ Pipeline check, not a result: 96 items per condition, one weak direction.
 
 - **Natural labels win at 1% FPR** (10 seeds, 3,000 prompts per generator, prompt-clustered 95% intervals; first-32-CoT-token features, 64 labels, all prompts): natural **0.66**, dense direction 0.58, prompted 0.53, bundle 0.42, random bundles 0.41, 4-latent mix 0.34. Mixing synthetic into natural never beats natural (-0.02 to -0.12). Whole-CoT probes are saturated (0.99; synthetic 0.93 to 0.99); on held-out WildChat refusals natural is 0.38 to 0.40 vs 0.15 to 0.30 synthetic-only (first 32 tokens).
 - **Latent generators are the least useful** although the most natural by activation: positives that all share a few latents are narrow. Coverage of natural refusals is 0.00 to 0.09 recall for every generator; diversity (final-answer compression, lower = more diverse): dense 134, bundle 60, latent mix 19, prompted 14.5, natural 9.
-- **Controls:** random-direction projection changes nothing; projecting the CoT direction out collapses the **natural-trained** probe too (whole-CoT AUROC 1.00 to 0.61), so refusal sits in one direction for every arm and the control cannot show circularity. The prompt-matched discriminator is unusable for refusal (prompt-only AUC 0.97: synthetic prompts are harmless, natural refusals harmful).
+- **Controls:** random-direction projection changes nothing; projecting the CoT direction out collapses the **natural-trained** probe too (whole-CoT AUROC 1.00 to 0.61), so the control cannot show circularity.
+- **Topic matters most.** Positives on the **same prompts** as natural refusals (178 WildChat prompts the model naturally refuses, 12 samples each) match natural data on held-out WildChat refusals (first 32 tokens, 128 labels, natural 0.40): two strength-12 latents 0.41, prompted 0.45, dense direction 0.30, bundle 0.22; the same generators on harmless prompts 0.15 to 0.24. Keeping only the 30% most natural-looking synthetic positives (cross-fitted discriminator) lifts the union from 0.28 to 0.46 and the dense direction from 0.48 to 0.56 (256 labels); 23 distinct latents (0.17 to 0.37) do **not** beat the dense direction. The gap is largest at the layer where natural is best: layer 15 natural 0.70 vs dense 0.48; layer 7 0.60 vs 0.60.
 
 ---
 
 ## Sycophancy testbed: steering and probes
 
-- **Steering** (64 low-sycophancy items, baseline 0.20 sycophantic answers): the CoT direction at layer 11 (coefficient 8) reaches **64%** (the E0 proxy: +2 to +5 points); attributed latents reach 70% (4-latent bundle), 8 of 26 screened single latents survive fresh items (49 to 53% best). **Caveat:** random latents reach 38% at the largest strength, and the strongest steering shortens the CoT (540 to 160 tokens).
-- **Probes detect sycophancy poorly:** natural at 256 labels gives AUROC 0.85, TPR at 1% FPR 0.23 (final answer; 0.03 at 8 labels). Synthetic-only trails natural at 256 labels (0.12 to 0.20); mixes add 0.03 to 0.05 at 64 labels, equal at 256; on the first 32 CoT tokens mixes trail natural (-0.03 to -0.05).
-- **Naturalness here is measurable** (prompt-only AUC 0.5 after matching): latent mixes are the hardest to tell apart (AUC 0.84 to 0.88; dense direction 0.97 to 0.999) and cover the most natural answers (recall 0.69 to 0.84 vs 0.52 to 0.56).
+- **Steering** (64 low-sycophancy items, baseline 0.20 sycophantic answers): the CoT direction at layer 11 (coefficient 8) reaches **64%** (the E0 proxy: +2 to +5 points); attributed latents reach 81% on the screen (44332 at strength 8) and **39 of 40 survive fresh items** at strengths 5 to 12 (best bundle 74%). **Caveat:** random latents reached 38% in the first screen, and the strongest steering shortens the CoT (540 to 160 tokens).
+- **Probes detect sycophancy poorly:** natural at 256 labels gives AUROC 0.85, TPR at 1% FPR 0.23 (final answer; 0.03 at 8 labels, 0.38 at 1,024, 0.46 at 2,048). Synthetic-only trails natural at every budget: 39-latent mix 0.18 at 256, 0.22 at 1,024, dense direction 0.11 to 0.13. **A random steering direction gives the same probe quality** (0.13 at 256, 0.23 at 1,024): with an exact answer-key label the vector is only a sampler. CoT-length matching changes nothing; half-natural mixes track natural (-0.03 to -0.05).
+- **Naturalness here is measurable** (prompt-only AUC 0.5 after matching): latent mixes are hardest to tell apart (AUC 0.84 to 0.88; dense direction 0.97 to 0.999) and cover the most natural answers (recall 0.69 to 0.84 vs 0.52 to 0.56).
 
 ---
 
@@ -221,8 +222,9 @@ Pipeline check, not a result: 96 items per condition, one weak direction.
 1. **The infrastructure works.** Hooks (HF and vLLM), segment-aware steering, SAEs, gradients, features, probes, LASER, grader all run on one GPU.
 2. **Activations wobble about 2%** between identical computations, from MoE routing flips. Per-token naturalness metrics must report against this floor.
 3. **LASER is a strong baseline.** On human labels at 2% positives it hits the all-label ceiling with about 300 labels.
-4. **The steering vector can be the policy.** Refusal is induced grader-free (100%), delta-attribution finds the causal latents (4 alone, 99% as a bundle), and they stay near the natural manifold, but with 10 seeds and intervals **synthetic positives still do not beat natural data at 1% FPR** (natural 0.66 vs 0.34 to 0.58 on the first 32 CoT tokens). They help only as free warm-start labels, and prompted generation does the same.
-5. **Sycophancy steers far better than the proxy suggested** (64% with a CoT direction, 70% with a latent bundle) but is **hard to detect** (natural TPR 0.23 at 1% FPR); synthetic data adds 0.03 to 0.05 at 64 labels in mixes and trails at 256.
+4. **The steering vector can be the policy.** Refusal is induced grader-free (100%) and delta-attribution finds many causal latents (23 at strengths up to 12), but with 10 seeds and intervals **synthetic positives still do not beat natural data at 1% FPR** (natural 0.66 vs 0.34 to 0.58 on the first 32 CoT tokens), and more distinct latents did not help.
+5. **Topic mismatch is the main reason.** Synthetic positives on the same prompts as natural refusals match natural data (0.41 vs 0.40), on harmless prompts they lose by 0.15 to 0.25; selecting the most natural-looking synthetic text also helps. Prompted generation does as well as the best steering, so steering has no demonstrated edge.
+6. **Sycophancy steers far better than the proxy suggested** (64% with a CoT direction, 39 validated latents) but is **hard to detect** (natural TPR 0.23 at 256 labels, 0.46 at 2,048) and a **random** direction gives the same probe quality: synthetic data plateaus (0.22) while natural keeps scaling.
 
 ---
 
@@ -231,7 +233,8 @@ Pipeline check, not a result: 96 items per condition, one weak direction.
 - **Intent labels are blocked** on the grading policy (`configs/policies/harmful_intent.md`). The researchers write it; it defines the label.
 - The safeguard grader refused about 2% of harmful-looking inputs even under a harmless toy policy, so the real run needs a retry or fallback.
 - Aegis "unsafe" is broader than harmful intent (it includes hate speech and profanity), so the LASER baseline uses a related label, not ours.
-- Sycophancy: 64 items per screening condition; random latents also raise the rate (38%); strongest steering shortens the CoT.
+- Sycophancy: 64 items per screening condition; random latents also raise the rate (38%) and random directions train equally good probes; strongest steering shortens the CoT.
+- Prompt-matched positives cover 178 WildChat prompts that the model naturally refuses; held-out prompts differ but cluster by topic.
 - Refusal: label is a refusal phrase in the final answer (cut-off samples unlabeled); synthetic positives sit on harmless prompts and natural refusals mostly on harmful ones (topic confound the matched discriminator cannot remove); over-refusal positives only (ablation-based compliance data needs Isak's handling rules).
 - Steered generation in HF is slow (about 120 tok/s at batch 96). It is the bottleneck for E1.
 - WildGuardMix (human-labeled test set) needs its terms accepted on the Hub.
@@ -242,9 +245,9 @@ Pipeline check, not a result: 96 items per condition, one weak direction.
 
 | Step | What |
 |---|---|
-| Topic-matched positives | steer and compare on the same prompts, or use natural over-refusals only; needs Isak's handling rules |
-| More distinct latents | rescreen near misses at strengths 8 and 12, grow bundles; target 10 or more validated latents |
-| Sycophancy follow-ups | length-matched non-specificity control, label budgets above 256 |
+| Topic-matched positives at scale | steer the prompts natural refusals come from (borderline and harmful prompts); needs Isak's handling rules for harmful-prompt data; test whether steering beats prompted generation there |
+| Naturalness-selected generation | select or constrain steered text to look natural (discriminator filter at generation time, per-token strength under a reconstruction cap) |
+| Sycophancy | drop it as a steering testbed unless the label is not an exact key; keep it for the sampler-only control |
 | LASER with warm start | prompted warm start as reference, rare-positive pool near 1% |
 | Intent label (optional) | needs the researchers' policy, then grading and the LASER baseline on the intent pool |
 
@@ -278,6 +281,9 @@ cp data/runs/refusal_pipeline/<stamp>/*.json docs/results/refusal_v0/
 # second pass (wider search, sycophancy, extras); about 7 hours; data/pools/steer_v1/SUMMARY.md is the readable summary
 GPU=1 PIPELINE=steer_v1.py ./scripts/run_refusal_overnight.sh
 GPU=1 PIPELINE=steer_v1_extra.py ./scripts/run_refusal_overnight.sh
+
+# third pass (wider latent search, prompt-matched positives, probe controls, layer sweep); about 7 hours
+GPU=1 PIPELINE=steer_v2.py ./scripts/run_refusal_overnight.sh
 
 # figures for this deck (CPU)
 .venv/bin/python scripts/make_presentation_figures.py

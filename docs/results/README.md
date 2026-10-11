@@ -33,3 +33,18 @@ summary; `*.json.gz` are the full probe reports and screening tables (gzip).
 | `syco_*` | Sycophancy: attribution, sweep, latent screen and validation, probes |
 | `laser_warmstart.json`, `probes_wildchat.json` | LASER with synthetic warm start; probes on held-out WildChat refusals |
 | `reach_table.json`, `timing_table.json` | Reachability (reconstruction error, nearest natural neighbor); steering timing |
+
+## steer_v2 (2026-10-11, `data/pools/steer_v2`)
+
+Third pass, `scripts/steer_v2.py`, one GPU, 7.1 h. `SUMMARY.md` is the readable summary; `*.json.gz` are the full
+reports and screening tables (gzip).
+
+| File | Content |
+|---|---|
+| `SUMMARY.md`, `timings.log` | Tables for every stage; stage durations |
+| `screen2_table.json.gz`, `latents_validated2_table.json`, `generator_choices_v2.json` | Refusal: 501-condition wider screen (ranks 33 to 128, strengths 8 and 12), validation (23 latents), generator choices |
+| `probes2_report.json.gz` | Refusal probes with the many-latent, multi-strength and best-bundle generators |
+| `probes2_extra_report.json.gz` | Union, naturalness-filtered and multi-layer arms |
+| `probes_matched_report.json.gz` | Probes on held-out WildChat refusals with prompt-matched positives |
+| `probes_layers_report.json.gz` | Layer sweep (7, 11, 15, 19, 23, all concatenated) |
+| `syco_*` | Sycophancy: wider screen (400 conditions), validation (39 latents), probes with a random-direction arm, CoT-length matching and budgets to 2,048 |
