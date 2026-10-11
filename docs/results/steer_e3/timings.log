@@ -1,0 +1,10 @@
+init rc=0 30s
+e3_floor rc=0 271s
+reach2 rc=0 660s
+e3_gen rc=0 2100s
+e3_features rc=0 1321s
+e3_select rc=0 30s
+e3_probes rc=0 60s
+e2_usefulness rc=0 30s
+summary_e3 rc=0 30s
+report_e3 rc=0 30s

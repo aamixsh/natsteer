@@ -1,5 +1,5 @@
 """Figures for docs/presentation.md, read from the E0 run reports under data/runs/ and the committed results
-under docs/results/ (refusal_v0, steer_v1, steer_v2). CPU only.
+under docs/results/ (refusal_v0, steer_v1, steer_v2, steer_e3). CPU only.
 
 Usage: .venv/bin/python scripts/make_presentation_figures.py
 """
@@ -366,9 +366,77 @@ def syco():
     fig.savefig(OUT / "syco.png", dpi=130)
 
 
+def e2_reach():
+    """E2 at scale: (a) how far steering moves activations from natural, against the behavior it produces;
+    (b) per refusal latent: yield against the usefulness of its data for probes, colored by distance."""
+    t = _res("steer_e3", "reach2_table.json")
+    u = _res("steer_e3", "e2_usefulness.json")
+    fig, (a, b) = plt.subplots(1, 2, figsize=(15, 4.6))
+    for task, col, lab in (("refusal", C["latent"], "refusal latents"), ("syco", "#8c564b", "sycophancy latents")):
+        es = [e for e in t if e["task"] == task and e["family"] == "attr" and e["pos_rate"] is not None]
+        a.scatter([max(e["rel_mse_steered"] - e["rel_mse_unsteered"], 1e-4) for e in es], [e["pos_rate"] - e["base_rate"] for e in es], color=col, label=f"{lab} (n = {len(es)})", alpha=0.8)
+    a.set_xscale("log")
+    a.set_xlabel("increase in SAE reconstruction error when steered (log)")
+    a.set_ylabel("behavior gain over unsteered (fresh prompts)")
+    cr, cs = u["correlations"]["refusal:rel_mse_steered_increase~yield"], u["correlations"]["syco:rel_mse_steered_increase~yield"]
+    a.set_title(f"(a) Distance from natural vs effect: refusal Spearman {cr['spearman']:.2f}, sycophancy {cs['spearman']:.2f}", fontsize=10.5)
+    a.legend(fontsize=9)
+    a.grid(alpha=0.3)
+    rows = u["latents"]
+    sc = b.scatter([r["yield"] for r in rows], [r["tpr"] for r in rows], c=[np.log10(max(r["recon_increase"], 1e-3)) for r in rows], cmap="viridis", s=60)
+    cb = fig.colorbar(sc, ax=b)
+    cb.set_label("log10 reconstruction-error increase")
+    b.axhline(u["natural"]["tpr@0.01"]["mean"], color=C["natural"], ls="--", lw=1)
+    b.text(0.45, u["natural"]["tpr@0.01"]["mean"] + 0.01, "natural labels", color=C["natural"], fontsize=10)
+    c1, c2 = u["correlations"]["yield~tpr"], u["correlations"]["recon_increase~tpr"]
+    b.set_xlabel("refusal yield of the latent (fresh prompts)")
+    b.set_ylabel(f"TPR at 1% FPR, probe on its data ({u['budget']} labels)")
+    b.set_title(f"(b) Usefulness of each latent's data: yield Spearman {c1['spearman']:.2f}, distance {c2['spearman']:.2f}", fontsize=10.5)
+    b.grid(alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(OUT / "e2_reach.png", dpi=130)
+
+
+def e3():
+    """E3: best-of-8 selection by a discriminator and per-token capped steering, against random-of-8 and natural."""
+    import gzip
+
+    r = json.load(gzip.open(RESULTS / "steer_e3" / "e3_probes_report.json.gz"))
+    ts = r["test_set"]["L15_cot_first32"]["all"]["256"]
+    wc = r["wildchat"]["L15_cot_first32"]["wildchat_heldout"]["128"]
+    fams = [("dense", C["dense"], "k_dense", ["cap_dense_c3.0"]), ("latents", C["latent"], "k_latents", ["cap_latents_x1.0", "cap_latents_x1.5"]), ("prompted", C["prompted"], "k_prompted", [])]
+    variants = [("_rand", "random of 8", 0.35, None), ("_best_label", "best of 8, labeled discriminator", 1.0, None), ("_best_free", "best of 8, label-free", 0.6, "..")]
+    fig, axes = plt.subplots(1, 2, figsize=(16, 4.6))
+    for ax, res, title in ((axes[0], ts, "(a) Harmless prompts, refusal test set, 256 labels"), (axes[1], wc, "(b) Naturally refused WildChat prompts, held-out WildChat, 128 labels")):
+        x0 = 0
+        ticks, labels = [], []
+        for fam, col, k, caps in fams:
+            arms = [("synthetic_" + k + v, lab, al, h) for v, lab, al, h in variants] + [("synthetic_" + c, "capped " + c.split("_")[-1], 1.0, "//") for c in caps]
+            for j, (arm, lab, al, h) in enumerate(arms):
+                if arm not in res:
+                    continue
+                m, lo, hi = _ci(res[arm])
+                ax.bar(x0 + j, m, 0.85, yerr=[[lo], [hi]], capsize=2, color=col, alpha=al, hatch=h, edgecolor="white" if h else None)
+            ticks.append(x0 + (len(arms) - 1) / 2)
+            labels.append(fam)
+            x0 += len(arms) + 1
+        ax.axhline(res["natural"]["tpr@0.01"]["mean"], color=C["natural"], ls="--", lw=1.2)
+        ax.text(x0 - 1.2, res["natural"]["tpr@0.01"]["mean"] + 0.012, "natural", color=C["natural"], ha="right", fontsize=10)
+        ax.set_xticks(ticks, labels, fontsize=11)
+        ax.set_ylabel("TPR at 1% FPR (first 32 CoT tokens)")
+        ax.set_title(title, fontsize=11)
+        ax.set_ylim(0, 0.8)
+        ax.grid(alpha=0.3, axis="y")
+    from matplotlib.patches import Patch
+
+    axes[1].legend(handles=[Patch(color="#555", alpha=0.35, label="random of 8"), Patch(color="#555", alpha=1.0, label="best of 8, labeled discriminator"), Patch(facecolor="#555", alpha=0.6, hatch="..", edgecolor="white", label="best of 8, label-free"), Patch(facecolor="#555", hatch="//", edgecolor="white", label="capped (E3a): x1, x1.5 / dense c3")], fontsize=8.5, loc="upper left")
+    fig.tight_layout()
+    fig.savefig(OUT / "e3.png", dpi=130)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in (method, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco):
+    for f in (method, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3):
         f()
         print("wrote", f.__name__)
 

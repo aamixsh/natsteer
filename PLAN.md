@@ -39,6 +39,14 @@ the expensive resource; synthetic labels from steering are free but noisy.
   but closeness does not predict probe transfer. Prompted generation matches the best steering, so steering has no
   demonstrated edge; as free LASER warm-start labels, synthetic positives help whole-CoT features (0.49 to 0.90
   after 32 natural labels, prompted equally) and not the first-32-token features.
+- **E2 at scale and E3** done (`steer_e3.py`, 1.3 h; `docs/results/steer_e3/SUMMARY.md`). E2: for refusal,
+  distance from natural (SAE reconstruction error) rises smoothly with yield (Spearman 0.74, 24 latents; strength
+  8 and 12 latents run at about 4x the natural error), sycophancy latents stay near natural; a latent's data is more
+  useful when its yield is high (0.76), not when it stays near natural (0.37, n.s.). E3: best-of-8 selection by a
+  discriminator trained on 128 natural refusals adds about 6 points (label-free selection hurts); a per-token cap
+  at the natural 90th-percentile reconstruction error hurts latent data and helps the dense direction only at
+  strength 3; every synthetic arm stays below natural on harmless prompts (best 0.58 vs 0.70), while on naturally
+  refused prompts capped latents and prompted text match natural. Naturalness is a second-order lever after topic.
 - **Sycophancy testbed** done: baseline 0.20 sycophantic answers; the CoT direction at layer 11 reaches 64%
   (E0 proxy +2 to +5 points); 39 of 40 attributed latents survive fresh items (best bundle 74%); random latents
   reached 38% in the first screen. Probes detect it poorly (natural: TPR at 1% FPR 0.23 at 256 labels, 0.46 at
@@ -50,16 +58,7 @@ the expensive resource; synthetic labels from steering are free but noisy.
 
 ## 3. Next todo (pick up here)
 
-**In progress (started 2026-10-11 18:14 UTC on GPU 1, expected about 3 hours):**
-`GPU=1 PIPELINE=steer_e3.py ./scripts/run_refusal_overnight.sh` (`scripts/steer_e3.py`, output `data/pools/steer_e3`)
-runs E3 and E2 at scale on the refusal testbed. E3a: per-token strength kept under the natural 90th-percentile SAE
-reconstruction error (`natsteer.vllm_steer` `cap`), at the usual and 1.5x strength. E3b: K = 8 samples per prompt,
-keep the most natural-looking verified positive under a discriminator (128 labeled natural refusals, or label-free);
-baselines: a random one of the same K, prompted with the same selection, natural. Both on 1,500 harmless prompts
-(refusal test set) and on the naturally refused WildChat prompts (held-out WildChat). E2: distance from natural
-activations for every validated refusal and sycophancy condition against yield, and per-latent usefulness of its
-data. When it ends read `data/pools/steer_e3/SUMMARY.md`, check `timings.log`, copy the JSONs to
-`docs/results/steer_e3/`, update the deck and this plan. Log: `scratch/steer_e3_full.log`.
+Nothing is running. All code and results are in git (`steer_v1*.py`, `steer_v2.py`, `steer_e3.py`, `docs/results/`).
 
 Decisions already made by the user: positives are over-refusal (addition on harmless prompts; ablation on
 harmful prompts is out until Isak sets handling rules); the probe reads the CoT or its first tokens; the
@@ -73,10 +72,8 @@ the sycophancy add-on is included.
 2. **Topic-matched positives at scale** (needs Isak's handling rules for harmful-prompt data): steer the prompts
    natural refusals come from (borderline and harmful), compare steered, prompted and natural positives with
    the same prompts and equal label budgets; XSTest-style borderline prompts are the harmless version.
-3. **Naturalness-constrained generation (E3)**: filter or select steered text by the natural-vs-synthetic
-   discriminator at generation time, or per-token strength that keeps the SAE reconstruction error under a
-   natural quantile (reachability data are in `docs/results/steer_v1/reach_table.json`). The filtered-subset
-   result (0.28 to 0.46) is the pilot for this.
+3. **Reliability-selected latents** (about 2 h GPU): generators from the highest-yield latents only (yield
+   predicts usefulness, E2), tested on the naturally refused prompts where topic is controlled.
 4. **LASER with a synthetic warm start as the main comparison** if the lab wants one headline: prompted warm
    start as the reference arm, rare-positive pools near 1% positives, positives found per label.
 5. **Sycophancy**: treat it as the sampler-only control (random direction equals chosen direction); a testbed
@@ -109,11 +106,13 @@ directions work as well and probes barely detect it.
 
 ## 5. Later experiments (kept from the original proposal)
 
-- **Reachability (E2, first pass done: SAE reconstruction error and nearest-neighbor distance; GCG-style search not done).** Distance of steered activations to the natural set: autoencoder reconstruction
+- **Reachability (E2; distances at scale done in `steer_e3.py`, GCG-style search not done and lower priority, since
+  closeness to natural did not predict usefulness).** Distance of steered activations to the natural set: autoencoder reconstruction
   distance, nearest neighbor in a position-matched natural bank, and a GCG-style suffix search
   (Soft-GCG, arXiv 2607.08883) with an L2 loss against a target activation. Report against the 2% noise
   floor. Tests whether effect size against distance is bimodal, a spectrum or flat.
-- **Naturalness-constrained generators (E3).** Latent bundling from co-activation structure on natural
+- **Naturalness-constrained generators (E3; done: best-of-K discriminator selection and per-token reconstruction
+  cap, see status; co-activation bundling not tried).** Latent bundling from co-activation structure on natural
   positives; dynamic per-token strength keeping reconstruction error under a natural quantile or keeping a
   natural-vs-steered discriminator confused. Drop a variant with no interpretable signal after a pilot.
 - **Active-learning comparison (E4).** Arms: natural-only LASER, prompted generation, fixed steering,

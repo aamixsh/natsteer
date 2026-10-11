@@ -48,3 +48,16 @@ reports and screening tables (gzip).
 | `probes_matched_report.json.gz` | Probes on held-out WildChat refusals with prompt-matched positives |
 | `probes_layers_report.json.gz` | Layer sweep (7, 11, 15, 19, 23, all concatenated) |
 | `syco_*` | Sycophancy: wider screen (400 conditions), validation (39 latents), probes with a random-direction arm, CoT-length matching and budgets to 2,048 |
+
+## steer_e3 (2026-10-11, `data/pools/steer_e3`)
+
+E2 at scale and E3, `scripts/steer_e3.py`, one GPU, 1.3 h. `SUMMARY.md` is the readable summary.
+
+| File | Content |
+|---|---|
+| `SUMMARY.md`, `timings.log` | Tables for every stage; stage durations |
+| `e3_floor.json` | Natural per-token SAE reconstruction error quantiles (layers 11, 15, 19): the E3a cap |
+| `reach2_table.json` | E2: distance from natural activations for every validated refusal and sycophancy condition, with yield |
+| `e2_usefulness.json` | E2: per refusal latent, probe quality of its own data against yield and distance; correlations |
+| `e3_alpha.json`, `e3_select_stats.json` | E3a mean per-token strength under the cap; generation yields and selection statistics |
+| `e3_probes_report.json.gz` | E3 probes: harmless-prompt arms on the refusal test set, matched-prompt arms on held-out WildChat |

@@ -1,0 +1,34 @@
+{
+ "h_cap_dense_c2.0": {
+  "mean_alpha": 0.8276565339591567,
+  "tokens": 821531
+ },
+ "h_cap_dense_c3.0": {
+  "mean_alpha": 0.5703852461701152,
+  "tokens": 854856
+ },
+ "h_cap_latents_x1.0": {
+  "mean_alpha": 0.5036705611559743,
+  "tokens": 1504947
+ },
+ "h_cap_latents_x1.5": {
+  "mean_alpha": 0.3073562286511395,
+  "tokens": 1677490
+ },
+ "m_cap_dense_c2.0": {
+  "mean_alpha": 0.7978379056997195,
+  "tokens": 91601
+ },
+ "m_cap_dense_c3.0": {
+  "mean_alpha": 0.5410150345633729,
+  "tokens": 99238
+ },
+ "m_cap_latents_x1.0": {
+  "mean_alpha": 0.5659071818563629,
+  "tokens": 95240
+ },
+ "m_cap_latents_x1.5": {
+  "mean_alpha": 0.33500520976683834,
+  "tokens": 101732
+ }
+}

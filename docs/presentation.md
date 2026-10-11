@@ -6,7 +6,7 @@ title: Steering-generated positives for activation probes
 
 # Steering-generated positives for activation probes
 
-MATS project 1 (with Isak Etinger), gpt-oss-20b. Status 2026-10-11: infrastructure (E0), a LASER baseline, and three passes of refusal and sycophancy testbeds where the steering vector defines the behavior.
+MATS project 1 (with Isak Etinger), gpt-oss-20b. Status 2026-10-11: infrastructure (E0), a LASER baseline, three passes of refusal and sycophancy testbeds where the steering vector defines the behavior, reachability at scale (E2) and naturalness-constrained generation (E3).
 
 Slides separated by `---` (Marp). Figures: `scripts/make_presentation_figures.py`. Run summaries: `docs/results/*/SUMMARY.md`.
 
@@ -27,7 +27,8 @@ Slides separated by `---` (Marp). Figures: `scripts/make_presentation_figures.py
 2. **Synthetic positives do not beat natural labels** at 1% FPR on early-CoT features (refusal: natural 0.66 vs 0.37 to 0.58 at 64 labels), and mixing them in never helps. Whole-CoT probes are saturated, so only early tokens or strict FPRs separate the arms.
 3. **The gap is mostly topic:** positives steered on the *same prompts* that natural refusals come from match natural data (0.41 vs 0.40); on harmless prompts they reach 0.15 to 0.24. Keeping natural-looking synthetic text helps (0.28 to 0.46).
 4. **Steering has no demonstrated edge over prompting:** prompted positives do about as well as the best steering wherever both were tested (within intervals; better on matched prompts); with an exact label (sycophancy) a **random** direction gives equally good probes.
-5. Diversity from many latents did **not** help; closeness to the natural activation manifold did not predict usefulness.
+5. **Making steered text more natural does not close the gap** (E3): choosing the most natural of 8 samples helps a little (+6 points), a per-token cap that keeps activations near natural does not. Diversity from many latents did not help either.
+6. **What predicts a latent's usefulness is how reliably it produces the behavior** (Spearman 0.76 over 23 latents), not how close it stays to natural activations (0.37, n.s.; E2).
 
 ---
 
@@ -80,6 +81,7 @@ Natural refusal samples: 28,889 labeled (24,200 train, 4,689 test). Synthetic: 3
 | Refusal pilot (`refusal_pipeline.py`) | 10-10 | 2.8 h | directions, steering sweep, attribution (325 pairs), first synthetic data and probes (3 seeds) |
 | Second pass (`steer_v1.py`, `steer_v1_extra.py`) | 10-10 | 7.2 h | 1,500-pair attribution on 4 layers, 288-condition latent screen, 7 generators x 3,000 prompts, probes with intervals; sycophancy testbed; LASER warm start, WildChat probes, reachability, steering timing |
 | Third pass (`steer_v2.py`) | 10-11 | 7.1 h | 501-condition wider latent screen, many-latent generators, prompt-matched positives, naturalness filter, multi-layer and layer sweep; sycophancy wider screen, random-direction control, budgets to 2,048 |
+| E2 and E3 (`steer_e3.py`) | 10-11 | 1.3 h | distance from natural for 24 refusal and 40 sycophancy latents vs yield and data usefulness; per-token capped steering, best-of-8 selection by a discriminator, on harmless and naturally refused prompts |
 
 ---
 
@@ -140,6 +142,25 @@ Natural refusal samples: 28,889 labeled (24,200 train, 4,689 test). Synthetic: 3
 
 ---
 
+## E2: distance from natural activations, effect and usefulness
+
+![w:1150](figures/e2_reach.png)
+
+- **(a)** For refusal, the further a latent moves activations from natural (SAE reconstruction error), the more it refuses (Spearman 0.74, 24 latents): a smooth trend, not two regimes, and near-natural latents still add 50 points. Strength-8 and -12 latents run at about 4x the natural error (0.32 vs 0.07). Sycophancy latents stay near natural (0.10) with no clear relation (0.24). Nearest-neighbor distance predicts little.
+- **(b)** A probe trained only on one latent's positives is better when the latent refuses reliably (Spearman 0.76, p < 0.001), not when it stays near natural (0.37, n.s.). The best latents include near-natural (27857) and far-off ones (98869); none reaches natural labels (0.66).
+
+---
+
+## E3: naturalness-constrained generation
+
+![w:1150](figures/e3.png)
+
+- **E3b, best of 8:** keeping the sample a discriminator trained on 128 natural refusals finds most natural adds about 6 points for latents and prompted text (latents 0.31 to 0.37, prompted 0.43 to 0.49 at 256 labels; first 16 tokens, prompted 0.19 to 0.34); a label-free discriminator (any natural output) hurts. Weaker than ranking all positives (the earlier top-30% filter, +18).
+- **E3a, per-token cap** at the natural 90th-percentile reconstruction error: keeps 83% of the dense strength and 50% of the latents'. It hurts latent data on harmless prompts (0.18 to 0.22) and helps the dense direction only at strength 3 (0.58 vs 0.52). On naturally refused prompts, capped latents and prompted text match natural (0.38 to 0.45 vs 0.40), as uncapped latents did before.
+- Every synthetic-only arm stays below natural on harmless prompts (best 0.58 vs 0.70); naturalness is a second-order lever after topic.
+
+---
+
 ## Where synthetic positives help: LASER warm start
 
 ![w:1100](figures/laser_warmstart.png)
@@ -161,7 +182,7 @@ Natural refusal samples: 28,889 labeled (24,200 train, 4,689 test). Synthetic: 3
 ## What we learned
 
 1. **The steering vector can define a behavior and generate it reliably,** and delta-attribution picks causal latents that activation differences miss.
-2. **What makes steered data useful is where it comes from, not how it is steered:** shared prompts with natural positives close the gap; natural-looking text helps; more latents, more diversity or closeness to the activation manifold do not.
+2. **What makes steered data useful is where it comes from, not how it is steered:** shared prompts with natural positives close the gap; natural-looking text helps a little; more latents, more diversity, or keeping activations near natural (E2, E3a) do not. Among latents, reliable ones make better data.
 3. **Prompting is a strong baseline.** No experiment shows steering beating a one-line instruction on the same prompts.
 4. **Where labels are exact, the vector does not matter** (sycophancy): the case for steering is behaviors that cannot be elicited or verified otherwise.
 5. **Evaluation must be strict:** whole-CoT probes saturate for refusal; differences appear only at 1% FPR on early CoT tokens, with intervals over prompts.
@@ -184,8 +205,9 @@ Natural refusal samples: 28,889 labeled (24,200 train, 4,689 test). Synthetic: 3
 |---|---|---|
 | Topic-matched positives at scale | steer the prompts natural positives come from (borderline and harmful), compare steered, prompted and natural on the same prompts and budgets | Isak's handling rules |
 | A behavior prompting cannot elicit | a testbed where the label exists only through the vector (no answer key, hard to prompt), where steering could add something | choice of behavior |
-| Naturalness-constrained generation (E3) | discriminator filter at generation time, per-token strength under a reconstruction cap | none (GPU) |
+| Reliability-selected latents | build generators from the highest-yield latents only (yield predicts usefulness) and test them on matched prompts | none (GPU, about 2 h) |
 | LASER with a warm start | prompted warm start as reference, rare-positive pools near 1% | none (CPU) |
+| E2 search and E5 (prompt recovery) | look for inputs that reach steered states without steering; lower priority since closeness to natural did not predict usefulness | none (GPU, days) |
 | Intent label (optional) | grading, validation against human labels, LASER on the graded pool | the policy |
 
 ---
@@ -201,6 +223,7 @@ GPU=1 ./scripts/run_refusal_overnight.sh                         # refusal pilot
 GPU=1 PIPELINE=steer_v1.py ./scripts/run_refusal_overnight.sh     # second pass, about 6 h
 GPU=1 PIPELINE=steer_v1_extra.py ./scripts/run_refusal_overnight.sh   # extras, about 1 h
 GPU=1 PIPELINE=steer_v2.py ./scripts/run_refusal_overnight.sh     # third pass, about 7 h
+GPU=1 PIPELINE=steer_e3.py ./scripts/run_refusal_overnight.sh     # E2 at scale and E3, about 1.5 h
 .venv/bin/python scripts/make_presentation_figures.py            # figures (CPU)
 ```
 
