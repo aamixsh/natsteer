@@ -19,3 +19,17 @@ Refusal testbed, `scripts/refusal_pipeline.py`, one GPU, 2 h 46 min.
 | `probes_report.json` | Probes on natural, synthetic and mixed data; naturalness discriminator; text diversity |
 | `syco_attribution.json` | Sycophancy delta-attribution (sampling and attribution only; nothing steered yet) |
 | `timings.log` | Stage durations |
+
+## steer_v1 (2026-10-10 to 11, `data/pools/steer_v1`)
+
+Second pass, `scripts/steer_v1.py` and `steer_v1_extra.py`, one GPU, 7.2 h. `SUMMARY.md` is the readable
+summary; `*.json.gz` are the full probe reports and screening tables (gzip).
+
+| File | Content |
+|---|---|
+| `SUMMARY.md`, `timings.log` | Tables for every stage; stage durations |
+| `attribution_wide.json`, `latents_screen_table.json.gz`, `latents_validated_table.json` | Refusal: 1,500-pair attribution, 288-condition screen, validation on fresh prompts |
+| `probes_report.json.gz` | Refusal probes: 10 seeds, intervals, controls, coverage, diversity |
+| `syco_*` | Sycophancy: attribution, sweep, latent screen and validation, probes |
+| `laser_warmstart.json`, `probes_wildchat.json` | LASER with synthetic warm start; probes on held-out WildChat refusals |
+| `reach_table.json`, `timing_table.json` | Reachability (reconstruction error, nearest natural neighbor); steering timing |

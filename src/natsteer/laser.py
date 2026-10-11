@@ -63,10 +63,13 @@ def run(
     embed_dim: int = 256,
     fpr: float = 0.01,
     seed: int = 0,
+    extra: tuple[np.ndarray, np.ndarray] | None = None,
 ) -> list[dict]:
     """Run one active-learning arm. oracle(indices) -> 0/1 labels (the grader).
 
-    Returns the learning curve: metrics on (X_eval, y_eval) after each round.
+    `extra` = (X, y) are free labeled examples (for example steered synthetic data) added to every probe fit;
+    they are not counted in `budget` or `n_labels`. Returns the learning curve: metrics on (X_eval, y_eval)
+    after each round.
     """
     rng = np.random.default_rng(seed)
     n = len(X_pool)
@@ -80,8 +83,9 @@ def run(
         idx = np.fromiter(y.keys(), int)
         lab = np.fromiter(y.values(), int)
         point = {"n_labels": len(idx), "n_pos": int(lab.sum())}
-        if 0 < lab.sum() < len(lab):
-            probe = make_probe().fit(X_pool[idx], lab)
+        X_fit, y_fit = (X_pool[idx], lab) if extra is None else (np.concatenate([X_pool[idx], extra[0]]), np.concatenate([lab, extra[1]]))
+        if 0 < y_fit.sum() < len(y_fit):
+            probe = make_probe().fit(X_fit, y_fit)
             s = probe.decision_function(X_eval)
             point |= {"auroc": auroc(y_eval, s), f"tpr@{fpr}": tpr_at_fpr(y_eval, s, fpr), "tpr@0.05": tpr_at_fpr(y_eval, s, 0.05)}
         else:

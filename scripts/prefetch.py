@@ -50,6 +50,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip-grader", action="store_true", help="skip gpt-oss-safeguard-20b (13 GB)")
     ap.add_argument("--sae-layers", type=int, nargs="+", default=[15, 19])
+    ap.add_argument("--sae-trainers", type=int, nargs="+", default=[0, 1], help="0 is k=64 (3 GB per layer), 1 is k=128")
     ap.add_argument("--goodfire", action="store_true", help="also fetch the weak Goodfire layer-15 SAE")
     args = ap.parse_args()
 
@@ -59,7 +60,7 @@ def main():
         path = snapshot_download(m, allow_patterns=MODEL_FILES, ignore_patterns=["original/*", "metal/*"])
         print(m, path, flush=True)
     for layer in args.sae_layers:
-        for trainer in (0, 1):
+        for trainer in args.sae_trainers:
             for f in ("ae.pt", "config.json", "eval_results.json"):
                 p = hf_hub_download(SAE_REPO, f"resid_post_layer_{layer}/trainer_{trainer}/{f}")
         print("SAE layer", layer, "ok", flush=True)

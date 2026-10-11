@@ -18,6 +18,7 @@ src/natsteer/
   vllm_utils.py  vLLM engine with Triton attention (FlashInfer fails on this GPU)
   vllm_steer.py  activation addition inside vLLM (all-position, prompt-only)
   attribution.py SAE-latent delta-attribution on paired behavior / no-behavior completions
+  probe_eval.py  probe grid with clustered bootstrap intervals, precision/recall, matched discriminator
   refusal.py     refusal testbed: prompt sets, labels from the model's own answer, quality and diversity metrics
   data.py        loaders: XSTest, Aegis 2.0, hh-rlhf red-team, HarmfulQA, WildChat-1M, sycophancy evals
 scripts/
@@ -31,7 +32,9 @@ scripts/
   grade.py, validate_grader.py                        policy labels and agreement with human labels
   laser_baseline.py                                   LASER vs random vs uncertainty curves (data/runs/laser_baseline)
   syco_pipeline.py                                    sycophancy proxy end to end, staged
-  refusal_pipeline.py, run_refusal_overnight.sh       refusal testbed: steering, attribution, synthetic data, probes
+  refusal_pipeline.py, run_refusal_overnight.sh       refusal testbed (first pass): steering, attribution, synthetic data, probes
+  steer_v1.py, steer_v1_extra.py, morning_summary.py   second pass: wider latent search, sycophancy testbed, LASER warm start, reachability
+  run_after.sh                                         run a pipeline after a running chain finishes
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
 docs/results/  small run reports behind the deck (committed); see docs/results/README.md
@@ -54,6 +57,7 @@ CUDA_VISIBLE_DEVICES=0 .venv/bin/python scripts/e0_smoke.py --keep-model
 
 ```bash
 GPU=1 ./scripts/run_refusal_overnight.sh          # refusal testbed, about 3 h; --smoke for a tiny check run
+GPU=1 PIPELINE=steer_v1.py ./scripts/run_refusal_overnight.sh   # second pass, about 6 h (steer_v1_extra.py: 1 h more)
 ```
 
 Current results: [docs/presentation.md](docs/presentation.md) and `docs/results/`; plan and next todo: [PLAN.md](PLAN.md).

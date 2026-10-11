@@ -2,7 +2,7 @@
 
 MATS project 1 with Isak Etinger. This file is the current plan only. Rewrite it when the plan changes
 (do not append history: results live in [docs/presentation.md](docs/presentation.md) and
-`docs/results/`, setup in [docs/HANDOFF.md](docs/HANDOFF.md), history in git). Last updated 2026-10-10.
+`docs/results/`, setup in [docs/HANDOFF.md](docs/HANDOFF.md), history in git). Last updated 2026-10-11.
 
 ## 1. Goal
 
@@ -17,50 +17,71 @@ per-prompt bootstrap intervals). Secondary: which notion of "natural" and "diver
 LASER (Isak's active learning, grader-labeled) stays the natural-data baseline where natural labels are
 the expensive resource; synthetic labels from steering are free but noisy.
 
-## 2. Status (2026-10-10)
+## 2. Status (2026-10-11)
 
 - **E0 infrastructure** done: hooked bf16 gpt-oss-20b, harmony rendering with a fixed date, segment-aware
   steering, andyrdt SAEs, features, probes, LASER, vLLM grader. Activations reproduce only to about 2%.
-- **Refusal testbed** run once at pilot scale (`scripts/refusal_pipeline.py`, 2 h 46 min on one GPU):
-  steering induces refusal on harmless prompts (100% at the best setting), delta-attribution finds the
-  latents that cause it (one latent alone 91%, top-8 bundle 99%; activation-difference and random
-  latents at most 2%), synthetic positives do **not** beat natural data at 1% FPR, dense steering
-  collapses diversity. Numbers: deck and `docs/results/refusal_v0/`.
-- **Sycophancy**: proxy from E0 (difference of means barely moves the rate, +2 to +5 points); sampling and
-  delta-attribution on 374 pairs done in the refusal run, nothing steered yet.
+- **Refusal testbed, second pass** done (`scripts/steer_v1.py`, `steer_v1_extra.py`, 7.2 GPU-hours, no failed
+  stage; numbers in the deck and `docs/results/steer_v1/SUMMARY.md`). Steering induces refusal on harmless
+  prompts (CoT-only masks do the work: 97 to 100%). Delta-attribution finds causal latents (4 single latents
+  validated, 99% for a 3-latent bundle; activation-difference and random latents 0 of 32). **Synthetic positives
+  do not beat natural data at 1% FPR** with 10 seeds and prompt-clustered intervals: on the first 32 CoT tokens
+  natural 0.66, dense steering 0.58, prompted 0.53, latent bundles 0.34 to 0.42; mixing synthetic into natural
+  is never better (-0.02 to -0.12). Whole-CoT probes are saturated (0.99). Latent generators are the most
+  natural by activation (reconstruction error 0.11 vs 0.30 for the dense direction, natural 0.09) yet give the
+  worst probes, so closeness to the natural manifold does not predict probe transfer here.
+- **Where synthetic data helps**: a few points at the smallest budgets (dense direction, whole CoT, held-out
+  WildChat refusals: +0.03 at 8 to 16 labels), and as free warm-start labels for LASER on whole-CoT features
+  (TPR at 1% FPR 0.49 to 0.90 after 32 natural labels), but prompted generation gives the same warm start, so
+  the gain is "more labels", not steering. No gain on the first-32-token features.
+- **Sycophancy testbed** done: baseline 0.20 sycophantic answers; the CoT direction at layer 11 reaches 64%
+  (the E0 proxy gave +2 to +5 points); attributed latents reach 70% (4-latent bundle), 8 single latents survive
+  validation; random latents reach 38% at the largest strength, so part of the effect is non-specific. Probes
+  detect sycophancy poorly (natural at 256 labels: AUROC 0.85, TPR at 1% FPR 0.23): synthetic-only probes
+  trail natural at 256 labels, mixes add 0.03 to 0.05 at 64 labels (final-answer features) and trail on the
+  first 32 CoT tokens.
 - **Intent label** (harmful intent of the user turn, graded against a researcher-written policy): pools and
-  features built, grading blocked on the policy. Optional track now.
+  features built, grading blocked on the policy. Optional track.
 
 ## 3. Next todo (pick up here)
+
+Nothing is running. All second-pass code is committed once the user says so (uncommitted until then:
+`steer_v1.py`, `steer_v1_extra.py`, `morning_summary.py`, `run_after.sh`, `probe_eval.py`, streaming
+`attribution.py`, LASER `extra` warm start, `docs/results/steer_v1/`).
 
 Decisions already made by the user: positives are over-refusal (addition on harmless prompts; ablation on
 harmful prompts is out until Isak sets handling rules); the probe reads the CoT or its first tokens; the
 label is the steering condition plus the cheap verifier (refusal phrase, or exact answer agreement);
 the sycophancy add-on is included.
 
-1. **Sharper probe evaluation on the existing refusal data** (CPU, minutes; do first). 8, 16, 32 labels;
-   targets of the first 8, 16, 32 CoT tokens; per-prompt bootstrap intervals (4 samples per prompt are
-   correlated); at least 5 seeds; a saved natural-trained control for the projection-out-the-direction
-   test; a topic-matched naturalness check (the discriminator is at AUC 1.0 for every generator and
-   cannot rank them). Done when the report separates the arms with intervals.
-2. **Wider latent search for diversity** (about 1 h GPU). Attribution-ranked top 64 latents per layer on
-   layers 11, 15, 19, 23; keep every latent that reaches refusal with generation intact; a "diverse"
-   generator with at least 10 validated latents (now 2). Report coverage and text-diversity metrics.
-3. **More harmless prompts** than the 1,174 training prompts (benign WildChat or Alpaca-style), to lift
-   the roughly 1,050 samples per generator.
-4. **Sycophancy testbed** (about 2 h GPU). Steer with attributed latents and the difference-of-means
-   direction, exact-oracle labels, probes on answer-reading features; compare with natural and prompted
-   data. This is the intent-defined case where steered data is most likely to fail (arXiv 2511.17408).
-5. **Rerun the refusal pipeline at the larger settings** (`GPU=N ./scripts/run_refusal_overnight.sh`, resumable;
-   the second pass should use the items above) and update the deck, `docs/results/` and this section.
-6. Optional, when the policy arrives: grade the intent pool (`scripts/grade.py`), validate against Aegis
+1. **Decide with Isak what the null means** and where to push (the next items depend on it). The refusal result
+   is tight: synthetic positives on harmless prompts do not reach natural data at 1% FPR on early-CoT features.
+   Likely causes to test: topic shift (synthetic refusals sit on harmless prompts, natural refusals mostly on
+   harmful ones; the prompt-matched discriminator cannot check this for refusal because the topics differ),
+   and recall (precision/recall coverage of natural refusals is 0.00 to 0.09 for every generator).
+2. **Make the topic confound testable** (needs Isak's handling rules for harmful-prompt data): positives from
+   steering on matched prompts (same prompts for steered and natural samples), or natural over-refusals only
+   (XSTest-style borderline prompts), so the synthetic and natural positives share topics.
+3. **Wider latent search for more distinct latents** (about 1.5 h GPU): only 4 refusal latents passed (most
+   near misses at 0.17 to 0.19 needed more than strength 5). Rescreen the top near misses at strengths 8 and 12
+   and grow bundles from co-activation; goal 10 or more validated latents for the "diverse" generator.
+4. **Sycophancy follow-ups**: a non-specificity control (random-latent baseline reaches 38%; compare effects
+   after matching generation length, since the strongest steering shortens the CoT from 540 to 160 tokens), and
+   a larger label budget (natural keeps improving, 0.03 at 8 labels to 0.23 at 256).
+5. **LASER with synthetic warm start as the main comparison** if the lab wants one headline: add the prompted
+   warm start as the reference arm in every table (done in the extras), extend to rare-positive pools with
+   about 1% positives, and report positives found per label.
+6. **Dynamic steering (E3)**: per-token strength that keeps the SAE reconstruction error under the natural
+   quantile (reachability data are in `docs/results/steer_v1/reach_table.json`).
+7. Optional, when the policy arrives: grade the intent pool (`scripts/grade.py`), validate against Aegis
    and XSTest human labels (`scripts/validate_grader.py`), LASER on the graded pool
    (`scripts/laser_baseline.py --pool-grades ...`).
-7. Keep committed: after each run copy the report JSONs to `docs/results/<run>/`, add or update deck slides,
+8. Keep committed: after each run copy the report JSONs to `docs/results/<run>/`, update the deck in place,
    and rewrite sections 2 and 3 here.
 
 Open questions for Isak: handling rules for assistant-side compliance data (needed for ablation-based
-positives); grader and API budget; whether the sycophancy proxy is an acceptable second testbed.
+positives and for item 2); grader and API budget; whether sycophancy is accepted as the second testbed given
+that probes barely detect it.
 
 ## 4. Design decisions
 
@@ -79,7 +100,7 @@ positives); grader and API budget; whether the sycophancy proxy is an acceptable
 
 ## 5. Later experiments (kept from the original proposal)
 
-- **Reachability (E2).** Distance of steered activations to the natural set: autoencoder reconstruction
+- **Reachability (E2, first pass done: SAE reconstruction error and nearest-neighbor distance; GCG-style search not done).** Distance of steered activations to the natural set: autoencoder reconstruction
   distance, nearest neighbor in a position-matched natural bank, and a GCG-style suffix search
   (Soft-GCG, arXiv 2607.08883) with an L2 loss against a target activation. Report against the 2% noise
   floor. Tests whether effect size against distance is bimodal, a spectrum or flat.

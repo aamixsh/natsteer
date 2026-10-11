@@ -8,7 +8,10 @@ so delta > 0 means the latent supports the completion. Per completion we average
 completion tokens. Expanding the product, mean_t delta = -S1 + (abar . d_i) * S2 with
 S1 = mean_t (g.d)(a.d) and S2 = mean_t (g.d), so abar can be fixed after the pass.
 Delta-attribution of a behavior = mean over pairs of [delta(behavior completion) -
-delta(contrast completion of the same prompt)].
+delta(contrast completion of the same prompt)] = mean over pairs of (-A + abar * B) with
+A = S1(pos) - S1(neg), B = S2(pos) - S2(neg). Only running sums of A, B, A^2, B^2, AB are kept
+(five vectors per layer), so memory does not grow with the number of pairs and any set of
+layers can be run in one pass.
 """
 
 import numpy as np
@@ -86,7 +89,8 @@ def delta_attribution(model, tok, pairs, saes: dict, log_every: int = 50) -> dic
     import time
 
     layers = sorted(saes)
-    acc = {L: {"S1": [], "S2": [], "code_mean": [], "a_sum": 0, "n_tok": 0, "code_sum": 0, "code_cnt": 0} for L in layers}
+    z = lambda L: torch.zeros(saes[L].W_dec.shape[0], dtype=torch.float64)  # noqa: E731
+    acc = {L: {k: z(L) for k in ("A", "B", "AA", "BB", "AB", "dact", "code_sum", "code_cnt")} | {"a_sum": 0, "n_tok": 0} for L in layers}
     t0 = time.time()
     kept = 0
     for k, (pos, neg) in enumerate(pairs):
@@ -96,34 +100,38 @@ def delta_attribution(model, tok, pairs, saes: dict, log_every: int = 50) -> dic
         kept += 1
         for L in layers:
             A = acc[L]
-            for s, sign in ((sp, 1), (sn, -1)):
-                A["a_sum"] = A["a_sum"] + s[L]["a_sum"]
+            a_, b_ = (sp[L]["S1"] - sn[L]["S1"]).double(), (sp[L]["S2"] - sn[L]["S2"]).double()
+            A["A"] += a_
+            A["B"] += b_
+            A["AA"] += a_ * a_
+            A["BB"] += b_ * b_
+            A["AB"] += a_ * b_
+            A["dact"] += (sp[L]["code_mean"] - sn[L]["code_mean"]).double()
+            for s in (sp, sn):
+                A["a_sum"] = A["a_sum"] + s[L]["a_sum"].double()
                 A["n_tok"] += s["n_tokens"]
-                A["code_sum"] = A["code_sum"] + s[L]["code_sum"]
-                A["code_cnt"] = A["code_cnt"] + s[L]["code_cnt"]
-            A["S1"].append(torch.stack([sp[L]["S1"], sn[L]["S1"]]))
-            A["S2"].append(torch.stack([sp[L]["S2"], sn[L]["S2"]]))
-            A["code_mean"].append(sp[L]["code_mean"] - sn[L]["code_mean"])
+                A["code_sum"] += s[L]["code_sum"].double()
+                A["code_cnt"] += s[L]["code_cnt"].double()
         if log_every and (k + 1) % log_every == 0:
             print(f"attribution: {k + 1}/{len(pairs)} pairs, {time.time() - t0:.0f}s", flush=True)
+    n = kept
     res = {"n_pairs": kept}
     for L in layers:
         A = acc[L]
+        abar = (A["a_sum"] / A["n_tok"]).float()
         D = saes[L].W_dec.float().cpu()
-        Dn = D / D.norm(dim=1, keepdim=True)
-        abar = A["a_sum"] / A["n_tok"]
-        abar_proj = Dn @ abar
-        S1, S2 = torch.stack(A["S1"]), torch.stack(A["S2"])  # [pairs, 2, d_sae]
-        delta = -S1 + abar_proj * S2
-        diff = delta[:, 0] - delta[:, 1]  # behavior minus contrast, per pair
-        dact = torch.stack(A["code_mean"])
-        n = diff.shape[0]
+        abar_proj = ((D / D.norm(dim=1, keepdim=True)) @ abar).double()
+        mean = (-A["A"] + abar_proj * A["B"]) / n
+        # variance of diff_i = -A_i + c B_i  =  var(A) - 2c cov(A,B) + c^2 var(B)   (sample variances)
+        var = lambda S, SS: (SS - S * S / n) / max(1, n - 1)  # noqa: E731
+        cov = (A["AB"] - A["A"] * A["B"] / n) / max(1, n - 1)
+        v = var(A["A"], A["AA"]) - 2 * abar_proj * cov + abar_proj**2 * var(A["B"], A["BB"])
         res[L] = {
-            "delta_attr": diff.mean(0),
-            "delta_attr_t": diff.mean(0) / (diff.std(0) / n**0.5 + 1e-12),
-            "delta_act": dact.mean(0),
-            "act_mean_active": A["code_sum"] / A["code_cnt"].clamp(min=1),
-            "act_freq": A["code_cnt"] / A["n_tok"],
+            "delta_attr": mean.float(),
+            "delta_attr_t": (mean / (v.clamp(min=0).sqrt() / n**0.5 + 1e-12)).float(),
+            "delta_act": (A["dact"] / n).float(),
+            "act_mean_active": (A["code_sum"] / A["code_cnt"].clamp(min=1)).float(),
+            "act_freq": (A["code_cnt"] / A["n_tok"]).float(),
             "abar": abar,
         }
     return res

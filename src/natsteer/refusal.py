@@ -110,3 +110,14 @@ def write_jsonl(path: Path, rows) -> None:
     with open(path, "w") as f:
         for r in rows:
             f.write(json.dumps(r) + "\n")
+
+
+def load_benign_wildchat(n: int = 4000, seed: int = 0) -> list[dict]:
+    """English WildChat first user turns (ODC-BY; the open release already dropped moderation-flagged
+    conversations), short and mostly ASCII, as extra harmless prompts. Rows: {prompt_id, source, split,
+    user, human_label}. Whether the model answers or refuses them is decided by sampling, not assumed."""
+    from natsteer.data import load_wildchat
+
+    rows = [r for r in load_wildchat((0,)) if 20 <= len(r["user"]) <= 600 and sum(c.isascii() for c in r["user"]) >= 0.97 * len(r["user"])]
+    random.Random(seed).shuffle(rows)
+    return [{"prompt_id": r["id"], "source": "wildchat", "split": "train", "user": r["user"], "human_label": None} for r in rows[:n]]

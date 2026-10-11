@@ -8,7 +8,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-POOLINGS = ("user_mean", "prompt_last", "eop_mean", "cot_mean", "cot_first32", "final_mean")
+POOLINGS = ("user_mean", "prompt_last", "eop_mean", "cot_mean", "cot_first8", "cot_first16", "cot_first32", "final_mean")
 
 
 def pool(acts: torch.Tensor, labels: list[str], how: str) -> torch.Tensor:
@@ -23,8 +23,8 @@ def pool(acts: torch.Tensor, labels: list[str], how: str) -> torch.Tensor:
         idx = np.arange(user[-1] + 1, min(user[-1] + 4, len(lab))) if len(user) else np.array([], dtype=int)
     elif how == "cot_mean":
         idx = np.flatnonzero(lab == "cot")
-    elif how == "cot_first32":
-        idx = np.flatnonzero(lab == "cot")[:32]
+    elif how.startswith("cot_first"):  # mean over the first N CoT tokens, e.g. cot_first32
+        idx = np.flatnonzero(lab == "cot")[: int(how[len("cot_first") :])]
     elif how == "final_mean":
         idx = np.flatnonzero(lab == "final")
     elif how == "prompt_last":

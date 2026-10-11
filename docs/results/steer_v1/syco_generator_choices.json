@@ -1,0 +1,18 @@
+{
+ "dom_all": "cot_L11_all_c8.0",
+ "dom_prompt": "cot_L11_prompt_c16.0",
+ "latents": [
+  "attr_L11_23993_x5.0",
+  "attr_L11_44332_x5.0",
+  "attr_L11_65211_x5.0",
+  "attr_L11_16825_x5.0",
+  "attr_L11_25809_x5.0",
+  "attr_L15_51305_x5.0",
+  "attr_L19_61801_x5.0",
+  "attr_L11_29000_x5.0",
+  "attr_L19_12074_x5.0",
+  "attr_L11_76341_x5.0",
+  "attr_L19_78981_x5.0"
+ ],
+ "valbundle": "valbundle_L11_k4_x2.0"
+}

@@ -94,7 +94,7 @@ def laser_curves():
     axes[0].text(2000, ceiling + 0.01, f"all {r['pool_n']:,} labels", ha="right", fontsize=10)
     axes[1].axhline(r["pool_pos"], color="k", ls="--", lw=1)
     axes[1].text(100, r["pool_pos"] - 15, f"all {r['pool_pos']} positives", fontsize=10)
-    axes[0].legend()
+    axes[1].legend(loc="upper right")
     fig.suptitle(f"Aegis human labels, pool at 2% positives ({r['pool_n']:,} prompts), layer 15 user_mean, 5 seeds")
     fig.tight_layout()
     fig.savefig(OUT / "laser_aegis.png", dpi=130)
@@ -178,20 +178,26 @@ def refusal_steering():
 
 
 def refusal_probes():
-    r = _refusal("probes_report.json")["features"]
-    arms = [("natural", "natural"), ("synthetic_dom_all", "difference of\nmeans"), ("synthetic_prompted", "prompted"), ("synthetic_bundle", "latent\nbundle"), ("synthetic_diverse", "2-latent\nmix")]
+    import gzip
+
+    r = json.load(gzip.open(Path(__file__).resolve().parents[1] / "docs" / "results" / "steer_v1" / "probes_report.json.gz"))["features"]
+    arms = [("natural", "natural"), ("synthetic_dom_all", "dense\ndirection"), ("synthetic_prompted", "prompted"), ("synthetic_valbundle", "3-latent\nbundle"), ("synthetic_latent_mix", "4-latent\nmix"), ("synthetic_random_bundles", "random\nbundles")]
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
-    for ax, (key, sl, title) in zip(axes, (("L15_cot_mean", "harmful_prompts", "whole CoT, natural refusals on harmful prompts"), ("L15_cot_first32", "harmful_prompts", "first 32 CoT tokens, harmful prompts"), ("L15_cot_first32", "harmless_prompts", "first 32 CoT tokens, harmless prompts"))):
+    panels = (("L15_cot_mean", "all", "whole CoT, all prompts"), ("L15_cot_first32", "all", "first 32 CoT tokens, all prompts"), ("L15_cot_first32", "harmless_prompts", "first 32 CoT tokens, harmless prompts"))
+    for ax, (key, sl, title) in zip(axes, panels):
         x = np.arange(len(arms))
         for j, (b, col) in enumerate((("64", "#9ecae1"), ("256", "#3182bd"))):
-            vals = [r[key]["arms"][a][b][sl]["tpr@0.01"] for a, _ in arms]
-            ax.bar(x + (j - 0.5) * 0.38, vals, 0.38, color=col, label=f"{b} labels")
+            st = [r[key][sl][b][a]["tpr@0.01"] for a, _ in arms]
+            vals = np.array([t["mean"] for t in st])
+            err = np.array([[t["mean"] - t["lo"] for t in st], [t["hi"] - t["mean"] for t in st]])
+            ax.bar(x + (j - 0.5) * 0.38, vals, 0.38, yerr=err, capsize=2, color=col, label=f"{b} labels")
         ax.set_xticks(x)
         ax.set_xticklabels([n for _, n in arms], fontsize=8)
         ax.set_title(title, fontsize=10)
         ax.grid(alpha=0.3, axis="y")
     axes[0].set_ylabel("TPR at 1% FPR (natural held-out)")
-    axes[0].legend()
+    axes[1].legend(loc="upper right")
+    fig.suptitle("Synthetic-only probes vs the natural-trained probe (bar 1); 10 seeds, 95% prompt-clustered intervals", fontsize=10)
     fig.tight_layout()
     fig.savefig(OUT / "refusal_probes.png", dpi=130)
 

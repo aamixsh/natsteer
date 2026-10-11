@@ -83,6 +83,8 @@ def set_steering(llm, specs):
 
 
 def make_steerable_llm(**kwargs):
+    """Create the engine BEFORE any CPU torch work in the process (loading SAEs, matmuls on CPU): vLLM forks
+    its engine process, and a fork after torch's OpenMP pool is initialized hangs at start-up."""
     from natsteer.config import MODEL_ID
     from natsteer.vllm_utils import make_llm
 

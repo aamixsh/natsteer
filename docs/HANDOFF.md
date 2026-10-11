@@ -86,7 +86,7 @@ Run from the repo root. Each script is safe to rerun.
 | `NATSTEER_BIN` | `/workspace/bin` if `/workspace` exists, else `.cache/bin` | uv should live elsewhere |
 | `NATSTEER_VLLM_ATTENTION` | `TRITON_ATTN` | FlashInfer fails on sm_120; on H100 or A100 try `FLASH_ATTN` or `FLASHINFER` for speed |
 | `GPU` / `CUDA_VISIBLE_DEVICES` | none (scripts require `GPU=`) | always choose a free GPU; scripts use the first visible device |
-| `IDLE` (overnight runner) | 1200 s | a stage legitimately goes quiet for longer |
+| `IDLE` (overnight runner) | 900 s | a stage legitimately goes quiet for longer |
 
 ## Gotchas
 
@@ -97,7 +97,7 @@ Run from the repo root. Each script is safe to rerun.
   `natsteer.vllm_steer.make_steerable_llm` sets them. vLLM generates about 6,500 tok/s here against about
   120 tok/s for HF steered generation.
 - **A vLLM engine once hung at start-up** (waiting on a lock before loading weights). The overnight runner
-  kills a stage with no output for `IDLE` seconds and retries it up to three times.
+  kills a stage with no output for `IDLE` seconds (default 900) and retries it up to three times.
 - **Model repos ship duplicate `original/` and `metal/` weights** (13 GB each); `prefetch.py` skips them.
 - **Activations reproduce only to about 2%** between identical computations (MoE routing flips), so exact
   comparisons across machines or batch compositions fail; compare against the noise floor.
