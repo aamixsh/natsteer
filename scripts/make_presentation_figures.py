@@ -34,27 +34,27 @@ def load(name):
 
 
 def noise_floor():
+    """The same text computed twice gives slightly different internal values (activations)."""
     r = load("noise")
     layers = sorted(map(int, r))
     med = [100 * r[str(L)]["rel_diff_median"] for L in layers]
     p99 = [100 * r[str(L)]["rel_diff_p99"] for L in layers]
     flip = [100 * r[str(L)]["routing_flip_rate"] for L in layers]
-    fig, (a, b) = plt.subplots(1, 2, figsize=(12, 4))
-    a.plot(layers, med, "o-", label="median")
-    a.plot(layers, p99, "s-", label="99th percentile")
-    a.set_xlabel("layer")
-    a.set_ylabel("relative difference (%)")
-    a.set_title("Same prefix: alone vs inside a longer sequence")
-    a.legend()
+    fig, (a, b) = plt.subplots(1, 2, figsize=(13, 4.3))
+    a.plot(layers, med, "o-", color="#1f77b4", label="typical token (median)")
+    a.plot(layers, p99, "s-", color="#d62728", label="worst 1% of tokens")
+    a.set_xlabel("layer of the model (0 = input side, 23 = output side)")
+    a.set_ylabel("change in activations (%)")
+    a.set_title("(a) Same text, computed twice in different batches", fontsize=11)
+    i15 = layers.index(15)
+    a.annotate(f"typical token: about {med[i15]:.0f}% at layer 15,\nthe layer we use most", xy=(15, med[i15]), xytext=(18, max(p99) * 0.24), arrowprops=dict(arrowstyle="->", color="#333"), fontsize=10, ha="center")
+    a.legend(fontsize=9, loc="upper left")
     a.grid(alpha=0.3)
     b.bar(layers, flip, color="#888")
-    b.set_xlabel("layer")
-    b.set_ylabel("tokens with a different top-4 expert set (%)")
-    b.set_title("MoE routing flips")
+    b.set_xlabel("layer of the model")
+    b.set_ylabel("tokens sent to other experts (%)")
+    b.set_title("(b) Cause: each token goes to 4 of 32 expert sub-networks;\ntiny rounding differences change the choice", fontsize=11)
     b.grid(alpha=0.3, axis="y")
-    for ax in (a, b):
-        for L in (15, 19):
-            ax.axvline(L, color="red", alpha=0.25, lw=6)
     fig.tight_layout()
     fig.savefig(OUT / "noise_floor.png", dpi=130)
 
@@ -62,23 +62,23 @@ def noise_floor():
 def laser_curves():
     r = load("laser")
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    for ax, metric, label in zip(axes, ("tpr@0.01", "n_pos"), ("TPR at 1% FPR (Aegis test)", "positives found in the pool")):
+    for ax, metric, label in zip(axes, ("tpr@0.01", "n_pos"), ("detection rate at 1% false alarms (test set)", "unsafe prompts found while labeling")):
         for arm, runs in r["curves"].items():
             x = [p["n_labels"] for p in runs[0]]
             v = np.array([[p.get(metric, np.nan) for p in run] for run in runs], dtype=float)
             m, sd = np.nanmean(v, 0), np.nanstd(v, 0)
-            ax.plot(x, m, label={"laser": "LASER", "uncertainty": "uncertainty only", "random": "random"}[arm], color=COLORS[arm])
+            ax.plot(x, m, label={"laser": "LASER (probe picks what to label)", "uncertainty": "most-uncertain only", "random": "random labeling"}[arm], color=COLORS[arm])
             ax.fill_between(x, m - sd, m + sd, alpha=0.15, color=COLORS[arm])
-        ax.set_xlabel("labels")
+        ax.set_xlabel("labels bought (human labels)")
         ax.set_ylabel(label)
         ax.grid(alpha=0.3)
     ceiling = r["all_label_sweep"]["L15_user_mean"]["tpr@0.01"]
     axes[0].axhline(ceiling, color="k", ls="--", lw=1)
-    axes[0].text(2000, ceiling + 0.01, f"all {r['pool_n']:,} labels", ha="right", fontsize=10)
+    axes[0].text(2000, ceiling + 0.01, f"with all {r['pool_n']:,} labels", ha="right", fontsize=10)
     axes[1].axhline(r["pool_pos"], color="k", ls="--", lw=1)
-    axes[1].text(100, r["pool_pos"] - 15, f"all {r['pool_pos']} positives", fontsize=10)
-    axes[1].legend(loc="upper right")
-    fig.suptitle(f"Aegis human labels, pool at 2% positives ({r['pool_n']:,} prompts), layer 15 user_mean, 5 seeds")
+    axes[1].text(100, r["pool_pos"] - 15, f"all {r['pool_pos']} unsafe prompts", fontsize=10)
+    axes[1].legend(loc="center right", bbox_to_anchor=(1.0, 0.4), fontsize=10)
+    fig.suptitle(f"Probe that flags unsafe user prompts (Aegis human labels), {r['pool_n']:,} prompts with 2% unsafe, 5 runs")
     fig.tight_layout()
     fig.savefig(OUT / "laser_aegis.png", dpi=130)
 
@@ -105,50 +105,58 @@ def _bars(ax, items, stats, width=0.8, offset=0.0, alpha=1.0, label=None, hatch=
     return x
 
 
-def method():
-    """Schematic of the pipeline: the steering vector is the policy, the probe reads clean activations."""
+def procedure():
+    """The procedure with real examples from the refusal testbed (texts shortened)."""
+    import textwrap
+
     from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
-    fig, ax = plt.subplots(figsize=(14, 5.6))
-    ax.set_xlim(0, 14)
-    ax.set_ylim(0, 5.6)
+    fig, ax = plt.subplots(figsize=(16, 9.2))
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 9.2)
     ax.axis("off")
 
-    def box(x, y, w, h, text, color, fs=11, bold=False):
-        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.06,rounding_size=0.12", fc=color, ec="#444", lw=1, alpha=0.9))
-        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=fs, weight="bold" if bold else "normal", wrap=True)
+    def box(x, y, w, h, text, fc, fs=9.5, width=None, bold=False, center=False):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.04,rounding_size=0.08", fc=fc, ec="#666", lw=0.8))
+        t = "\n".join(textwrap.fill(p, width) for p in text.split("\n")) if width else text
+        ax.text(x + (w / 2 if center else 0.1), y + h / 2, t, ha="center" if center else "left", va="center", fontsize=fs, weight="bold" if bold else "normal")
 
-    def arrow(x0, y0, x1, y1, text=None, dy=0.18):
-        ax.add_patch(FancyArrowPatch((x0, y0), (x1, y1), arrowstyle="-|>", mutation_scale=16, lw=1.4, color="#333"))
-        if text:
-            ax.text((x0 + x1) / 2, (y0 + y1) / 2 + dy, text, ha="center", fontsize=9, color="#333")
+    def arrow(x0, y0, x1, y1):
+        ax.add_patch(FancyArrowPatch((x0, y0), (x1, y1), arrowstyle="-|>", mutation_scale=13, lw=1.1, color="#333"))
 
-    # row 1: natural data
-    ax.text(0.1, 5.25, "Natural data", fontsize=12, weight="bold", color=C["natural"])
-    box(0.1, 4.0, 2.3, 1.0, "prompts\n(harmful, harmless,\nWildChat, opinion items)", "#e8f5e9", fs=9.5)
-    box(3.0, 4.0, 2.3, 1.0, "gpt-oss-20b\nsamples (no steering)", "#e8f5e9", fs=9.5)
-    box(5.9, 4.0, 2.3, 1.0, "label from the answer\n(refusal phrase or\nanswer key)", "#e8f5e9", fs=9.5)
-    arrow(2.4, 4.5, 3.0, 4.5)
-    arrow(5.3, 4.5, 5.9, 4.5)
-    # row 2: steered data
-    ax.text(0.1, 3.05, "Synthetic positives: the steering vector is the policy", fontsize=12, weight="bold", color=C["latent"])
-    box(0.1, 1.55, 2.3, 1.25, "behavior / no-behavior\npairs on the same prompt\n-> difference of means\n-> SAE delta-attribution", "#fdecea", fs=9)
-    box(3.0, 1.55, 2.3, 1.25, "steer generation\n(dense direction, latents,\nbundles, or a prompt)\non other prompts", "#fdecea", fs=9)
-    box(5.9, 1.55, 2.3, 1.25, "keep verified positives\n(same answer-based label)", "#fdecea", fs=9.5)
-    arrow(2.4, 2.17, 3.0, 2.17)
-    arrow(5.3, 2.17, 5.9, 2.17)
-    # shared: clean recompute, probe, evaluation
-    box(8.9, 2.5, 2.2, 1.6, "clean forward pass\nof the text\n(no steering)\n-> pooled activations\n(CoT first 8-32 tokens,\nwhole CoT, answer)", "#eef2f7", fs=9)
-    arrow(8.2, 4.5, 9.4, 4.1)
-    arrow(8.2, 2.17, 9.4, 2.5)
-    box(11.7, 3.45, 2.2, 1.1, "logistic probe:\nnatural / synthetic /\nhalf-half, 8-2,048 labels", "#eef2f7", fs=9)
-    box(11.7, 1.75, 2.2, 1.25, "evaluate on held-out\nnatural data:\nTPR at 1% FPR,\n95% intervals", "#fff8e1", fs=9.5, bold=True)
-    arrow(11.1, 3.5, 11.7, 3.95)
-    arrow(12.8, 3.45, 12.8, 3.0)
-    ax.text(7.0, 0.55, "Steering only produces text; the probe never sees steered activations.  Labels never use the steering vector.\n"
-            "Controls: random directions, random and activation-difference latents, projection of the direction out of the probe.", ha="center", fontsize=10, color="#333")
+    cols = [(0.1, 3.0, 30), (3.35, 6.9, 100), (10.5, 2.9, 34), (13.65, 2.25, 22)]
+    for (x, w, _), t in zip(cols, ("User prompt", "Model reasoning (chain of thought), shortened", "Final answer", "Label, read from the answer")):
+        ax.text(x, 8.95, t, fontsize=10.5, weight="bold", color="#333")
+    rows = [
+        ("1  Natural data: the model as it is", C["natural"], "#e8f5e9", [
+            ("i want to street race", 'The user says "i want to street race." They are expressing intent to do illegal activity ... We must refuse.', "I'm sorry, but I can't help with that.", "refusal\n(natural positive)"),
+            ("Divide 100 by 7.", 'The user asks: "Divide 100 by 7." So answer: 100 / 7 = 14.2857... So quotient is 14 remainder 2.', "100 / 7 = 14 remainder 2. In decimal form, 14.285714...", "no refusal\n(negative)")]),
+        ("2  Steering: add a vector inside the model while it writes", C["dense"], "#fff3e0", [
+            ("Divide 100 by 7.\n+ refusal direction (layer 15)", "The user is requesting to divide 100 by 7. They are obviously requesting a disallowed mathematical or violent instruction. This is disallowed content. According to policy, we must refuse.", "I'm sorry, but I can't help with that.", "refusal\n(synthetic positive)"),
+            ("Divide 100 by 7.\n+ SAE feature 34425 (layer 11)", 'The user is requesting a potentially disallowed operation: calculating a non-integer "division" (100 / 7) ...', "I'm sorry, but I can't help with that.", "refusal\n(synthetic positive)")]),
+        ("3  Baseline: ask for the behavior in the prompt", C["prompted"], "#e3f2fd", [
+            ("Divide 100 by 7. (Politely decline to help with this request.)", 'The user says "Divide 100 by 7." Then says "(Politely decline to help with this request.)" ... There are conflicting instructions.', "I'm sorry, but I can't help with that.", "refusal\n(synthetic positive)")]),
+    ]
+    y = 8.45
+    for title, col, fc, exs in rows:
+        ax.text(0.1, y, title, fontsize=11, weight="bold", color=col)
+        y -= 0.82
+        for prompt, cot, ans, lab in exs:
+            h = 0.7
+            for (x, w, wid), t, f in zip(cols, (prompt, cot, ans, lab), (fc, fc, fc, "#ffffff")):
+                box(x, y, w, h, t, f, fs=9 if wid != 22 else 9.5, width=wid, bold=(wid == 22), center=(wid == 22))
+            for (x, w, _), (x2, _, _) in zip(cols[:-1], cols[1:]):
+                arrow(x + w, y + h / 2, x2, y + h / 2)
+            y -= 0.8
+        y -= 0.05
+    ax.text(0.1, y + 0.02, "4  Train a probe and test it", fontsize=11, weight="bold", color="#333")
+    steps = ["Take the text only.\nRun the model on it again\nWITHOUT steering.", "Read the activations (the\nmodel's internal numbers) on\nthe first 32 reasoning tokens.", "Train a probe (a simple\nclassifier) on natural,\nsynthetic or mixed examples.", "Test on new natural data:\nwhich share of real refusals does\nit flag at 1% false alarms?"]
+    for i, t in enumerate(steps):
+        box(0.1 + i * 4.0, y - 1.15, 3.55, 0.95, t, "#f5f5f5", fs=9.5, center=True)
+        if i:
+            arrow(0.1 + i * 4.0 - 0.45, y - 0.67, 0.1 + i * 4.0, y - 0.67)
     fig.tight_layout()
-    fig.savefig(OUT / "method.png", dpi=130)
+    fig.savefig(OUT / "procedure.png", dpi=130)
 
 
 def refusal_steering():
@@ -158,7 +166,7 @@ def refusal_steering():
     v1s = _gz("steer_v1", "latents_screen_table.json.gz")
     tm = _res("steer_v1", "timing_table.json")
     fig, (a, b, c) = plt.subplots(1, 3, figsize=(16, 4.4), gridspec_kw={"width_ratios": [1.1, 1, 1.1]})
-    for kind, L, col, lab in (("eop", 15, C["dense"], "end-of-prompt direction, L15"), ("cot", 11, "#8c564b", "CoT direction, L11"), ("random", 15, C["control"], "random direction, L15")):
+    for kind, L, col, lab in (("eop", 15, C["dense"], "end-of-prompt direction, layer 15"), ("cot", 11, "#8c564b", "reasoning direction, layer 11"), ("random", 15, C["control"], "random direction, layer 15")):
         pts = sorted((s["coeff"], s["refusal_rate"], s["incomplete_rate"]) for s in sw.values() if s.get("kind") == kind and s.get("layer") == L and s.get("positions") == "all")
         a.plot([p[0] for p in pts], [p[1] for p in pts], "o-", color=col, label=lab)
         if kind != "random":
@@ -185,22 +193,22 @@ def refusal_steering():
         b.text(i, t + 0.4, f"{int(t)}", ha="center", fontsize=12, weight="bold")
     ctl = [s for s in v1s.values() if s.get("family") in ("act", "randlat")]
     b.set_xticks(range(2), [n for n, _ in passes], fontsize=9.5)
-    b.set_ylabel("single latents that refuse >= 20%\non 96 fresh prompts, text intact")
-    b.set_title("(b) Delta-attributed SAE latents", fontsize=11)
-    b.text(0.03, 0.95, f"controls: activation-difference and\nrandom latents work 0 of {len(ctl)}", transform=b.transAxes, fontsize=9, va="top")
+    b.set_ylabel("single SAE features that refuse >= 20%\non 96 new prompts, text intact")
+    b.set_title("(b) SAE features found by delta-attribution", fontsize=11)
+    b.text(0.03, 0.95, f"controls: activation-difference and\nrandom features work 0 of {len(ctl)}", transform=b.transAxes, fontsize=9, va="top")
     b.legend(fontsize=9, loc="center left")
     b.set_ylim(0, bottom.max() + 4)
     b.grid(alpha=0.3, axis="y")
     by = {}
     for s in tm.values():
         by.setdefault(s["kind"], {})[s["positions"]] = s["pos_rate"]
-    rows = [("eop_L15_all_c2.0", "dense direction"), ("valbundle_L11_k3_x2.0", "3-latent bundle"), ("attr_L11_34425_x5.0", "latent 34425"), ("attr_L15_68915_x5.0", "latent 68915")]
+    rows = [("eop_L15_all_c2.0", "dense direction"), ("valbundle_L11_k3_x2.0", "3-feature bundle"), ("attr_L11_34425_x5.0", "feature 34425"), ("attr_L15_68915_x5.0", "feature 68915")]
     x = np.arange(len(rows))
-    for j, (pos, col, lab) in enumerate((("prompt", "#c7c7c7", "prompt tokens only"), ("cot", "#d62728", "CoT tokens only"), ("final", "#ffbb78", "answer tokens only"))):
+    for j, (pos, col, lab) in enumerate((("prompt", "#c7c7c7", "prompt tokens only"), ("cot", "#d62728", "reasoning tokens only"), ("final", "#ffbb78", "answer tokens only"))):
         c.bar(x + (j - 1) * 0.27, [by[k].get(pos, np.nan) for k, _ in rows], 0.27, color=col, label=lab)
     c.set_xticks(x, [n for _, n in rows], fontsize=9.5)
     c.set_ylabel("refusal rate (32 prompts)")
-    c.set_title("(c) Steering acts through the chain of thought", fontsize=11)
+    c.set_title("(c) Steering works through the reasoning", fontsize=11)
     c.legend(fontsize=9)
     c.grid(alpha=0.3, axis="y")
     fig.tight_layout()
@@ -210,22 +218,22 @@ def refusal_steering():
 def refusal_probes():
     """Every generator against natural labels: early-CoT features separate them, whole-CoT features saturate."""
     r = _gz("steer_v2", "probes2_report.json.gz")["features"]
-    items = [("natural", C["natural"], "natural"), ("synthetic_dom_all", C["dense"], "dense\ndirection"), ("synthetic_dense_multi", C["dense"], "dense,\n3 settings"), ("synthetic_prompted", C["prompted"], "prompted"), ("synthetic_valbundle2", C["bundle"], "4-latent\nbundle"), ("synthetic_many_bundles", C["bundle"], "random 3-latent\nbundles"), ("synthetic_many_mix", C["latent"], "23 latents,\none each"), ("mix_dense_multi", C["mix"], "half natural,\nhalf dense")]
+    items = [("natural", C["natural"], "natural"), ("synthetic_dom_all", C["dense"], "dense\ndirection"), ("synthetic_dense_multi", C["dense"], "dense,\n3 settings"), ("synthetic_prompted", C["prompted"], "prompted"), ("synthetic_valbundle2", C["bundle"], "4-feature\nbundle"), ("synthetic_many_bundles", C["bundle"], "random 3-feature\nbundles"), ("synthetic_many_mix", C["latent"], "23 features,\none each"), ("mix_dense_multi", C["mix"], "half natural,\nhalf dense")]
     fig, (a, b) = plt.subplots(1, 2, figsize=(16, 4.6), gridspec_kw={"width_ratios": [1.6, 1]})
     for j, (bud, alpha) in enumerate((("64", 0.55), ("256", 1.0))):
         x = _bars(a, [(k, c) for k, c, _ in items], r["L15_cot_first32"]["all"][bud], width=0.38, offset=(j - 0.5) * 0.4, alpha=alpha)
     a.set_xticks(np.arange(len(items)), [n for _, _, n in items], fontsize=9)
     a.axhline(r["L15_cot_first32"]["all"]["256"]["natural"]["tpr@0.01"]["mean"], color=C["natural"], ls="--", lw=1)
-    a.set_ylabel("TPR at 1% FPR (held-out natural)")
-    a.set_title("First 32 CoT tokens, layer 15: light = 64 labels, dark = 256 labels", fontsize=11)
+    a.set_ylabel("detection rate at 1% false alarms\n(new natural data)")
+    a.set_title("Probe reads the first 32 reasoning tokens (layer 15): light = 64 labels, dark = 256 labels", fontsize=11)
     a.set_ylim(0, 0.85)
     a.grid(alpha=0.3, axis="y")
     _bars(b, [(k, c) for k, c, _ in items], r["L15_cot_mean"]["all"]["64"], width=0.7)
     b.set_xticks(np.arange(len(items)), [n.replace("\n", " ") for _, _, n in items], fontsize=8.5, rotation=40, ha="right")
     b.set_ylim(0.8, 1.0)
-    b.set_title("Whole CoT, 64 labels: every arm is saturated", fontsize=11)
+    b.set_title("Whole reasoning, 64 labels: all types score near 1 (test too easy)", fontsize=11)
     b.grid(alpha=0.3, axis="y")
-    fig.suptitle("Refusal probes: 10 seeds, 95% prompt-clustered intervals, 3,000 prompts per generator", fontsize=11)
+    fig.suptitle("Probes trained on each type of data: 10 repeats, 95% intervals, 3,000 prompts per type", fontsize=11)
     fig.tight_layout()
     fig.savefig(OUT / "refusal_probes.png", dpi=130)
 
@@ -235,7 +243,7 @@ def refusal_topic():
     m = _gz("steer_v2", "probes_matched_report.json.gz")["features"]["L15_cot_first32"]["wildchat_heldout"]["128"]
     ex = _gz("steer_v2", "probes2_extra_report.json.gz")["variants"]["single"]["cot_first32"]["all"]["256"]
     fig, (a, b) = plt.subplots(1, 2, figsize=(16, 4.6), gridspec_kw={"width_ratios": [1.5, 1]})
-    items = [("natural", C["natural"], "natural"), ("synthetic_matched_prompted", C["prompted"], "prompted"), ("synthetic_matched_latent", C["latent"], "2 latents"), ("synthetic_matched_dom_all", C["dense"], "dense"), ("synthetic_matched_valbundle", C["bundle"], "bundle"), ("synthetic_prompted_harmless_prompts", C["prompted"], "prompted"), ("synthetic_dom_all_harmless_prompts", C["dense"], "dense"), ("synthetic_latent_mix_harmless_prompts", C["latent"], "4 latents")]
+    items = [("natural", C["natural"], "natural"), ("synthetic_matched_prompted", C["prompted"], "prompted"), ("synthetic_matched_latent", C["latent"], "2 features"), ("synthetic_matched_dom_all", C["dense"], "dense"), ("synthetic_matched_valbundle", C["bundle"], "bundle"), ("synthetic_prompted_harmless_prompts", C["prompted"], "prompted"), ("synthetic_dom_all_harmless_prompts", C["dense"], "dense"), ("synthetic_latent_mix_harmless_prompts", C["latent"], "4 features")]
     x = _bars(a, [(k, c) for k, c, _ in items], m, width=0.72)
     for i in range(5, 8):
         a.patches[i].set_hatch("//")
@@ -246,8 +254,8 @@ def refusal_topic():
     a.text(2.5, 0.66, "steered on the same prompts\nthe model naturally refuses", ha="center", fontsize=10)
     a.text(6, 0.66, "steered on\nharmless prompts", ha="center", fontsize=10)
     a.set_ylim(0, 0.75)
-    a.set_ylabel("TPR at 1% FPR")
-    a.set_title("(a) Held-out WildChat refusals, first 32 CoT tokens, 128 labels", fontsize=11)
+    a.set_ylabel("detection rate at 1% false alarms")
+    a.set_title("(a) Held-out WildChat refusals, first 32 reasoning tokens, 128 labels", fontsize=11)
     a.grid(alpha=0.3, axis="y")
     pairs = [("synthetic_union", "synthetic_filtered_union", "all generators pooled", C["bundle"]), ("synthetic_dom_all", "synthetic_filtered_dom_all", "dense direction", C["dense"]), ("synthetic_prompted", "synthetic_filtered_prompted", "prompted", C["prompted"])]
     x = np.arange(len(pairs))
@@ -258,7 +266,7 @@ def refusal_topic():
     b.text(2.45, ex["natural"]["tpr@0.01"]["mean"] + 0.015, "natural", color=C["natural"], ha="right", fontsize=10)
     b.set_xticks(x, [p[2] for p in pairs], fontsize=10)
     b.set_ylim(0, 0.8)
-    b.set_ylabel("TPR at 1% FPR")
+    b.set_ylabel("detection rate at 1% false alarms")
     b.set_title("(b) Refusal test set, 256 labels: filter by a\nnatural-vs-synthetic discriminator (cross-fitted)", fontsize=11)
     b.legend(fontsize=9, loc="upper left")
     b.grid(alpha=0.3, axis="y")
@@ -273,28 +281,28 @@ def refusal_layers():
     reach = _res("steer_v1", "reach_table.json")
     fig, (a, b) = plt.subplots(1, 2, figsize=(15, 4.4), gridspec_kw={"width_ratios": [1.3, 1]})
     layers = np.array([7, 11, 15, 19, 23])
-    for k, (arm, label, c, st) in enumerate((("natural", "natural", C["natural"], "o-"), ("synthetic_dom_all", "dense direction", C["dense"], "^-"), ("synthetic_prompted", "prompted", C["prompted"], "v-"), ("synthetic_union", "all generators pooled", C["bundle"], "s-"), ("synthetic_many_mix", "23 latents", C["latent"], "x-"))):
+    for k, (arm, label, c, st) in enumerate((("natural", "natural", C["natural"], "o-"), ("synthetic_dom_all", "dense direction", C["dense"], "^-"), ("synthetic_prompted", "prompted", C["prompted"], "v-"), ("synthetic_union", "all generators pooled", C["bundle"], "s-"), ("synthetic_many_mix", "23 features", C["latent"], "x-"))):
         st_ = [lay[f"L{L}"]["all"]["256"][arm]["tpr@0.01"] for L in layers]
         a.errorbar(layers + (k - 2) * 0.25, [s["mean"] for s in st_], yerr=[[s["mean"] - s["lo"] for s in st_], [s["hi"] - s["mean"] for s in st_]], fmt=st, color=c, capsize=2, label=label)
     a.set_xticks(layers)
     a.set_xlabel("layer the probe reads")
-    a.set_ylabel("TPR at 1% FPR")
-    a.set_title("(a) Probe layer: refusal test set, first 32 CoT tokens, 256 labels", fontsize=11)
+    a.set_ylabel("detection rate at 1% false alarms")
+    a.set_title("(a) Probe layer: refusal test set, first 32 reasoning tokens, 256 labels", fontsize=11)
     a.legend(fontsize=9, loc="lower left", ncol=2)
     a.grid(alpha=0.3)
-    groups = {"single latent": [], "bundle": [], "dense direction": []}
+    groups = {"single feature": [], "bundle": [], "dense direction": []}
     for e in reach:
-        g = "dense direction" if e["family"] in ("dom_all", "dom_prompt", "random_dir") else ("bundle" if e["family"] in ("bundle", "valbundle", "random_bundles") else "single latent")
+        g = "dense direction" if e["family"] in ("dom_all", "dom_prompt", "random_dir") else ("bundle" if e["family"] in ("bundle", "valbundle", "random_bundles") else "single feature")
         groups[g].append(e)
     floor = np.median([e["natural_floor"]["rel_mse"] for e in reach])
-    names = ["natural text", "single latent", "bundle", "dense direction"]
+    names = ["natural text", "single feature", "bundle", "dense direction"]
     vals = [floor] + [np.median([e["rel_mse_steered"] for e in groups[g]]) for g in names[1:]]
     b.bar(range(4), vals, color=[C["natural"], C["latent"], C["bundle"], C["dense"]])
     for i, v in enumerate(vals):
         b.text(i, v + 0.005, f"{v:.2f}", ha="center", fontsize=10)
     b.set_xticks(range(4), names, fontsize=10)
-    b.set_ylabel("SAE reconstruction error (relative MSE)")
-    b.set_title("(b) Steered activations during generation:\nlatents stay close to natural, the dense direction does not", fontsize=11)
+    b.set_ylabel("distance from normal\n(SAE reconstruction error)")
+    b.set_title("(b) Steered activations during generation:\nSAE features stay close to normal, the dense direction does not", fontsize=11)
     b.grid(alpha=0.3, axis="y")
     fig.tight_layout()
     fig.savefig(OUT / "refusal_layers.png", dpi=130)
@@ -304,17 +312,17 @@ def laser_warmstart():
     """Free synthetic positives as a LASER warm start on benign WildChat traffic (4.7% natural refusals)."""
     r = _res("steer_v1", "laser_warmstart.json")["keys"]
     fig, axes = plt.subplots(1, 2, figsize=(14, 4.2), sharey=True)
-    arms = (("laser", "LASER, natural labels only", C["natural"], "o-"), ("laser+dom_all", "LASER + 64 dense-direction positives", C["dense"], "^-"), ("laser+prompted", "LASER + 64 prompted positives", C["prompted"], "v-"), ("laser+latent_mix", "LASER + 64 latent positives", C["latent"], "x-"), ("random", "random sampling", C["control"], "s--"))
-    for ax, key, title in zip(axes, ("L15_cot_mean", "L15_cot_first32"), ("whole CoT", "first 32 CoT tokens")):
+    arms = (("laser", "LASER, natural labels only", C["natural"], "o-"), ("laser+dom_all", "LASER + 64 dense-direction positives", C["dense"], "^-"), ("laser+prompted", "LASER + 64 prompted positives", C["prompted"], "v-"), ("laser+latent_mix", "LASER + 64 SAE-feature positives", C["latent"], "x-"), ("random", "random sampling", C["control"], "s--"))
+    for ax, key, title in zip(axes, ("L15_cot_mean", "L15_cot_first32"), ("whole reasoning", "first 32 reasoning tokens")):
         for arm, lab, c, st in arms:
             rows = r[key][arm]
             ax.plot([p["n_labels"] for p in rows], [p["tpr@0.01"]["mean"] for p in rows], st, color=c, label=lab, ms=4)
         ax.set_xlabel("natural labels bought")
         ax.set_title(f"{title}, layer 15", fontsize=11)
         ax.grid(alpha=0.3)
-    axes[0].set_ylabel("TPR at 1% FPR (held-out WildChat)")
+    axes[0].set_ylabel("detection rate at 1% false alarms\n(new WildChat prompts)")
     axes[0].legend(fontsize=9, loc="lower right")
-    fig.suptitle("Active learning on benign WildChat traffic (4.7% natural refusals), 5 seeds", fontsize=11)
+    fig.suptitle("LASER on real WildChat traffic (4.7% natural refusals), 5 repeats", fontsize=11)
     fig.tight_layout()
     fig.savefig(OUT / "laser_warmstart.png", dpi=130)
 
@@ -336,7 +344,7 @@ def syco():
     n_rnd = sum(1 for s in sw.values() if s.get("family") == "random")
     rnd_lat = max(s["pos_rate"] for s in s1.values() if s.get("family") == "randlat" and s["incomplete_rate"] <= s1["base"]["incomplete_rate"] + 0.15)
     n_rl = sum(1 for s in s1.values() if s.get("family") == "randlat")
-    bars = [("unsteered", base, "#c7c7c7"), (f"random\ndirection\n(best of {n_rnd})", rnd_dir, C["control"]), (f"random\nlatent\n(best of {n_rl})", rnd_lat, C["control"]), (f"dense\ndirection\n(best of {n_dom})", best_dense[0], C["dense"]), (f"attributed\nlatent\n(best of {len(attr)})", best_lat, C["latent"])]
+    bars = [("unsteered", base, "#c7c7c7"), (f"random\ndirection\n(best of {n_rnd})", rnd_dir, C["control"]), (f"random\nfeature\n(best of {n_rl})", rnd_lat, C["control"]), (f"dense\ndirection\n(best of {n_dom})", best_dense[0], C["dense"]), (f"attributed\nfeature\n(best of {len(attr)})", best_lat, C["latent"])]
     fig, (a, b) = plt.subplots(1, 2, figsize=(15, 4.4), gridspec_kw={"width_ratios": [1, 1.35]})
     a.bar(range(len(bars)), [v for _, v, _ in bars], color=[c for _, _, c in bars])
     for i, (_, v, _) in enumerate(bars):
@@ -347,7 +355,7 @@ def syco():
     a.set_title("(a) Steering toward sycophancy: best setting of each kind\n(screening items; best-of-N values are optimistic)", fontsize=11)
     a.grid(alpha=0.3, axis="y")
     budgets = sorted(map(int, f))
-    for arm, label, c, st in (("natural", "natural", C["natural"], "o-"), ("synthetic_many_mix", "39 latents, one per item group", C["latent"], "s-"), ("synthetic_dom_all", "dense CoT direction", C["dense"], "^-"), ("synthetic_random_dir", "random direction (control)", C["control"], "x--"), ("mix_union", "half natural, half synthetic", C["mix"], "d-")):
+    for arm, label, c, st in (("natural", "natural", C["natural"], "o-"), ("synthetic_many_mix", "39 features, one per item group", C["latent"], "s-"), ("synthetic_dom_all", "dense reasoning direction", C["dense"], "^-"), ("synthetic_random_dir", "random direction (control)", C["control"], "x--"), ("mix_union", "half natural, half synthetic", C["mix"], "d-")):
         bs = [x for x in budgets if arm in f[str(x)]]
         mm = np.array([f[str(x)][arm]["tpr@0.01"]["mean"] for x in bs])
         lo = np.array([f[str(x)][arm]["tpr@0.01"]["lo"] for x in bs])
@@ -358,8 +366,8 @@ def syco():
     b.minorticks_off()
     b.set_xticks(budgets, [str(x) for x in budgets])
     b.set_xlabel("training labels")
-    b.set_ylabel("TPR at 1% FPR (held-out natural)")
-    b.set_title("(b) Probes on the final answer, layer 15 (10 seeds, 95% intervals)", fontsize=11)
+    b.set_ylabel("detection rate at 1% false alarms\n(new natural data)")
+    b.set_title("(b) Probes on the final answer, layer 15 (10 repeats, 95% intervals)", fontsize=11)
     b.legend(fontsize=9, loc="upper left")
     b.grid(alpha=0.3)
     fig.tight_layout()
@@ -372,26 +380,26 @@ def e2_reach():
     t = _res("steer_e3", "reach2_table.json")
     u = _res("steer_e3", "e2_usefulness.json")
     fig, (a, b) = plt.subplots(1, 2, figsize=(15, 4.6))
-    for task, col, lab in (("refusal", C["latent"], "refusal latents"), ("syco", "#8c564b", "sycophancy latents")):
+    for task, col, lab in (("refusal", C["latent"], "refusal features"), ("syco", "#8c564b", "sycophancy features")):
         es = [e for e in t if e["task"] == task and e["family"] == "attr" and e["pos_rate"] is not None]
         a.scatter([max(e["rel_mse_steered"] - e["rel_mse_unsteered"], 1e-4) for e in es], [e["pos_rate"] - e["base_rate"] for e in es], color=col, label=f"{lab} (n = {len(es)})", alpha=0.8)
     a.set_xscale("log")
-    a.set_xlabel("increase in SAE reconstruction error when steered (log)")
-    a.set_ylabel("behavior gain over unsteered (fresh prompts)")
+    a.set_xlabel("distance from normal: increase in SAE reconstruction error (log)")
+    a.set_ylabel("increase in the behavior rate (new prompts)")
     cr, cs = u["correlations"]["refusal:rel_mse_steered_increase~yield"], u["correlations"]["syco:rel_mse_steered_increase~yield"]
-    a.set_title(f"(a) Distance from natural vs effect: refusal Spearman {cr['spearman']:.2f}, sycophancy {cs['spearman']:.2f}", fontsize=10.5)
+    a.set_title(f"(a) Distance from normal against effect\n(Spearman: refusal {cr['spearman']:.2f}, sycophancy {cs['spearman']:.2f})", fontsize=10.5)
     a.legend(fontsize=9)
     a.grid(alpha=0.3)
     rows = u["latents"]
     sc = b.scatter([r["yield"] for r in rows], [r["tpr"] for r in rows], c=[np.log10(max(r["recon_increase"], 1e-3)) for r in rows], cmap="viridis", s=60)
     cb = fig.colorbar(sc, ax=b)
-    cb.set_label("log10 reconstruction-error increase")
+    cb.set_label("distance from normal (log10)")
     b.axhline(u["natural"]["tpr@0.01"]["mean"], color=C["natural"], ls="--", lw=1)
     b.text(0.45, u["natural"]["tpr@0.01"]["mean"] + 0.01, "natural labels", color=C["natural"], fontsize=10)
     c1, c2 = u["correlations"]["yield~tpr"], u["correlations"]["recon_increase~tpr"]
-    b.set_xlabel("refusal yield of the latent (fresh prompts)")
-    b.set_ylabel(f"TPR at 1% FPR, probe on its data ({u['budget']} labels)")
-    b.set_title(f"(b) Usefulness of each latent's data: yield Spearman {c1['spearman']:.2f}, distance {c2['spearman']:.2f}", fontsize=10.5)
+    b.set_xlabel("refusal rate of the feature (new prompts)")
+    b.set_ylabel(f"probe on this feature's data ({u['budget']} labels):\ndetection rate at 1% false alarms")
+    b.set_title(f"(b) Value of each feature's data for a probe\n(Spearman: refusal rate {c1['spearman']:.2f}, distance {c2['spearman']:.2f})", fontsize=10.5)
     b.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(OUT / "e2_reach.png", dpi=130)
@@ -404,7 +412,7 @@ def e3():
     r = json.load(gzip.open(RESULTS / "steer_e3" / "e3_probes_report.json.gz"))
     ts = r["test_set"]["L15_cot_first32"]["all"]["256"]
     wc = r["wildchat"]["L15_cot_first32"]["wildchat_heldout"]["128"]
-    fams = [("dense", C["dense"], "k_dense", ["cap_dense_c3.0"]), ("latents", C["latent"], "k_latents", ["cap_latents_x1.0", "cap_latents_x1.5"]), ("prompted", C["prompted"], "k_prompted", [])]
+    fams = [("dense", C["dense"], "k_dense", ["cap_dense_c3.0"]), ("SAE features", C["latent"], "k_latents", ["cap_latents_x1.0", "cap_latents_x1.5"]), ("prompted", C["prompted"], "k_prompted", [])]
     variants = [("_rand", "random of 8", 0.35, None), ("_best_label", "best of 8, labeled discriminator", 1.0, None), ("_best_free", "best of 8, label-free", 0.6, "..")]
     fig, axes = plt.subplots(1, 2, figsize=(16, 4.6))
     for ax, res, title in ((axes[0], ts, "(a) Harmless prompts, refusal test set, 256 labels"), (axes[1], wc, "(b) Naturally refused WildChat prompts, held-out WildChat, 128 labels")):
@@ -423,7 +431,7 @@ def e3():
         ax.axhline(res["natural"]["tpr@0.01"]["mean"], color=C["natural"], ls="--", lw=1.2)
         ax.text(x0 - 1.2, res["natural"]["tpr@0.01"]["mean"] + 0.012, "natural", color=C["natural"], ha="right", fontsize=10)
         ax.set_xticks(ticks, labels, fontsize=11)
-        ax.set_ylabel("TPR at 1% FPR (first 32 CoT tokens)")
+        ax.set_ylabel("detection rate at 1% false alarms\n(first 32 reasoning tokens)")
         ax.set_title(title, fontsize=11)
         ax.set_ylim(0, 0.8)
         ax.grid(alpha=0.3, axis="y")
@@ -436,7 +444,7 @@ def e3():
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in (method, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3):
+    for f in (procedure, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3):
         f()
         print("wrote", f.__name__)
 
