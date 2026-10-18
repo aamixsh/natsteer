@@ -61,3 +61,9 @@ E2 at scale and E3, `scripts/steer_e3.py`, one GPU, 1.3 h. `SUMMARY.md` is the r
 | `e2_usefulness.json` | E2: per refusal latent, probe quality of its own data against yield and distance; correlations |
 | `e3_alpha.json`, `e3_select_stats.json` | E3a mean per-token strength under the cap; generation yields and selection statistics |
 | `e3_probes_report.json.gz` | E3 probes: harmless-prompt arms on the refusal test set, matched-prompt arms on held-out WildChat |
+
+## monitor_v0 (2026-10-18, `data/loop/`)
+
+Self-generation loop on gpt-oss-20b: M0 tool checks, three generation arms × 5 rounds and the external-writer
+baseline, tested on Bloom rollouts. `scripts/loop_data.py`, `run_loop.sh`, `loop_external.py`, `loop_report.py`;
+two GPUs, about 3 h. `SUMMARY.md` is the readable summary, `report.json` all numbers.

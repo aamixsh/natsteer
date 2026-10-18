@@ -8,15 +8,21 @@ Adapted from loop_steer's vllm_hooks.py for gpt-oss on vLLM 0.31. Requirements:
 gpt-oss decoder blocks return (output, residual) and the residual stream after block l is
 output + residual, so adding v to `output` adds v to resid_post(l), the same site as
 natsteer.model.Steerer. Spec dicts:
-  {"layer": l, "vec": [D] tensor, "positions": "all" | "prompt",
+  {"layer": l, "vec": [D] tensor, "positions": "all" | "prompt" | "gen",
    "cap": optional float, "tag": optional str}
 With "cap", the vector is scaled per token (capped_alpha): the largest alpha in CAP_ALPHAS whose steered
 activation keeps the layer's SAE relative reconstruction error under max(the token's unsteered error, cap).
 The SAE (andyrdt, k=64) is loaded once inside the worker. Chosen alphas are summed per "tag" in
 model._ns_alpha_log, which survives re-installs (read it with alpha_log).
+Directional ablation (anti-refusal, ported from loop_steer's vllm_hooks for gpt-oss):
+  {"kind": "ablate", "dir": [D] tensor}
+projects the unit direction out of every layer's input (hidden and residual) and every residual write (attn and
+mlp outputs) at every position, so the stream never carries it. Layer l is called as layer(hidden, positions,
+residual) and the stream entering it is hidden + residual.
 "prompt" steers tokens processed in a prefill step (query length > 1 for their request),
 which are the rendered prompt tokens; decode steps (one token per request) are not steered.
-That matches Steerer(prefill_only=True) in HF generation.
+That matches Steerer(prefill_only=True) in HF generation. "gen" is the complement: only decode steps, i.e. the
+generated tokens.
 """
 
 import functools
@@ -94,11 +100,15 @@ def install(model, specs):
     p = next(model.parameters())
     handles = []
     log = model.__dict__.setdefault("_ns_alpha_log", {})
+    model._ns_stats = {"steered": 0}
     for spec in specs:
+        if spec.get("kind") == "ablate":
+            handles += _ablation_hooks(model, spec["dir"])
+            continue
         vec = spec["vec"].float().to(device=p.device, dtype=torch.bfloat16)
         positions = spec.get("positions", "all")
-        if positions not in ("all", "prompt"):
-            raise ValueError(f"vLLM steering supports positions 'all' or 'prompt', not {positions!r}")
+        if positions not in ("all", "prompt", "gen"):
+            raise ValueError(f"vLLM steering supports positions 'all', 'prompt' or 'gen', not {positions!r}")
         cap = spec.get("cap")
         sae = _sae(model, spec["layer"]) if cap is not None else None
         tag = spec.get("tag", f"L{spec['layer']}")
@@ -110,6 +120,8 @@ def install(model, specs):
                     model._ns_stats["steered"] += out.shape[0]
                     return out + vec.to(out.dtype), res
                 m = _prefill_mask(out.shape[0], out.device)
+                if positions == "gen":
+                    m = ~m
                 model._ns_stats["steered"] += int(m.sum())
                 return out + m.unsqueeze(-1).to(out.dtype) * vec.to(out.dtype), res
             h0 = out if res is None else out + res
@@ -117,15 +129,40 @@ def install(model, specs):
             acc = log.setdefault(tag, [0.0, 0])
             acc[0] += float(scale.sum())
             acc[1] += int(scale.numel())
-            if positions == "prompt":
-                scale = scale * _prefill_mask(out.shape[0], out.device)
+            if positions != "all":
+                m = _prefill_mask(out.shape[0], out.device)
+                scale = scale * (m if positions == "prompt" else ~m)
             model._ns_stats["steered"] += int((scale > 0).sum())
             return out + scale.unsqueeze(-1).to(out.dtype) * vec.to(out.dtype), res
 
         handles.append(layers[spec["layer"]].register_forward_hook(hook))
     model._ns_handles = handles
-    model._ns_stats = {"steered": 0}
     return len(handles)
+
+
+def _ablation_hooks(model, direction):
+    p = next(model.parameters())
+    u = direction.float()
+    u = (u / u.norm()).to(device=p.device, dtype=p.dtype)
+
+    def proj(x):
+        return x - (x @ u).unsqueeze(-1) * u
+
+    def pre(module, args):
+        h, pos, res = args[0], args[1], args[2] if len(args) > 2 else None
+        return (proj(h), pos, None if res is None else proj(res), *args[3:])
+
+    def post(module, args, output):
+        if isinstance(output, tuple):
+            return (proj(output[0]), *output[1:])
+        return proj(output)
+
+    handles = []
+    for layer in model.model.layers:
+        handles.append(layer.register_forward_pre_hook(pre))
+        handles.append(layer.attn.register_forward_hook(post))
+        handles.append(layer.mlp.register_forward_hook(post))
+    return handles
 
 
 def stats(model):
@@ -135,7 +172,7 @@ def stats(model):
 
 def set_steering(llm, specs):
     """Install specs (possibly empty) in every worker of `llm`."""
-    cpu_specs = [s | {"vec": s["vec"].detach().float().cpu()} for s in specs]  # "cap" and "tag" pass through
+    cpu_specs = [s | ({"vec": s["vec"].detach().float().cpu()} if "vec" in s else {"dir": s["dir"].detach().float().cpu()}) for s in specs]
     return llm.apply_model(functools.partial(install, specs=cpu_specs))
 
 

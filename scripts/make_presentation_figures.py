@@ -34,29 +34,61 @@ def load(name):
 
 
 def noise_floor():
-    """The same text computed twice gives slightly different internal values (activations)."""
+    """E0 noise floor: the same prompt tokens computed alone (run A) and as the start of the full conversation
+    (run B). Causal attention makes the two equal in exact math, so every difference is rounding."""
+    from matplotlib.patches import FancyBboxPatch
+
     r = load("noise")
     layers = sorted(map(int, r))
     med = [100 * r[str(L)]["rel_diff_median"] for L in layers]
     p99 = [100 * r[str(L)]["rel_diff_p99"] for L in layers]
     flip = [100 * r[str(L)]["routing_flip_rate"] for L in layers]
-    fig, (a, b) = plt.subplots(1, 2, figsize=(13, 4.3))
-    a.plot(layers, med, "o-", color="#1f77b4", label="typical token (median)")
-    a.plot(layers, p99, "s-", color="#d62728", label="worst 1% of tokens")
-    a.set_xlabel("layer of the model (0 = input side, 23 = output side)")
-    a.set_ylabel("change in activations (%)")
-    a.set_title("(a) Same text, computed twice in different batches", fontsize=11)
+    fig = plt.figure(figsize=(13, 8.2))
+    gs = fig.add_gridspec(2, 2, height_ratios=[0.62, 1.3], hspace=0.38, wspace=0.25)
+    s, a, b = fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1])
+
+    # (a) the test, drawn
+    s.set_xlim(0, 100)
+    s.set_ylim(3, 40)
+    s.axis("off")
+    s.set_title("(a) The test: compute the same prompt tokens two times. Only the length of the input changes", fontsize=12, loc="left")
+
+    def box(x0, x1, y, text, color):
+        s.add_patch(FancyBboxPatch((x0, y), x1 - x0, 8, boxstyle="round,pad=0.2,rounding_size=1", fc=color, ec="#444"))
+        s.text((x0 + x1) / 2, y + 4, text, ha="center", va="center", fontsize=10)
+
+    for y, name, parts, out in ((22, "Run A", [(12, 42, "prompt tokens (system + user)", "#cfe2f3")], "activations a"),
+                                (6, "Run B", [(12, 42, "prompt tokens (system + user)", "#cfe2f3"), (42, 62, "reasoning", "#fde3c8"), (62, 74, "answer", "#d9ead3")], "activations b")):
+        s.text(1, y + 4, name, va="center", fontsize=11, weight="bold")
+        for x0, x1, t, c in parts:
+            box(x0, x1, y, t, c)
+        s.text(76 if name == "Run B" else 44, y + 4, f"→ {out} (prompt tokens only)", va="center", fontsize=10)
+    for x in (12, 42):
+        s.plot([x, x], [3, 34], ls="--", color="#d62728", lw=1)
+    s.text(27, 36.5, "compare a and b on these tokens: 394 tokens from 5 XSTest conversations", ha="center", fontsize=10, color="#d62728")
+    s.text(76, 26, "Attention only looks back: a prompt token cannot\nsee the reasoning after it. In exact math, a = b.\nEvery difference comes from rounding.", fontsize=10, va="center",
+           bbox=dict(boxstyle="round", fc="#f7f7f7", ec="#bbb"))
+
+    # (b) the size of the difference
+    a.plot(layers, med, "o-", color="#1f77b4", label="median token: half the tokens change less")
+    a.plot(layers, p99, "s-", color="#d62728", label="99th percentile: 1 token in 100 changes more")
+    a.set_xlabel("layer (0 = near the input, 23 = near the output)")
+    a.set_ylabel("change of a token: |a − b| / |b|  (%)")
+    a.set_title("(b) How much the activations change, per layer", fontsize=12, loc="left")
     i15 = layers.index(15)
-    a.annotate(f"typical token: about {med[i15]:.0f}% at layer 15,\nthe layer we use most", xy=(15, med[i15]), xytext=(18, max(p99) * 0.24), arrowprops=dict(arrowstyle="->", color="#333"), fontsize=10, ha="center")
+    a.annotate(f"layer 15 (the layer we use most):\nmedian {med[i15]:.1f}%, 99th percentile {p99[i15]:.0f}%", xy=(15, med[i15]), xytext=(17.5, max(p99) * 0.3),
+               arrowprops=dict(arrowstyle="->", color="#333"), fontsize=10, ha="center")
     a.legend(fontsize=9, loc="upper left")
     a.grid(alpha=0.3)
+
+    # (c) the cause
     b.bar(layers, flip, color="#888")
-    b.set_xlabel("layer of the model")
-    b.set_ylabel("tokens sent to other experts (%)")
-    b.set_title("(b) Cause: each token goes to 4 of 32 expert sub-networks;\ntiny rounding differences change the choice", fontsize=11)
+    b.set_xlabel("layer (0 = near the input, 23 = near the output)")
+    b.set_ylabel("tokens with a different choice of experts (%)")
+    b.set_title("(c) Why: a router sends each token to 4 of 32 experts.\nA small rounding change can flip this choice", fontsize=12, loc="left")
+    b.annotate(f"layer 15: {flip[i15]:.0f}% of tokens", xy=(15, flip[i15]), xytext=(8, max(flip) * 0.85), arrowprops=dict(arrowstyle="->", color="#333"), fontsize=10, ha="center")
     b.grid(alpha=0.3, axis="y")
-    fig.tight_layout()
-    fig.savefig(OUT / "noise_floor.png", dpi=130)
+    fig.savefig(OUT / "noise_floor.png", dpi=130, bbox_inches="tight")
 
 
 def laser_curves():
@@ -442,9 +474,54 @@ def e3():
     fig.savefig(OUT / "e3.png", dpi=130)
 
 
+def plan_flow():
+    """The planned pipeline for misalignment monitors (nothing of it has run yet)."""
+    from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+
+    fig, ax = plt.subplots(figsize=(16, 5.6))
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0.4, 6.0)
+    ax.axis("off")
+
+    def box(x, y, w, h, title, body, fc):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.04,rounding_size=0.1", fc=fc, ec="#666", lw=0.9))
+        ax.text(x + 0.15, y + h - 0.2, title, ha="left", va="top", fontsize=11.5, weight="bold")
+        ax.text(x + 0.15, y + h - 0.62, body, ha="left", va="top", fontsize=10, linespacing=1.35)
+
+    def arrow(x0, y0, x1, y1):
+        ax.add_patch(FancyArrowPatch((x0, y0), (x1, y1), arrowstyle="-|>", mutation_scale=16, lw=1.3, color="#333"))
+
+    ax.text(0.1, 6.0, "Make the data (the target model writes it)", fontsize=12, weight="bold", color=C["dense"])
+    top = [
+        ("1  Scenario", "A situation where an assistant\ncan misbehave: domain x persona\nx behavior (e.g. an agent that\ncould hide a failed test)", "#fff3e0"),
+        ("2  Generate with steering", "Anti-refusal: removes the model's\nrefusal to act out misbehavior.\nTrait vector: pushes toward one\nbehavior. Writer or actor mode", "#fff3e0"),
+        ("3  Label", "A judge confirms the behavior and\nmarks where it starts. Negative:\nthe same scenario without steering\n(aligned rollout)", "#fff3e0"),
+    ]
+    ax.text(0.1, 2.85, "Train and test the monitor", fontsize=12, weight="bold", color="#333")
+    bottom = [
+        ("4  Re-read without steering", "Run the unmodified model on the\ntext. Save the activation of\nevery token (layer at about 60%\ndepth)", "#f5f5f5"),
+        ("5  Train a token-level probe", "Logistic regression per token.\nA turn is flagged if its score\npasses a threshold set at 1%\nfalse alarms on benign traffic", "#f5f5f5"),
+        ("6  Test, from easy to hard", "a. new scenarios, seen behaviors\nb. behaviors not seen in training\nc. the model's own misbehavior\n    (on-policy rollouts, benchmarks)", "#f5f5f5"),
+    ]
+    w, h = 3.75, 1.85
+    for row, y in ((top, 3.85), (bottom, 0.6)):
+        for i, (t, b, fc) in enumerate(row):
+            x = 0.1 + i * 4.15
+            box(x, y, w, h, t, b, fc)
+            if i:
+                arrow(x - 0.4, y + h / 2, x, y + h / 2)
+    xr, xl, ym = 0.1 + 2 * 4.15 + w / 2, 0.1 + w - 0.3, 3.2  # elbow from box 3 down to box 4
+    ax.plot([xr, xr, xl], [3.85, ym, ym], color="#333", lw=1.3)
+    arrow(xl, ym, xl, 0.6 + h + 0.02)
+    ax.add_patch(FancyBboxPatch((12.65, 0.6), 3.2, 5.1, boxstyle="round,pad=0.04,rounding_size=0.1", fc="#e3f2fd", ec="#666", lw=0.9))
+    ax.text(12.8, 5.5, "Compare: other training\ndata, same steps 4 to 6", ha="left", va="top", fontsize=11.5, weight="bold", color=C["prompted"])
+    ax.text(12.8, 4.55, "- Prompted only: the same\n  scenarios, no steering\n\n- Written by another model:\n  misalignment-indicators\n  transcripts (Claude Sonnet)\n\n- Natural labels, where they\n  exist\n\nEqual numbers of labels\nfor every arm", ha="left", va="top", fontsize=10, linespacing=1.35)
+    fig.savefig(OUT / "plan_flow.png", dpi=130, bbox_inches="tight")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in (procedure, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3):
+    for f in (procedure, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3, plan_flow):
         f()
         print("wrote", f.__name__)
 

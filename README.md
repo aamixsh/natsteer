@@ -21,6 +21,12 @@ src/natsteer/
   probe_eval.py  probe grid with clustered bootstrap intervals, precision/recall, matched discriminator
   refusal.py     refusal testbed: prompt sets, labels from the model's own answer, quality and diversity metrics
   data.py        loaders: XSTest, Aegis 2.0, hh-rlhf red-team, HarmfulQA, WildChat-1M, sycophancy evals
+  convo.py       multi-turn conversations: schema, writer text format, indicators and Bloom loaders, rendering
+  behaviors.py   the five behavior cards (definitions, scope clause, data maps)
+  writer.py      writer, aligned-rewrite and judge prompts and parsers
+  convfeats.py   clean re-read of conversations into 32-token window and turn features
+  monitor.py     window probes, indicators evaluation convention, out-of-fold scores
+  amplify.py     next-round seeds (missed and far) and per-cluster style vectors
 scripts/
   check_machine.sh, setup_machine.sh, prefetch.py,    new-machine setup (docs/HANDOFF.md): check, install, download,
   pull_data.sh, claude_session.sh, verify_machine.sh  copy results, carry Claude sessions, verify
@@ -37,6 +43,9 @@ scripts/
   steer_v2.py, morning_summary_v2.py                   third pass: wider latent search, prompt-matched positives, probe controls, layer sweep
   steer_e3.py                                          E2 at scale and E3 (capped per-token steering, best-of-K selection)
   run_after.sh                                         run a pipeline after a running chain finishes
+  loop_data.py, loop_generate.py, loop_features.py,    self-generation loop: frozen data, write/rewrite/judge (vLLM),
+  loop_round.py, run_loop.sh, loop_external.py,        re-read (HF), train/evaluate/amplify, one arm for R rounds,
+  loop_judge_check.py, loop_report.py                  external-writer baseline, judge check, report (monitor_v0)
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
 docs/results/  small run reports behind the deck (committed); see docs/results/README.md
@@ -62,6 +71,16 @@ GPU=1 ./scripts/run_refusal_overnight.sh          # refusal testbed, about 3 h; 
 GPU=1 PIPELINE=steer_v1.py ./scripts/run_refusal_overnight.sh   # second pass, about 6 h (steer_v1_extra.py: 1 h more)
 GPU=1 PIPELINE=steer_v2.py ./scripts/run_refusal_overnight.sh   # third pass, about 7 h
 GPU=1 PIPELINE=steer_e3.py ./scripts/run_refusal_overnight.sh   # E2 at scale and E3, about 1.5 h
+```
+
+Self-generation loop (needs `data/external/misalignment-indicators`, cloned from GitHub):
+
+```bash
+.venv/bin/python scripts/loop_data.py
+```
+
+```bash
+GPU=0 scripts/run_loop.sh full 5 100
 ```
 
 Current results: [docs/presentation.md](docs/presentation.md) and `docs/results/`; plan and next todo: [PLAN.md](PLAN.md).
