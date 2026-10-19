@@ -27,6 +27,10 @@ src/natsteer/
   convfeats.py   clean re-read of conversations into 32-token window and turn features
   monitor.py     window probes, indicators evaluation convention, out-of-fold scores
   amplify.py     next-round seeds (missed and far) and per-cluster style vectors
+  onpolicy.py    pressure scenarios, the model as the assistant (its chat format, its own tool calls), simulated
+                 user and tools, on-policy judge prompt
+  remote.py      OpenRouter chat calls (judge gpt-6.1-sol) with a spend ledger and a hard cap
+  apikeys.py     API keys read from ~/.bashrc as text, never exported or printed
 scripts/
   check_machine.sh, setup_machine.sh, prefetch.py,    new-machine setup (docs/HANDOFF.md): check, install, download,
   pull_data.sh, claude_session.sh, verify_machine.sh  copy results, carry Claude sessions, verify
@@ -46,6 +50,8 @@ scripts/
   loop_data.py, loop_generate.py, loop_features.py,    self-generation loop: frozen data, write/rewrite/judge (vLLM),
   loop_round.py, run_loop.sh, loop_external.py,        re-read (HF), train/evaluate/amplify, one arm for R rounds,
   loop_judge_check.py, loop_report.py                  external-writer baseline, judge check, report (monitor_v0)
+  onpolicy_pilot.py, onpolicy_seeds.py,               on-policy pilot: scenarios, rollouts, remote judge; seeds and
+  run_round0.sh, seedsrc_report.py                    training conversations; one round 0 from a seed file; report (onpolicy_v0)
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
 docs/results/  small run reports behind the deck (committed); see docs/results/README.md
@@ -81,6 +87,20 @@ Self-generation loop (needs `data/external/misalignment-indicators`, cloned from
 
 ```bash
 GPU=0 scripts/run_loop.sh full 5 100
+```
+
+On-policy seeds (OpenRouter key in `~/.bashrc`; spend capped by `--cap`):
+
+```bash
+GPU=0 .venv/bin/python scripts/onpolicy_pilot.py --out data/onpolicy/pilot --cap 60
+```
+
+```bash
+.venv/bin/python scripts/onpolicy_seeds.py && cp data/onpolicy/pilot/seeds_onpolicy.jsonl data/loop/seeds_onpolicy.jsonl
+```
+
+```bash
+GPU=0 scripts/run_round0.sh data/loop/arms/seedsrc/onpolicy_s2 data/loop/seeds_onpolicy.jsonl 2
 ```
 
 Current results: [docs/presentation.md](docs/presentation.md) and `docs/results/`; plan and next todo: [PLAN.md](PLAN.md).

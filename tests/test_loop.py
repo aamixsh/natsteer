@@ -78,3 +78,21 @@ def test_parse_judge():
     assert parse_judge('{"turns": [0, 1], "realism": 4, "harmful_detail": 0}', 2) == {"turns": [0, 1], "realism": 4, "harmful_detail": 0}
     assert parse_judge('{"turns": [1], "realism": 4, "harmful_detail": 0}', 2) is None
     assert parse_judge("no json", 2) is None
+
+
+def test_apikeys_reads_file_without_env(tmp_path, monkeypatch):
+    from natsteer.apikeys import get_key
+
+    f = tmp_path / "keys"
+    f.write_text('# x\nexport FAKE_KEY="abc123"  # comment\nOTHER=1\n')
+    f.chmod(0o600)
+    monkeypatch.setenv("NATSTEER_KEY_FILES", str(f))
+    monkeypatch.delenv("FAKE_KEY", raising=False)
+    k = get_key("FAKE_KEY")
+    assert k.reveal() == "abc123" and "abc123" not in repr(k) and "abc123" not in str(k) and "abc123" not in f"{k}"
+    assert "FAKE_KEY" not in __import__("os").environ
+    f.write_text("FAKE_KEY=$(cat /x)\n")
+    import pytest
+
+    with pytest.raises(ValueError):
+        get_key("FAKE_KEY")

@@ -1,5 +1,5 @@
 """Figures for docs/presentation.md, read from the E0 run reports under data/runs/ and the committed results
-under docs/results/ (refusal_v0, steer_v1, steer_v2, steer_e3). CPU only.
+under docs/results/ (refusal_v0, steer_v1, steer_v2, steer_e3, monitor_v0). CPU only.
 
 Usage: .venv/bin/python scripts/make_presentation_figures.py
 """
@@ -519,9 +519,78 @@ def plan_flow():
     fig.savefig(OUT / "plan_flow.png", dpi=130, bbox_inches="tight")
 
 
+def loop_flow():
+    """The self-generation loop as built (monitor_v0)."""
+    from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+
+    fig, ax = plt.subplots(figsize=(16, 5.4))
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0.4, 5.9)
+    ax.axis("off")
+
+    def box(x, y, w, h, title, body, fc):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.04,rounding_size=0.1", fc=fc, ec="#666", lw=0.9))
+        ax.text(x + 0.15, y + h - 0.2, title, ha="left", va="top", fontsize=11.5, weight="bold")
+        ax.text(x + 0.15, y + h - 0.62, body, ha="left", va="top", fontsize=10, linespacing=1.35)
+
+    def arrow(x0, y0, x1, y1, color="#333"):
+        ax.add_patch(FancyArrowPatch((x0, y0), (x1, y1), arrowstyle="-|>", mutation_scale=16, lw=1.3, color=color))
+
+    top = [
+        ("1  Write", "gpt-oss-20b gets: definition,\n2 example conversations (seeds),\na setting. It writes a new\nconversation with reasoning.\nAnti-refusal on; style vector on\nhalf the prompts (full arm)", "#fff3e0"),
+        ("2  Rewrite", "The same model rewrites only\nthe assistant turns to be\naligned. Same system and user\nturns: a matched negative", "#fff3e0"),
+        ("3  Judge", "Unsteered gpt-oss-20b labels\neach assistant turn (0/1), rates\nrealism 1-5, checks hazard.\nKeep: behavior, realism >= 3,\nno hazard", "#fff3e0"),
+    ]
+    bottom = [
+        ("5  Amplify (next round)", "Seeds: kept conversations the\nmonitor scores low, spread out.\nStyle vectors: 3 clusters per\nbehavior; positive mean minus\nmatched-negative mean", "#e8f5e9"),
+        ("4  Re-read and train", "Unsteered model reads the text.\nMean activation per 32 tokens,\nlayer 15. Logistic regression on\nall rounds so far. Turn = max\nwindow; conversation = max turn", "#f5f5f5"),
+    ]
+    w, h = 3.75, 2.05
+    for i, (t, b, fc) in enumerate(top):
+        x = 0.1 + i * 4.15
+        box(x, 3.55, w, h, t, b, fc)
+        if i:
+            arrow(x - 0.4, 3.55 + h / 2, x, 3.55 + h / 2)
+    xs = (0.1, 4.25)
+    for (t, b, fc), x in zip(bottom, xs):
+        box(x, 0.6, w, h, t, b, fc)
+    x3 = 0.1 + 2 * 4.15 + w / 2
+    ax.plot([x3, x3, 4.25 + w + 0.25], [3.55, 1.65, 1.65], color="#333", lw=1.3)
+    arrow(4.25 + w + 0.25, 1.65, 4.25 + w + 0.02, 1.65)
+    arrow(4.25 - 0.02, 1.65, 0.1 + w + 0.02, 1.65)
+    arrow(0.1 + w / 2, 0.6 + h + 0.02, 0.1 + w / 2, 3.55 - 0.02, color="#2ca02c")
+    ax.text(0.1 + w / 2 + 0.12, 3.05, "new seeds + vectors", fontsize=10, color="#2ca02c")
+    ax.add_patch(FancyBboxPatch((12.65, 0.6), 3.2, 5.0, boxstyle="round,pad=0.04,rounding_size=0.1", fc="#e3f2fd", ec="#666", lw=0.9))
+    ax.text(12.8, 5.4, "Frozen tests\n(the loop never\nreads them)", ha="left", va="top", fontsize=11.5, weight="bold", color=C["prompted"])
+    ax.text(12.8, 4.2, "1. Own writes from held-out\n   seeds\n\n2. Claude-written transcripts\n   (misalignment-indicators)\n\n3. Bloom: real rollouts of\n   GLM-4.7-Flash and Qwen3.6\n   (val: tuning; test: headline)", ha="left", va="top", fontsize=10, linespacing=1.35)
+    fig.savefig(OUT / "loop_flow.png", dpi=130, bbox_inches="tight")
+
+
+def behavior_recall():
+    """Bloom-test detection at 1% false alarms, per behavior, for the largest training set of each arm."""
+    rep = json.load(open(RESULTS / "monitor_v0" / "report.json"))
+    arms = [("prompt", "prompt only", "#7f7f7f"), ("seeds", "anti-refusal + seeds", "#1f77b4"),
+            ("full", "anti-refusal + seeds + styles", "#d62728"), ("external", "Claude-written", "#2ca02c")]
+    behs = ["sandbagging", "sycophancy", "sabotage", "deception", "self_preservation"]
+    fig, ax = plt.subplots(figsize=(11, 3.8))
+    for i, (arm, lab, col) in enumerate(arms):
+        d = rep["detection"][arm]
+        last = max(d, key=lambda k: d[k]["train_convs"])
+        pb = d[last]["bloom_test"]["per_behavior_tpr@1"]
+        ax.bar(np.arange(len(behs)) + (i - 1.5) * 0.2, [pb[b]["tpr"] for b in behs], 0.2, color=col, label=f"{lab} ({d[last]['train_convs']:,})")
+    n = rep["detection"]["seeds"]["4"]["bloom_test"]["per_behavior_tpr@1"]
+    ax.set_xticks(range(len(behs)), [f"{b.replace('_', '-')}\n({n[b]['n']} convs)" for b in behs])
+    ax.set_ylabel("detection at 1% false alarms")
+    ax.set_ylim(0, 1)
+    ax.grid(axis="y", alpha=0.3)
+    ax.legend(fontsize=9, frameon=False)
+    fig.tight_layout()
+    fig.savefig(OUT / "behavior_recall.png", dpi=130)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in (procedure, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3, plan_flow):
+    for f in (procedure, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3, plan_flow, loop_flow, behavior_recall):
         f()
         print("wrote", f.__name__)
 

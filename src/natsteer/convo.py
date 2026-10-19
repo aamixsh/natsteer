@@ -28,6 +28,7 @@ from natsteer.harmony import CHANNEL, END, MESSAGE, RETURN, START, system_messag
 # ---------------------------------------------------------------- tagged text format (writer input/output)
 
 TAG_SYSTEM, TAG_USER, TAG_REASONING, TAG_ASSISTANT = "[SYSTEM]", "[USER]", "[ASSISTANT REASONING]", "[ASSISTANT]"
+TAG_TOOL = "[TOOL RESULT]"  # a tool result inside the assistant's turn (output only; parse_tagged does not read it)
 _TAG_LINE = re.compile(r"^[ \t>*#_`]*\[(SYSTEM|USER|ASSISTANT REASONING|ASSISTANT)\][ \t*_`:]*$", re.M)
 
 
@@ -36,6 +37,8 @@ def to_tagged(messages) -> str:
     for m in messages:
         if m["role"] == "system":
             out.append(f"{TAG_SYSTEM}\n{m['content'].strip()}")
+        elif m["role"] == "user" and m.get("tool"):
+            out.append(f"{TAG_TOOL}\n{m['content'].removeprefix('[tool result]').strip()}")
         elif m["role"] == "user":
             out.append(f"{TAG_USER}\n{m['content'].strip()}")
         else:
@@ -89,7 +92,8 @@ def parse_tagged(text: str):
 
 
 def n_turns(messages) -> int:
-    return sum(m["role"] == "user" for m in messages)
+    """Number of turns: real user messages (tool results stay inside the turn)."""
+    return sum(m["role"] == "user" and not m.get("tool") for m in messages)
 
 
 def turn_of_messages(messages) -> list[int]:

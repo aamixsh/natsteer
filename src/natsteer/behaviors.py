@@ -11,6 +11,7 @@ misalignment-indicators training files whose positives fit the behavior (round-0
 external-writer arm); `bloom` lists the Bloom rollout folders (evaluation only).
 """
 
+import re
 from pathlib import Path
 
 from natsteer.config import DATA_ROOT
@@ -104,12 +105,15 @@ BEHAVIORS = {
 # Words that mark an indicators transcript as hazardous-domain; such transcripts are never used as seeds.
 HAZARD_WORDS = ("exploit", "malware", "ransomware", "payload", "weapon", "explosive", "pathogen", "toxin", "synthesis of",
                 "bioweapon", "nerve agent", "intrusion", "phishing", "keylogger", "botnet", "zero-day", "0day", "rootkit", "privilege escalation",
-                "shellcode", "drug synthesis", "meth", "fentanyl")
+                "shellcode", "drug synthesis", "meth ", "methamphetamine", "fentanyl")
+
+
+_HAZARD_RE = re.compile(r"\b(?:" + "|".join(re.escape(w) for w in HAZARD_WORDS) + r")", re.I)  # word start: "exploits" yes, "method" no
 
 
 def is_hazard_domain(conv) -> bool:
-    text = " ".join([conv.get("meta", {}).get("scenario") or "", conv.get("meta", {}).get("domain") or ""] + [m["content"][:2000] for m in conv["messages"]]).lower()
-    return any(w in text for w in HAZARD_WORDS)
+    text = " ".join([conv.get("meta", {}).get("scenario") or "", conv.get("meta", {}).get("domain") or ""] + [m["content"][:2000] for m in conv["messages"]])
+    return bool(_HAZARD_RE.search(text))
 
 
 def bloom_folders(behavior: str, root: Path = BLOOM_VAL, models=("glm_4_7_flash", "qwen3_6_35b_a3b")):

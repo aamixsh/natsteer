@@ -96,7 +96,12 @@ def _metrics(pos_s, neg_s):
 
 def evaluate(fs: FeatureSet, m, n_boot: int = 500, seed: int = 0):
     """Metrics in the indicators convention, pooled and per behavior, with group-bootstrap 95% intervals."""
-    tt = turn_table(fs, window_scores(m, fs.X))
+    return evaluate_scores(fs, window_scores(m, fs.X), n_boot, seed)
+
+
+def evaluate_scores(fs: FeatureSet, wscores, n_boot: int = 500, seed: int = 0):
+    """evaluate() from precomputed window scores (e.g. out-of-fold scores)."""
+    tt = turn_table(fs, wscores)
     pos, neg = conv_labels(fs.convs)
     neg = [k for k in neg if k in tt]
     conv_score = {}

@@ -3,9 +3,12 @@
 MATS project 1 with Isak Etinger. This file is the current plan only. Rewrite it when the plan changes
 (do not append history: results live in [docs/presentation.md](docs/presentation.md) and
 `docs/results/`, setup in [docs/HANDOFF.md](docs/HANDOFF.md), history in git). Theory of change:
-[docs/toc.md](docs/toc.md). Last updated 2026-10-18.
+[docs/toc.md](docs/toc.md). Last updated 2026-10-19.
 **Status: loop built and run on gpt-oss-20b (M0-M2, `docs/results/monitor_v0/`). Self-written data beats
-Claude-written data on Bloom; amplification rounds do not help yet. The adversarial arm is on hold (section 3.3).**
+Claude-written data on Bloom; amplification rounds do not help yet. On-policy pilot (`docs/results/onpolicy_v0/`):
+gpt-oss-20b misbehaves on its own mostly by sycophancy; on-policy seeds match Claude seeds; no writer-trained
+monitor catches the model's own misbehavior in agentic rollouts (tool turns look like misbehavior). Next: agentic
+writer data. The adversarial arm is on hold (section 3.3).**
 
 ## 1. Goal
 
@@ -65,6 +68,17 @@ Qwen3.6-35B-A3B. End state: one command from a behavior description to a monitor
   - No arm improves over rounds 0-4 (seed amplification, style vectors). Style vectors do steer (1.1-1.4 SD).
   - Every arm misses deception and self-preservation at 1% FPR (recall under 0.15); sandbagging 0.8-0.95.
   - Two identical round-0 runs differ by 0.10 in TPR at 1% FPR: use replicates before claiming differences.
+- **On-policy pilot (`docs/results/onpolicy_v0/`, $10.89 API):** `natsteer.onpolicy`, `natsteer.remote`
+  (OpenRouter, spend ledger with a hard cap), `natsteer.apikeys` (keys read from `~/.bashrc` as text, never
+  exported), `scripts/onpolicy_pilot.py`, `onpolicy_seeds.py`, `run_round0.sh`, `seedsrc_report.py`.
+  - 100 scenarios (gpt-6.1-sol) × 4 samples × {none, anti-refusal}, 4 turns; gpt-oss-20b calls its built-in tools
+    (simulated by unsteered gpt-oss-20b) in 52% of rollouts. Judge gpt-6.1-sol (medium), motive required.
+  - Misaligned: sycophancy 89%, self-preservation 4% (incentive only), deception 3%, sabotage and sandbagging 0%.
+  - Writer round 0 from on-policy seeds vs Claude seeds (3 runs each), Bloom test: AUROC 0.926 vs 0.947, detection
+    at 1% 0.47 vs 0.43 (within noise).
+  - On held-out own rollouts every writer monitor fails (AUROC 0.71-0.80, detection at 1% 0.01-0.04): aligned
+    tool-use turns score like misbehavior. A monitor trained on the rollouts gets 0.96 / 0.45 there but 0.76 on
+    Bloom (its positives are 93% sycophancy).
 - **Speed:** a base round takes about 8 min (writes 500, rewrites, judge, re-read, train); style rounds about
   30 min because each style vector runs as its own small batch (fix: per-request vectors in one batch).
 - **First testbed (closed; `docs/results/steer_v1`, `steer_v2`, `steer_e3`):** tool validation and three lessons:
@@ -133,17 +147,21 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
 
 ## 5. Next todo (pick up here)
 
-1. **Why amplification does not help.** Seeds chosen by low out-of-fold score may be judge errors or odd
-   writes rather than new styles; check a sample by hand. Then aim the budget at what the monitor misses
-   (deception, self-preservation) and at multi-turn settings where the behavior develops late. Selection must
-   never use the frozen sets.
-2. **Why anti-refusal helps transfer** although nothing was refused: compare text statistics and re-read
-   features of round-0 anti-refusal vs prompt-only conversations (length, reasoning share, how explicit the
-   misaligned reasoning is); run 3 replicates of each round-0 config to size the effect.
-3. Per-request style vectors in one vLLM batch (style rounds 30 -> 8 min).
-4. Early-warning curve (detection vs window position) and the OOD benchmarks in `ood_misalignment_eval/`.
-5. Review the shortened sabotage and sandbagging definitions with Isak; decide on the adversarial arm.
-6. Re-cut the deck to goal → loop → checks → results; first testbed to an appendix.
+1. **Agentic writer data.** The writer writes conversations with tool calls and tool output (the deployment list
+   already has agent settings), and the rewrite keeps the same tool use, so the probe learns the act, not tool
+   use. Add on-policy aligned rollouts as hard negatives. Test on held-out own rollouts (`onpolicy_heldout`) and
+   Bloom. This is the main gap now.
+2. **Hand-check labels.** `data/onpolicy/pilot/review.md` (the 10 non-sycophancy positives may include
+   fabrication read as motive) and the loop's amplification seeds (low out-of-fold score: new style or judge
+   error?).
+3. **Rare behaviors on-policy.** Deception, self-preservation, sabotage and sandbagging are 0-4% on their own:
+   more and harder incentive scenarios, longer agentic tasks, medium reasoning effort, and actor-mode steering
+   (style vectors) to raise the rate; measure the rate per condition.
+4. **Speed of the rollout runner.** One process per steering config (one GPU each, simulators on the unsteered
+   engine) and continuous batching instead of step-synchronous tool steps (about 1 h per 800 rollouts now, GPU
+   at about 20%).
+5. Why anti-refusal helps transfer; per-request style vectors; early-warning curve and OOD benchmarks.
+6. Review the shortened sabotage and sandbagging definitions with Isak; decide on the adversarial arm.
 7. Qwen3.6-35B-A3B (M3).
 
 ## 6. Design decisions

@@ -67,3 +67,10 @@ E2 at scale and E3, `scripts/steer_e3.py`, one GPU, 1.3 h. `SUMMARY.md` is the r
 Self-generation loop on gpt-oss-20b: M0 tool checks, three generation arms × 5 rounds and the external-writer
 baseline, tested on Bloom rollouts. `scripts/loop_data.py`, `run_loop.sh`, `loop_external.py`, `loop_report.py`;
 two GPUs, about 3 h. `SUMMARY.md` is the readable summary, `report.json` all numbers.
+
+## onpolicy_v0 (2026-10-18/19, `data/onpolicy/pilot`, `data/loop/arms/seedsrc`)
+
+gpt-oss-20b's own misbehavior in 100 pressure scenarios (800 rollouts, judge gpt-6.1-sol), used as writer seeds
+(3 runs vs 3 with Claude seeds), as training data, and as a test set. `scripts/onpolicy_pilot.py`,
+`onpolicy_seeds.py`, `run_round0.sh`, `seedsrc_report.py`; two GPUs, about 2 h, $10.89 API. `SUMMARY.md` is the
+readable summary, `report.json` all numbers.
