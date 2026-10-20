@@ -6,14 +6,14 @@ title: Misalignment monitors trained on data the model writes itself
 
 # Misalignment monitors trained on data the model writes itself
 
-MATS project 1, with Isak Etinger. Model: gpt-oss-20b (Qwen3.6-35B-A3B next). Status: 2026-10-19.
+MATS project 1, with Isak Etinger. Model: gpt-oss-20b (Qwen3.6-35B-A3B next). Status: 2026-10-20.
 
 1. Idea
 2. Method, models and data
-3. Results: the writer loop; the model's own misbehavior
+3. Results: the writer loop; the model's own misbehavior; a better probe from normal traffic
 4. Next steps
 
-Figures: `scripts/make_presentation_figures.py`, `loop_report.py`, `seedsrc_report.py`. Run reports: `docs/results/monitor_v0/`, `docs/results/onpolicy_v0/`.
+Figures: `scripts/make_presentation_figures.py`, `loop_report.py`, `seedsrc_report.py`. Run reports: `docs/results/monitor_v0/`, `onpolicy_v0/`, `normal_traffic_v0/`.
 
 ---
 
@@ -25,7 +25,7 @@ Figures: `scripts/make_presentation_figures.py`, `loop_report.py`, `seedsrc_repo
 - **Idea:** the aligned model writes the examples. It gets a behavior definition and 2 example conversations.
   It writes a new one: new setting, new user, new way to go wrong, with the assistant's reasoning.
 - **Steering has two uses:** (1) anti-refusal, if the model refuses to write; (2) style vectors, to push the
-  writer to different styles of one behavior.
+  writer to different styles of one behavior (on hold: the current vectors also carry topic and format).
 - **Loop:** in each round, conversations that the monitor misses become the examples for the next round. The data
   should spread, and the monitor should get stronger each round.
 - **Rule:** the monitor never trains on steered activations. The unsteered model reads the text again, and we
@@ -43,7 +43,9 @@ Figures: `scripts/make_presentation_figures.py`, `loop_report.py`, `seedsrc_repo
 | Seed | An example conversation in the writer's prompt |
 | Anti-refusal | Remove one "refusal" direction from the activations at every layer while the model writes |
 | Style vector | A vector added to the layer-15 activations of new tokens, to push the writer to one style |
-| Matched negative | The same conversation, with only the assistant turns rewritten to be aligned |
+| Normal traffic | Activations of the model's own aligned work. Plentiful in deployment; no labels needed |
+| Whitening | Rescale the activations so that normal traffic has the same spread in every direction |
+| Matched negative | The same conversation, with the assistant turns made aligned (results here: rewritten; now: regenerated from the first misaligned turn) |
 | AUROC | The chance that a random misaligned conversation scores higher than a random aligned turn |
 | Detection at 1% false alarms | Set the threshold so that 1% of aligned turns are flagged. Report the share of misaligned conversations that are flagged (TPR at 1% FPR) |
 
@@ -85,7 +87,8 @@ Bloom test positives: sandbagging 83, sycophancy 53, sabotage 45, deception 29, 
 - **Write:** prompt = definition + scope rule (no hazardous detail) + 2 seeds + a setting. Output is tagged text:
   `[SYSTEM]`, `[USER]`, `[ASSISTANT REASONING]`, `[ASSISTANT]`. Every assistant turn must have reasoning.
 - **Rewrite:** the model rewrites only the assistant turns to be aligned. System and user turns stay. So the
-  monitor must learn the act, not the situation.
+  monitor must learn the act, not the situation. Now replaced by branches: keep the conversation up to the first
+  misaligned turn, then regenerate the rest aligned, turn by turn.
 - **Judge:** labels each assistant turn. Keep a positive if a turn shows the behavior, realism ≥ 3 and no hazard.
   Keep a negative if no turn shows it.
 - **Re-read:** the unsteered model reads the conversation in gpt-oss chat format (reasoning in the analysis
@@ -124,7 +127,7 @@ Bloom test positives: sandbagging 83, sycophancy 53, sabotage 45, deception 29, 
 | Kept per round (of 500 prompts) | 257–349 positives, 228–330 negatives |
 | Judge vs indicators labels, 300 transcripts | Finds 81% of misaligned ones; flags 0% of aligned ones; 88% turn agreement |
 | Re-read in 2,048-token chunks vs one pass | Same, except under 1% of tokens (expert-routing rounding) |
-| Style vectors | Move activations 1.1–1.4 SD along the vector; format rate 78% vs 94% |
+| Style vectors | Move activations 1.1–1.4 SD along the vector; format rate 78% vs 94%. At 2× strength: 13% (the writer breaks) |
 
 ---
 
@@ -152,7 +155,8 @@ Bloom test positives: sandbagging 83, sycophancy 53, sabotage 45, deception 29, 
 - The data grows, but it does not move toward real misbehavior. Median distance from a Bloom misaligned turn to the
   nearest training turn (PCA space): 41–43 → 40. Claude-written data is closer (34–36) but transfers worse.
 - The spread of the training data does not grow (mean pairwise distance stays at 54–58).
-- Style vectors change what the writer writes (1.1–1.4 SD along the vector) but do not raise detection.
+- Style vectors change what the writer writes (1.1–1.4 SD along the vector) but do not raise detection. A
+  stronger vector breaks the writer. On hold: they are clusters, not behavior directions (next: persona-vector method).
 - Noise is large: two identical round-0 runs differ by 0.10 in detection (0.47 vs 0.37). One run per arm is not
   enough to rank the arms.
 
@@ -200,6 +204,39 @@ Bloom test positives: sandbagging 83, sycophancy 53, sabotage 45, deception 29, 
 
 ---
 
+## A better probe: use the model's normal traffic
+
+![w:880](figures/whitening.png)
+
+- **Problem:** the probe learns from written data only. It also leans on directions in which the model's normal
+  work varies a lot (length, topic, tool use), so normal turns cross its threshold (left, made-up 2-D data).
+- **Whitening, 3 steps:** (1) collect normal traffic: the model's own turns. (2) Measure how much it varies in
+  each direction (mean and covariance). (3) Rescale every direction so that normal traffic varies by 1, then
+  train the same probe on the written data (right). Loud directions shrink, quiet directions grow.
+
+---
+
+## Result 5: normal traffic makes the probe better on the model's own rollouts
+
+| Probe (written data, Claude seeds, layer 15) | Own held-out rollouts AUROC / detection at 1% | Bloom test |
+|---|---|---|
+| Plain | 0.745 / 0.01 | 0.948 / 0.46 |
+| Normal traffic added as negatives | 0.840 / 0.09 | 0.944 / 0.48 |
+| Whitened by normal traffic | **0.846 / 0.11** | 0.949 / 0.48 |
+| Whitened by all traffic, no labels (11–14% misaligned) | 0.820 / 0.05 | 0.950 / 0.46 |
+
+Mean of 3 splits: normal traffic from the aligned turns of 50 scenarios, test on the other 50 (66–95 misaligned
+conversations, about 1,300 aligned turns). SD of own detection over splits: up to 0.04.
+
+- **Two-level monitor, first try: an anomaly detector before the probe. It fails.** Misaligned turns are not
+  unusual (anomaly AUROC 0.50 on Bloom test); the anomaly score mostly measures turn length. The gate lowers Bloom
+  detection at 1% from 0.46 to 0.36 / 0.18 / 0.04 when it passes 50 / 20 / 10% of aligned turns.
+- **Why:** misbehavior is a quiet direction: 0.05–0.08% of the variance of normal traffic, 95% of it outside the
+  top 64 directions. An anomaly score cannot see it; whitening makes it count.
+- Both uses of normal traffic help about equally. Whitening also works without labels. Detection at 1% is still low.
+
+---
+
 ## Summary and limits
 
 - The model can write useful training data about its own kind of misbehavior. On real rollouts of other models it
@@ -207,23 +244,30 @@ Bloom test positives: sandbagging 83, sycophancy 53, sabotage 45, deception 29, 
 - The amplifying loop does not work yet. More rounds add data close to the data that is already there.
 - On its own, gpt-oss-20b misbehaves mostly by sycophancy. Its own misbehavior makes seeds as good as Claude's,
   but the monitors from written data fail on its agentic rollouts: the written data has no tool use.
+- The model's normal traffic makes the probe better on its own rollouts (AUROC 0.75 → 0.85, no cost on Bloom), by
+  whitening or as negatives. An anomaly gate does not help: misbehavior is not unusual in activation space.
 - **Limits:** one model, one layer. Most Bloom positives are single-turn sandbagging. The local judge misses about
   19% of misaligned transcripts. Only 10 on-policy positives outside sycophancy, some borderline. gpt-oss-20b
-  simulates the user and the tools. The writer plans at low reasoning effort.
+  simulates the user and the tools. The writer plans at low reasoning effort. Normal traffic and its test set
+  come from the same scenario writer.
 
 ---
 
 ## Next steps
 
-1. **Agentic writer data:** conversations with tool calls and tool output, rewrites with the same tool use, and
-   the model's aligned rollouts as hard negatives. Test on its own held-out rollouts.
-2. Read the judged positives (`data/onpolicy/pilot/review.md`) and the seeds that the loop chose.
-3. Raise the on-policy rate of rare behaviors: harder incentive scenarios, longer tasks, actor-mode steering.
-4. Faster rollouts: one process per steering setting, requests fed continuously (now 1 h per 800, GPU at 20%).
-5. Why anti-refusal helps transfer; early-warning curve; outside benchmarks (MASK, DeceptionBench,
-   Sycophancy-Eval, Agentic Misalignment).
-6. With Isak: review the sabotage and sandbagging definitions; decide on the adversarial arm (on hold).
-7. Repeat on Qwen3.6-35B-A3B.
+1. **Agentic writer data:** conversations with tool calls and tool output, matched negatives with the same tool
+   use, and the model's aligned rollouts as hard negatives. Test on its own held-out rollouts.
+2. **Probes that know normal traffic by default:** whitening plus hard negatives from a large normal pool; report
+   detection at 0.1% false alarms too.
+3. **Two-level monitor:** the probe screens every token; flagged steps get a second check (a follow-up question
+   read by a probe, or a judge), which can run async.
+4. Read the judged positives (`data/onpolicy/pilot/review.md`) and the loop's seeds; gpt-6.1-sol as the judge for
+   writes and branches (about $4 per round).
+5. Raise the on-policy rate of rare behaviors: harder incentive scenarios, longer tasks, actor-mode steering.
+6. Style vectors (on hold): rebuild with the persona-vector method (system-prompt contrast, judge filter, layer and
+   strength chosen by steering) in actor mode.
+7. Faster rollouts (now 1 h per 800, GPU at 20%); why anti-refusal helps transfer; outside benchmarks.
+8. With Isak: the sabotage and sandbagging definitions; the adversarial arm (on hold). Then Qwen3.6-35B-A3B.
 
 ---
 
@@ -252,6 +296,7 @@ GPU=0 scripts/run_loop.sh seeds 5                           # one arm, 5 rounds 
 .venv/bin/python scripts/loop_report.py                     # report.json and loop_rounds.png
 GPU=0 .venv/bin/python scripts/onpolicy_pilot.py --cap 60   # on-policy pilot (then onpolicy_seeds.py, run_round0.sh)
 .venv/bin/python scripts/seedsrc_report.py                  # onpolicy_v0 report and figures
+.venv/bin/python scripts/anomaly_gate_check.py; .venv/bin/python scripts/whiten_robust.py   # normal_traffic_v0 (CPU)
 .venv/bin/python scripts/make_presentation_figures.py       # other figures (CPU)
 ```
 

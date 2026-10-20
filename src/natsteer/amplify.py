@@ -19,11 +19,12 @@ from natsteer.laser import farthest_point
 
 
 def conv_turn_features(fs, which: str = "pos"):
-    """{conv index: mean turn feature} over misaligned turns ("pos") or all turns ("all")."""
+    """{conv index: mean turn feature} over misaligned turns ("pos"), turns labeled aligned ("neg"; skips the
+    unlabeled shared prefix of a branch negative) or all turns ("all")."""
     acc = {}
     for i, (c, t) in enumerate(zip(fs.t_conv, fs.t_turn)):
         tl = fs.convs[c].get("turn_labels") or []
-        if which == "pos" and not (t < len(tl) and tl[t] == 1):
+        if which in ("pos", "neg") and not (t < len(tl) and tl[t] == (1 if which == "pos" else 0)):
             continue
         acc.setdefault(int(c), []).append(fs.T[i].astype(np.float32))
     return {c: np.mean(v, 0) for c, v in acc.items()}
@@ -51,7 +52,7 @@ def select_seeds(fs, candidates, oof, seed_feats, n_new: int, miss_q: float = 0.
 def style_vectors(fs, positives, k: int, alpha: float, behavior: str, round_: int, sae_dec=None, seed: int = 0):
     """Style vector cards for one behavior from accepted positives and their matched negatives."""
     pos_f = conv_turn_features(fs, "pos")
-    all_f = conv_turn_features(fs, "all")
+    all_f = conv_turn_features(fs, "neg")
     by_id = {c["id"]: i for i, c in enumerate(fs.convs)}
     pairs = [(c, by_id.get(fs.convs[c]["meta"].get("pair"))) for c in positives if c in pos_f]
     pairs = [(c, n) for c, n in pairs if n is not None and n in all_f]

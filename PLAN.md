@@ -3,12 +3,16 @@
 MATS project 1 with Isak Etinger. This file is the current plan only. Rewrite it when the plan changes
 (do not append history: results live in [docs/presentation.md](docs/presentation.md) and
 `docs/results/`, setup in [docs/HANDOFF.md](docs/HANDOFF.md), history in git). Theory of change:
-[docs/toc.md](docs/toc.md). Last updated 2026-10-19.
+[docs/toc.md](docs/toc.md). Last updated 2026-10-20.
 **Status: loop built and run on gpt-oss-20b (M0-M2, `docs/results/monitor_v0/`). Self-written data beats
 Claude-written data on Bloom; amplification rounds do not help yet. On-policy pilot (`docs/results/onpolicy_v0/`):
 gpt-oss-20b misbehaves on its own mostly by sycophancy; on-policy seeds match Claude seeds; no writer-trained
-monitor catches the model's own misbehavior in agentic rollouts (tool turns look like misbehavior). Next: agentic
-writer data. The adversarial arm is on hold (section 3.3).**
+monitor catches the model's own misbehavior in agentic rollouts (tool turns look like misbehavior). 2026-10-20:
+matched negatives are now regenerated branches; misaligned turns are not anomalous relative to normal traffic (an
+anomaly gate hurts), but whitening the probe by normal traffic (or adding it as negatives) lifts own-rollout
+AUROC 0.75 -> 0.85 at no cost on Bloom; stronger style vectors break the writer (x2: 13% parse), and the k-means style vectors are not trait
+directions (on hold; rebuild by the persona-vector recipe, todo 4). Next: agentic writer data, whitened probes,
+stronger judge. The adversarial arm is on hold (section 3.3).**
 
 ## 1. Goal
 
@@ -32,7 +36,7 @@ budget, monitors trained on (a) round-0 data without amplification, (b) the same
 (c) transcripts written by an external model (misalignment-indicators, Claude Sonnet). Models: gpt-oss-20b, then
 Qwen3.6-35B-A3B. End state: one command from a behavior description to a monitor.
 
-## 2. Status (2026-10-18)
+## 2. Status (2026-10-20)
 
 - **Built and smoke-tested (gpt-oss-20b):**
   - `scripts/loop_data.py` → `data/loop/`: round-0 seeds (4 per behavior from the indicators training data,
@@ -79,6 +83,26 @@ Qwen3.6-35B-A3B. End state: one command from a behavior description to a monitor
   - On held-out own rollouts every writer monitor fails (AUROC 0.71-0.80, detection at 1% 0.01-0.04): aligned
     tool-use turns score like misbehavior. A monitor trained on the rollouts gets 0.96 / 0.45 there but 0.76 on
     Bloom (its positives are 93% sycophancy).
+- **2026-10-20 (not yet in the deck):**
+  - **Branch negatives** (`loop_generate.py --negatives branch`, now the default): keep the conversation up to the
+    first misaligned turn, write an aligned replacement, then one turn at a time a new user message (the original
+    one as a hint) and an aligned reply. Smoke test: 25/26 branches parse (21 full, 4 short), 23 accepted. The
+    local judge is the weak point (a late branch point; a half-sycophantic "aligned" reply accepted).
+  - **Style strength sweep** (`--style-scale`, `scripts/style_sweep.sh`, `style_sweep_report.py`; one vector per
+    behavior, every prompt styled, 150 prompts per scale): stronger does not work in writer mode. Format OK /
+    positives per prompt / realism: none 0.94 / 0.56 / 3.65; x1 (alpha 0.1, current) 0.68 / 0.33 / 3.31 (shift
+    1.64 SD, spread unchanged); x2 0.13 / 0.03 / 3.00; x4 0 / 0 (incoherent text). The stored strength is already
+    about 1.5x the natural misaligned-aligned gap. The vector comes from the assistant role but steers the writer.
+  - **Normal-traffic model** (`scripts/anomaly_gate_check.py`, `anomaly_drivers.py`, `whiten_check.py`,
+    `whiten_robust.py`; layer 15, writer probe from Claude seeds; normal = aligned turns of own rollouts from half
+    the scenarios): misaligned turns are not anomalous (Mahalanobis AUROC 0.50 on Bloom test, at most 0.5 within
+    each behavior on own rollouts). The anomaly score mostly tracks turn length (short turns are outliers; Spearman
+    -0.66 on own rollouts); the probe direction holds 0.05-0.08% of normal variance and 94-95% of it lies outside
+    the top 64 PCs. An anomaly gate before the probe lowers Bloom-test detection at 1% from 0.46 to 0.36 / 0.18 /
+    0.04 (gate passes 50 / 20 / 10% of aligned turns). Whitening the probe by normal-traffic covariance (C 1e-4,
+    3 scenario splits; `docs/results/normal_traffic_v0/`): own held-out 0.846 / 0.11 (plain 0.745 / 0.01), Bloom
+    test unchanged (0.949 / 0.48); from an unlabeled pool with 11-14% misaligned windows 0.820 / 0.05. Normal
+    traffic as negatives: 0.840 / 0.09 (about equal; needs clean traffic).
 - **Speed:** a base round takes about 8 min (writes 500, rewrites, judge, re-read, train); style rounds about
   30 min because each style vector runs as its own small batch (fix: per-request vectors in one batch).
 - **First testbed (closed; `docs/results/steer_v1`, `steer_v2`, `steer_e3`):** tool validation and three lessons:
@@ -100,7 +124,7 @@ sandbagging**, **self-preservation**, **sycophancy**. Harmful compliance (CBRN, 
 | Step | What happens | Output |
 |---|---|---|
 | 1 Write | Definition + k = 2 seeds (weighted) + sampled setting (deployment × domain, 2–3 turns); base steering (anti-refusal or none); a share of prompts adds a style vector on generated tokens | Candidate conversations with provenance |
-| 2 Verify | Aligned rewrite as matched negative; unsteered judge labels each turn, rates realism, rejects hazard | Accepted positives and negatives with turn labels |
+| 2 Verify | Unsteered judge labels each turn, rates realism, rejects hazard; matched negative = aligned branch from the first misaligned turn (replacement turn, then new user turns and aligned replies), judged the same way | Accepted positives and negatives with turn labels |
 | 3 Re-read | Unsteered HF forward pass on the exact text | Window and turn features |
 | 4 Train | Logistic regression on window features of all accepted data so far; turn score = max window, conversation score = max turn | Monitor P_{r+1} |
 | 5 Amplify | **Seeds:** accepted positives with low out-of-fold monitor score, spread by farthest-point sampling in activation space, become new seeds (old seeds downweighted). **Style vectors:** cluster accepted positives in activation space; per cluster, mean of positive turns minus mean of their matched negatives → style vector, with nearest SAE latents on its card | S_{r+1}, V_{r+1} |
@@ -147,22 +171,39 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
 
 ## 5. Next todo (pick up here)
 
-1. **Agentic writer data.** The writer writes conversations with tool calls and tool output (the deployment list
-   already has agent settings), and the rewrite keeps the same tool use, so the probe learns the act, not tool
-   use. Add on-policy aligned rollouts as hard negatives. Test on held-out own rollouts (`onpolicy_heldout`) and
-   Bloom. This is the main gap now.
-2. **Hand-check labels.** `data/onpolicy/pilot/review.md` (the 10 non-sycophancy positives may include
-   fabrication read as motive) and the loop's amplification seeds (low out-of-fold score: new style or judge
-   error?).
-3. **Rare behaviors on-policy.** Deception, self-preservation, sabotage and sandbagging are 0-4% on their own:
-   more and harder incentive scenarios, longer agentic tasks, medium reasoning effort, and actor-mode steering
-   (style vectors) to raise the rate; measure the rate per condition.
-4. **Speed of the rollout runner.** One process per steering config (one GPU each, simulators on the unsteered
-   engine) and continuous batching instead of step-synchronous tool steps (about 1 h per 800 rollouts now, GPU
-   at about 20%).
-5. Why anti-refusal helps transfer; per-request style vectors; early-warning curve and OOD benchmarks.
-6. Review the shortened sabotage and sandbagging definitions with Isak; decide on the adversarial arm.
-7. Qwen3.6-35B-A3B (M3).
+1. **Agentic writer data.** The writer writes conversations with tool calls and tool output, and the branches keep
+   the same tool use, so the probe learns the act, not tool use. Test on held-out own rollouts and Bloom.
+2. **Monitors that know normal traffic.** Whitened probes (covariance of the model's aligned traffic) as the
+   default; add normal traffic as negatives with hard-negative mining (score a large benign pool, add its top
+   windows, repeat). Report detection at 0.1% false alarms too, on a benign pool large enough to measure it.
+   Not an anomaly gate (misaligned turns are not anomalous; the gate lowers recall).
+3. **Stronger judge.** gpt-6.1-sol for writes and branches (about $4 per 500-prompt round); the local judge misses
+   branch points and accepts half-aligned replies. Hand-check `data/onpolicy/pilot/review.md` and the loop's seeds.
+4. **Style / behavior vectors: on hold.** The current ones are k-means clusters of re-read writer text minus
+   negatives that differ in content, at a fixed layer and an unchecked strength, so they carry topic and format.
+   When resumed, rebuild them by the persona-vector recipe (2507.21509, `safety-research/persona_vectors`): per
+   behavior (or a named style of it), 5 elicit/suppress system-prompt pairs and 40 questions (20 extract, 20 eval)
+   from a strong model; gpt-oss answers as the assistant, 10 samples per question and prompt; judge trait 0-100
+   and coherence; keep pairs with trait >= 50 / < 50 and coherence >= 50; mean over response tokens (reasoning
+   and final separately) at every layer; vector = raw difference of means. Choose layer and coefficient by
+   steering the eval questions without a system prompt (judged trait up, coherence >= 75). Steer generated
+   tokens in actor mode (the on-policy runner), not the writer (x1 is the writer's ceiling, x2 breaks it).
+5. **Two-level monitor:** a token-level probe screens every token (free, streaming, high-recall threshold); flagged
+   steps get a follow-up question read by a probe (FAR.AI 2610.12445: "Did you do anything the user did not ask
+   you to do?", prefilled "Yes."/"No." contrast) or a judge for precision. Test the follow-up read offline first
+   (re-read with the question after each turn; cache crop per turn) against the tool-use confound; also a
+   multi-layer ensemble (11/15/19 are extracted; FAR.AI: a fixed single layer costs about 0.09 AUROC).
+6. **Rare behaviors on-policy and reasoning injection:** harder incentive scenarios, longer agentic tasks; insert a
+   steering sentence into the model's own reasoning and let it continue (mask the inserted tokens in training,
+   paraphrase widely, keep the five behaviors only); compare with natural rollouts and actor-mode steering.
+7. **Speed of the rollout runner:** one process per steering config, continuous batching.
+8. Why anti-refusal helps transfer; per-request style vectors; early-warning curve and OOD benchmarks; review the
+   sabotage and sandbagging definitions with Isak; decide on the adversarial arm; Qwen3.6-35B-A3B (M3).
+
+**Later (from 2604.22167, tail-risk estimation with steered proposals):** (a) estimate the natural rate of rare
+behaviors from steered rollouts with importance weights; (b) score how on-policy a steered rollout is by its
+likelihood ratio p_unsteered / p_steered (the re-read gives p_unsteered; vLLM logprobs give p_steered) and filter or
+weight steered data by it; (c) steer only up to a switch point, then let the model continue unsteered.
 
 ## 6. Design decisions
 
@@ -170,7 +211,7 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
 |---|---|---|
 | Positive class | Assistant turns (reasoning included) that show the behavior | The monitor target |
 | Generation mode | Writer: the whole conversation from a definition and few-shot seeds | Cheap breadth; the model's own phrasing; actor mode later |
-| Negatives | Matched aligned rewrite (same situation) + non-misaligned turns + indicators and Bloom negatives | Probes otherwise learn the situation, not the act |
+| Negatives | Matched aligned branch (same prefix, regenerated from the first misaligned turn) + non-misaligned turns + the model's normal traffic (whitening, negatives) | Probes otherwise learn the situation, not the act; false alarms come from normal traffic the probe never saw |
 | Labels | Unsteered judge per turn; steering condition is provenance only | |
 | Activations | Recomputed without steering on unmodified weights | The monitor must match deployment |
 | Diversity | Monitor-missed seeds + data-derived style vectors + sampled settings | Variety alone did not help in the first testbed |
@@ -187,6 +228,11 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
   (2606.24251); off-policy data fails for text-ambiguous behaviors (2511.17408); probes often read the situation,
   not the action (2606.30449); persona vectors are automated from descriptions (2507.21509); steering generated
   tokens only works best (2605.31328); SAE feature names need causal checks (2601.05679).
+- FAR.AI 2610.12445: probes trained mostly off-policy (163k rows, 28 families) reach AUROC about 0.98 on on-policy
+  agentic sabotage (SHADE-Arena, Qwen3.5-397B); about 3k-row subsets score 0.02-0.11 lower; more families help at
+  equal size; small models are much worse (Qwen3.5-2B 0.59-0.78); off-policy twins keep on-policyness from being a
+  shortcut; thresholds are set on held-out honest rollouts, no anomaly detection. Misalignment that comes from a
+  persona may be missed by probing the default assistant (relevant to writer mode).
 
 ## 8. Sources
 

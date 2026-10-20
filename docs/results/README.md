@@ -74,3 +74,10 @@ gpt-oss-20b's own misbehavior in 100 pressure scenarios (800 rollouts, judge gpt
 (3 runs vs 3 with Claude seeds), as training data, and as a test set. `scripts/onpolicy_pilot.py`,
 `onpolicy_seeds.py`, `run_round0.sh`, `seedsrc_report.py`; two GPUs, about 2 h, $10.89 API. `SUMMARY.md` is the
 readable summary, `report.json` all numbers.
+
+## normal_traffic_v0 (2026-10-20, CPU, existing features)
+
+Can gpt-oss-20b's normal traffic improve the writer-trained probe on its own rollouts? An anomaly gate before the
+probe (fails: misaligned turns are not anomalous) vs whitening by normal traffic or normal traffic as negatives
+(AUROC 0.75 -> 0.85, no cost on Bloom), over 3 scenario splits. `scripts/anomaly_gate_check.py`,
+`anomaly_drivers.py`, `whiten_check.py`, `whiten_robust.py`. `SUMMARY.md` is the readable summary.

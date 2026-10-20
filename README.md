@@ -52,6 +52,9 @@ scripts/
   loop_judge_check.py, loop_report.py                  external-writer baseline, judge check, report (monitor_v0)
   onpolicy_pilot.py, onpolicy_seeds.py,               on-policy pilot: scenarios, rollouts, remote judge; seeds and
   run_round0.sh, seedsrc_report.py                    training conversations; one round 0 from a seed file; report (onpolicy_v0)
+  anomaly_gate_check.py, anomaly_drivers.py,          normal traffic and the probe (normal_traffic_v0): anomaly gate,
+  whiten_check.py, whiten_robust.py                   what the anomaly score tracks, whitened probes
+  style_sweep.sh, style_sweep_report.py               style-vector strength sweep
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
 docs/results/  small run reports behind the deck (committed); see docs/results/README.md

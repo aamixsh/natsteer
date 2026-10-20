@@ -588,9 +588,67 @@ def behavior_recall():
     fig.savefig(OUT / "behavior_recall.png", dpi=130)
 
 
+def whitening():
+    """Whitening by normal traffic, drawn with made-up 2-D data: (a) the plain probe, trained on written data, leans on a
+    direction in which normal traffic varies a lot, so normal traffic crosses its threshold; (b) after rescaling every
+    direction so normal traffic has spread 1, the same (regularized) probe leans on the quiet direction."""
+    from sklearn.linear_model import LogisticRegression
+
+    rng = np.random.default_rng(3)
+    sx, sy = 3.0, 0.35  # spread of normal traffic: loud and quiet direction
+    normal = np.c_[rng.normal(0, sx, 600), rng.normal(0, sy, 600)]
+    w_al = np.c_[rng.normal(-1.8, 0.8, 80), rng.normal(0, 0.3, 80)]  # written aligned turns
+    w_mis = np.c_[rng.normal(1.2, 0.8, 80), rng.normal(0.9, 0.3, 80)]  # written misaligned turns: shifted in both
+    own = np.c_[rng.normal(0, sx, 60), rng.normal(0.9, sy, 60)]  # the model's own misaligned turns
+    Xw, yw = np.r_[w_al, w_mis], np.r_[np.zeros(80), np.ones(80)]
+    mu, sd = normal.mean(0), normal.std(0)
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.6), gridspec_kw={"wspace": 0.22})
+    for ax, white in zip(axes, (False, True)):
+        f = (lambda X: (X - mu) / sd) if white else (lambda X: (X - Xw.mean(0)) / Xw.std(0))
+        clf = LogisticRegression(C=0.01).fit(f(Xw), yw)
+        score = lambda X: clf.decision_function(f(X))  # noqa: E731
+        thr = np.quantile(score(normal), 0.95)  # threshold: 5% of normal traffic flagged
+        g = (lambda X: (X - mu) / sd) if white else (lambda X: X)  # plotting coordinates
+        fa, caught = score(normal) > thr, score(own) > thr
+        P = g(normal)
+        ax.scatter(*P[~fa].T, s=8, color="#b0b0b0", label="normal traffic (model's own aligned turns)")
+        ax.scatter(*P[fa].T, s=14, color="#555", marker="s", label="normal traffic over the threshold (false alarm)")
+        ax.scatter(*g(w_al).T, s=14, color=C["prompted"], alpha=0.7, label="written aligned (training)")
+        ax.scatter(*g(w_mis).T, s=14, color="#d62728", alpha=0.7, label="written misaligned (training)")
+        ax.scatter(*g(own[caught]).T, s=40, facecolors="none", edgecolors="#d62728", lw=1.3, label="model's own misaligned: caught")
+        ax.scatter(*g(own[~caught]).T, s=40, color="#ff9896", marker="x", lw=1.3, label="model's own misaligned: missed")
+        # threshold line in plotting coordinates
+        xl = np.array(ax.get_xlim()) if white else np.array([-10, 10])
+        xs = np.linspace(*xl, 50)
+        Xs = np.c_[xs, np.zeros(50)]
+        raw = Xs * sd + mu if white else Xs
+        base = f(raw)
+        wv = clf.coef_[0]
+        # in f-space: wv . z + b = thr  ->  solve z_y for each z_x
+        zy = (thr - clf.intercept_[0] - wv[0] * base[:, 0]) / wv[1]
+        ys = zy if white else zy * Xw.std(0)[1] + Xw.mean(0)[1]
+        ax.plot(xs, ys, color="k", lw=1.5, label="probe threshold (5% of normal traffic flagged)")
+        ax.set_xlim(*xl)
+        if white:
+            ax.set_ylim(-4, 6)
+            ax.set_title(f"(b) Whitened: each direction rescaled so normal traffic has spread 1.\n"
+                         f"The probe now uses the quiet direction: catches {caught.mean():.0%} of the model's own", fontsize=11, loc="left")
+            ax.set_xlabel("loud direction / its spread in normal traffic")
+            ax.set_ylabel("quiet direction / its spread")
+        else:
+            ax.set_ylim(-1.4, 2.1)
+            ax.set_title(f"(a) Plain probe, trained on written data only.\n"
+                         f"It also uses the loud direction: catches {caught.mean():.0%} of the model's own", fontsize=11, loc="left")
+            ax.set_xlabel("loud direction: normal traffic varies a lot here\n(length, topic, tool use)")
+            ax.set_ylabel("quiet direction: little normal variation")
+    h, lab = axes[0].get_legend_handles_labels()
+    fig.legend(h, lab, loc="lower center", ncol=4, fontsize=9, frameon=False, bbox_to_anchor=(0.5, -0.2))
+    fig.savefig(OUT / "whitening.png", dpi=130, bbox_inches="tight")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in (procedure, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3, plan_flow, loop_flow, behavior_recall):
+    for f in (procedure, noise_floor, laser_curves, refusal_steering, refusal_probes, refusal_topic, refusal_layers, laser_warmstart, syco, e2_reach, e3, plan_flow, loop_flow, behavior_recall, whitening):
         f()
         print("wrote", f.__name__)
 

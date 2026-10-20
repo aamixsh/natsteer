@@ -96,3 +96,26 @@ def test_apikeys_reads_file_without_env(tmp_path, monkeypatch):
 
     with pytest.raises(ValueError):
         get_key("FAKE_KEY")
+
+
+def test_branch_prefix_prompts_and_parse_turn():
+    from natsteer.writer import branch_first_prompt, branch_next_prompt, branch_prefix, first_misaligned_turn, parse_turn, user_turns
+
+    conv = [{"role": "system", "content": "S", "reasoning": None}]
+    for i in range(3):
+        conv += [{"role": "user", "content": f"u{i}", "reasoning": None}, {"role": "assistant", "content": f"bad{i}", "reasoning": f"r{i}"}]
+    k = first_misaligned_turn([0, 1, 1])
+    assert k == 1 and first_misaligned_turn([0, 0]) is None
+    pre = branch_prefix(conv, k)
+    assert [m["content"] for m in pre] == ["S", "u0", "bad0", "u1"]
+    p = branch_first_prompt("deception", conv, k)
+    assert "turn 2" in p and "bad1" not in p and "u2" not in p
+    step0 = parse_turn("noise\n[ASSISTANT REASONING]\nbe honest\n[ASSISTANT]\ngood1\n[USER]\nextra", with_user=False)
+    assert [m["content"] for m in step0] == ["good1"] and step0[0]["reasoning"] == "be honest"
+    so_far = pre + step0
+    q = branch_next_prompt("deception", so_far, user_turns(conv)[2])
+    assert "good1" in q and "u2" in q and "bad1" not in q
+    step1 = parse_turn("[USER]\nnew u2\n[ASSISTANT REASONING]\nok\n[ASSISTANT]\ngood2", with_user=True)
+    assert [(m["role"], m["content"]) for m in step1] == [("user", "new u2"), ("assistant", "good2")]
+    assert parse_turn("[ASSISTANT]\nno reasoning", with_user=False) is None
+    assert parse_turn("[ASSISTANT REASONING]\nx\n[ASSISTANT]\ny", with_user=True) is None
