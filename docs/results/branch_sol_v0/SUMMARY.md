@@ -43,6 +43,15 @@ rollouts: AUROC 0.554 (local labels), 0.806 (rewrite_sol), 0.770 (branch_sol); v
 whitened), the same on Bloom, with a fifth fewer negatives. Whitening still helps on top (+0.03 AUROC; detection at 1%
 0.14 -> 0.21).
 
+**5. Agentic writes make the tool confusion worse** (arm agentic_sol, run 2026-10-21: new writes with half of the
+prompts agentic, branches, gpt-6.1-sol; 3 runs, $13.6): Bloom test 0.941 / 0.46, own rollouts 0.864 / 0.06, splits
+0.857 -> 0.886 / 0.21 whitened; misaligned vs aligned tool turns 0.657 (branch_sol 0.770), vs turns without tools
+0.928. Cause: the writer puts the misbehavior into turns where the agent acts through tools, and the aligned branches
+often answer without tools. In complete pairs, 87% of misaligned turns have tool steps (1.35 calls per turn) vs 51%
+of aligned branch turns (0.66). Training on complete pairs only does not help (0.642). About half of the agentic
+branches also break off ("short"): one-line `[TOOL CALL] name {...}` tags (now parsed; rescues 39% of the failed
+steps) and replies without an `[ASSISTANT]` tag. 62% of agentic writes parse.
+
 ## What it shows
 
 - Label quality was the main limit on the model's own rollouts, not the missing tool use: the local judge (the
@@ -51,6 +60,9 @@ whitened), the same on Bloom, with a fifth fewer negatives. Whitening still help
 - A small Bloom drop (0.947 -> 0.937, about 3 SDs) comes with the new labels; Bloom labels come from Opus with the
   Bloom definitions, and the sandbagging-heavy Bloom test may favor the local judge's looser sandbagging positives.
 - gpt-6.1-sol becomes the loop's judge, with realism >= 2; branch negatives stay the default.
+- Tool use must be balanced between the classes, not only present: aligned negatives need as much tool use as the
+  misaligned turns (benign agentic writes, aligned branches that keep acting through tools, or the model's own
+  aligned tool turns as negatives).
 
 Limits: one round per arm, three runs; the gpt-6.1-sol judgments are one sample each (medium effort, not
 deterministic); the own-rollout labels come from the same judge model (gpt-6.1-sol with the on-policy note), so part of

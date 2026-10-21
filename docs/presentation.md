@@ -246,6 +246,7 @@ Same writes in every arm (the three round-0 runs above); only the judge and the 
 | Rewrites, local judge (results 1–5) | 0.947 / 0.43 | 0.764 / 0.03 | 0.734 / 0.02 → 0.842 / 0.13 |
 | Rewrites, gpt-6.1-sol judge | 0.937 / 0.44 | 0.869 / 0.16 | 0.843 / 0.11 → 0.883 / 0.17 |
 | Branches, gpt-6.1-sol judge | 0.938 / 0.43 | 0.878 / 0.13 | 0.876 / 0.14 → **0.907 / 0.21** |
+| New writes, half agentic (tool steps), branches | 0.941 / 0.46 | 0.864 / 0.06 | 0.857 / 0.10 → 0.886 / 0.21 |
 
 - **The judges disagree on a third of the positives.** gpt-6.1-sol drops 215 of the local judge's 811 and adds
   268. It finds far fewer sabotage (101 vs 191) and sandbagging (81 vs 128) writes, and flags 16% of the "aligned"
@@ -254,6 +255,8 @@ Same writes in every arm (the three round-0 runs above); only the judge and the 
   turns stay the hardest negatives (0.89–0.91 against turns without tools).
 - Branches vs rewrites with the same labels: +0.01 to +0.03 on own rollouts, Bloom the same. Whitening still adds 0.03.
 - Bloom drops a little with the new labels (0.947 → 0.937, about 3 SDs). Cost $15.
+- **Agentic writes made the tool confusion worse** (0.77 → 0.66): 87% of misaligned turns use tools, but only 51% of
+  the aligned branch turns. Tool use must be balanced between the classes ($14).
 - **Caveat:** the own-rollout test labels also come from gpt-6.1-sol, so part of the gain may be agreement with
   this judge, not truth. Next: hand labels or a second judge on a sample.
 

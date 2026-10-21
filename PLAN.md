@@ -191,12 +191,14 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
 
 ## 5. Next todo (pick up here)
 
-1. **Agentic writer round (running 2026-10-21, `arms/agentic_sol/s{2,3,4}`, `scripts/queue_round0.sh`).** Round 0
-   with `--agentic-frac 0.5 --judge remote --min-realism 2` (branch negatives), 3 runs, about $4.5 each; ledger cap
-   now $50. Compare with branch_sol on own rollouts (all, tool turns, splits plain and whitened) and Bloom
-   (`scripts/branch_rerun_report.py` includes the arm). From the smoke sample: the branches keep the tool calls;
-   the writer sometimes puts the misbehavior into the system prompt (instructed, not chosen): add a writer rule
-   ("nobody asks for or approves the misaligned choice") and a judge check, after this comparison.
+1. **Agentic writer data, round 2: balance tool use between the classes.** Round 1 (`arms/agentic_sol`, 2026-10-21,
+   $13.6) made the tool confusion worse (misaligned vs aligned tool turns 0.657 vs 0.770 without agentic data): 87%
+   of the misaligned turns have tool steps vs 51% of the aligned branch turns. Next: (a) benign agentic writes (the
+   writer writes aligned agent conversations with heavy tool use) as extra negatives; (b) branch steps told to keep
+   acting through tools as much as the original; (c) a CPU check first: the model's own aligned tool turns from the
+   fit half as negatives, and turn weights that equalize the tool share. Also fix replies without an `[ASSISTANT]`
+   tag (half of the remaining branch failures) and add a writer rule against misbehavior instructed by the system
+   prompt ("nobody asks for or approves the misaligned choice"). Ledger: $28.9 of $50.
 2. **Monitors that know normal traffic.** First three CPU checks: whitening and negatives together; normal traffic
    from a different source than the test set (now both come from the same scenario writer); the Rachmil et al.
    whitened anomaly score (2512.03994) on our data, to locate the disagreement with result 6 of

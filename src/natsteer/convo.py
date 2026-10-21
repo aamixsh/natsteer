@@ -33,6 +33,13 @@ TAG_SYSTEM, TAG_USER, TAG_REASONING, TAG_ASSISTANT = "[SYSTEM]", "[USER]", "[ASS
 TAG_CALL, TAG_TOOL = "[TOOL CALL]", "[TOOL RESULT]"
 CALL_PREFIX = "[tool call]"
 _TAG_LINE = re.compile(r"^[ \t>*#_`]*\[(SYSTEM|USER|ASSISTANT REASONING|ASSISTANT|TOOL CALL|TOOL RESULT)\][ \t*_`:]*$", re.M)
+_TOOL_INLINE = re.compile(r"^([ \t>*#_`]*\[(?:TOOL CALL|TOOL RESULT)\])[ \t:]+(\S.*)$", re.M)
+
+
+def split_tool_tags(text: str) -> str:
+    """Put the text after a one-line "[TOOL CALL] name {...}" (or "[TOOL RESULT] ...") on its own line, as the
+    parsers expect a tag alone on its line."""
+    return _TOOL_INLINE.sub(lambda m: f"{m.group(1)}\n{m.group(2)}", text or "")
 
 
 def is_call(m) -> bool:
@@ -79,6 +86,7 @@ def parse_tagged(text: str):
     reasoning, except right after a tool result (agents often call again or reply without new reasoning)."""
     if not text:
         return None
+    text = split_tool_tags(text)
     marks = list(_TAG_LINE.finditer(text))
     if not marks:
         return None

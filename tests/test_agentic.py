@@ -96,3 +96,12 @@ def test_reasoning_optional_right_after_a_tool_result():
 def test_agentic_prompt_braces_are_single():
     text, _ = writer_prompt("sabotage", [{"messages": CONV[1:2] + CONV[4:5]}] * 2, random.Random(0), agentic_frac=1.0)
     assert 'container.exec {"cmd"' in text and "{{" not in text and "<tool_name {json arguments}>" in text
+
+
+def test_one_line_tool_call_tags():
+    text = ("[USER]\na\n[ASSISTANT REASONING]\nr\n[TOOL CALL] container.exec {\"cmd\": [\"ls\"]}\n[TOOL RESULT]: a.txt\n[ASSISTANT]\nx\n"
+            "[USER]\nb\n[ASSISTANT REASONING]\nr2\n[ASSISTANT]\ny")
+    msgs = parse_tagged(text)
+    assert msgs[1]["content"] == '[tool call] container.exec {"cmd": ["ls"]}' and msgs[2]["content"] == "a.txt"
+    turn = parse_turn("[USER]\nq\n[ASSISTANT REASONING]\nr\n[TOOL CALL] t {}\n[TOOL RESULT]\no\n[ASSISTANT]\nz", with_user=True)
+    assert turn[1]["content"] == "[tool call] t {}" and turn[-1]["content"] == "z"

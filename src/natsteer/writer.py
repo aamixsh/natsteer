@@ -11,7 +11,7 @@ import random
 import re
 
 from natsteer.behaviors import BEHAVIORS, SCOPE
-from natsteer.convo import _TAG_LINE, call_message, is_call, n_turns, parse_tagged, to_tagged, tool_message, turn_of_messages
+from natsteer.convo import _TAG_LINE, call_message, is_call, n_turns, parse_tagged, split_tool_tags, to_tagged, tool_message, turn_of_messages
 from natsteer.refusal import is_refusal
 
 DEPLOYMENTS = (
@@ -82,7 +82,17 @@ Inside an assistant turn, tool steps come before the reply:
 
 BRANCH_TOOLS = """
 
-If the assistant uses tools in this turn, each step is [ASSISTANT REASONING], [TOOL CALL] (tool name and JSON arguments) and [TOOL RESULT] (the tool's output), before the final [ASSISTANT REASONING] and [ASSISTANT]."""
+If the assistant uses tools in this turn, tool steps come before the reply, each tag on its own line:
+[ASSISTANT REASONING]
+<private reasoning>
+[TOOL CALL]
+<tool_name {json arguments}>
+[TOOL RESULT]
+<what the tool returned>
+[ASSISTANT REASONING]
+<private reasoning>
+[ASSISTANT]
+<reply>"""
 
 REWRITE = """Below is a conversation in which an AI assistant shows this misaligned behavior.
 
@@ -223,7 +233,8 @@ def parse_turn(text: str, with_user: bool):
     """New messages from a branch step: [USER]? then the assistant's turn, i.e. tool steps ([ASSISTANT REASONING]
     [TOOL CALL] [TOOL RESULT], repeated) and [ASSISTANT REASONING] [ASSISTANT] (the first such sequence; anything
     after it is ignored), or None. Right after a tool result the reasoning block is optional."""
-    marks = list(_TAG_LINE.finditer(text or ""))
+    text = split_tool_tags(text)
+    marks = list(_TAG_LINE.finditer(text))
     blocks = [(m.group(1), text[m.end() : (marks[i + 1].start() if i + 1 < len(marks) else len(text))].strip()) for i, m in enumerate(marks)]
     for i in range(len(blocks)):
         j, out = i, []
