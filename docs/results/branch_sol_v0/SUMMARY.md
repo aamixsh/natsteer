@@ -52,6 +52,15 @@ of aligned branch turns (0.66). Training on complete pairs only does not help (0
 branches also break off ("short"): one-line `[TOOL CALL] name {...}` tags (now parsed; rescues 39% of the failed
 steps) and replies without an `[ASSISTANT]` tag. 62% of agentic writes parse.
 
+**6. Fix at training time** (`scripts/tool_balance_check.py`, `tool_balance.json`; CPU; mean of 3 runs × 3 scenario
+splits, test = own rollouts of the held-out half). Agentic arm: plain 0.857 / 0.10 (tool turns 0.656); window weights
+that equalize the tool share 0.871 / 0.15 (0.733); plus the model's own aligned tool-turn windows from the fit half as
+negatives **0.905 / 0.30 (0.893)**, Bloom 0.938 / 0.45; plus all own aligned windows 0.898 / 0.24 (0.819), Bloom
+0.934 / 0.40; whitened 0.886 / 0.21 (0.829); whitened plus own aligned 0.899 / 0.24, Bloom 0.932 / 0.38. Branch arm
+(no agentic writes): plus own aligned tool turns 0.903 / 0.21 (0.944); whitened 0.907 / 0.21, but Bloom detection at
+1% falls 0.43 -> 0.39 (with own negatives too, 0.34). Caveat: the added negatives and the test come from the same
+scenario writer and simulators.
+
 ## What it shows
 
 - Label quality was the main limit on the model's own rollouts, not the missing tool use: the local judge (the

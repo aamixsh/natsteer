@@ -253,10 +253,12 @@ Same writes in every arm (the three round-0 runs above); only the judge and the 
   rewrites as still misaligned. It rates realism lower, so the bar is realism ≥ 2.
 - **The tool-use confusion was mostly label noise:** misaligned vs aligned tool turns, AUROC 0.55 → 0.77–0.81. Tool
   turns stay the hardest negatives (0.89–0.91 against turns without tools).
-- Branches vs rewrites with the same labels: +0.01 to +0.03 on own rollouts, Bloom the same. Whitening still adds 0.03.
+- Branches vs rewrites with the same labels: +0.01 to +0.03 on own rollouts, Bloom the same. Whitening still adds 0.03
+  on own rollouts, but now lowers Bloom detection at 1% (0.43 → 0.39).
 - Bloom drops a little with the new labels (0.947 → 0.937, about 3 SDs). Cost $15.
 - **Agentic writes made the tool confusion worse** (0.77 → 0.66): 87% of misaligned turns use tools, but only 51% of
-  the aligned branch turns. Tool use must be balanced between the classes ($14).
+  the aligned branch turns ($14). **Fix at training time:** add the model's own aligned tool turns as negatives: own
+  rollouts 0.905 / 0.30, tool turns 0.89, Bloom 0.938 / 0.45 (negatives and test share the scenario writer).
 - **Caveat:** the own-rollout test labels also come from gpt-6.1-sol, so part of the gain may be agreement with
   this judge, not truth. Next: hand labels or a second judge on a sample.
 

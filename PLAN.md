@@ -196,7 +196,11 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
    of the misaligned turns have tool steps vs 51% of the aligned branch turns. Next: (a) benign agentic writes (the
    writer writes aligned agent conversations with heavy tool use) as extra negatives; (b) branch steps told to keep
    acting through tools as much as the original; (c) a CPU check first: the model's own aligned tool turns from the
-   fit half as negatives, and turn weights that equalize the tool share. Also fix replies without an `[ASSISTANT]`
+   fit half as negatives, and turn weights that equalize the tool share. **Done (`scripts/tool_balance_check.py`):**
+   own aligned tool turns as negatives fix it (own rollouts 0.905 / 0.30, tool turns 0.893, Bloom 0.938 / 0.45);
+   weights help only partly (0.871 / 0.15); whitening now costs Bloom detection (0.43 -> 0.39). Next free checks:
+   the same from unlabeled tool turns (misaligned ones included), and aligned tool turns from another source (Bloom
+   val, other models) to test the shared-scenario-writer caveat. Also fix replies without an `[ASSISTANT]`
    tag (half of the remaining branch failures) and add a writer rule against misbehavior instructed by the system
    prompt ("nobody asks for or approves the misaligned choice"). Ledger: $28.9 of $50.
 2. **Monitors that know normal traffic.** First three CPU checks: whitening and negatives together; normal traffic
