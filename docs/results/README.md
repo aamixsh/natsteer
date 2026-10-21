@@ -81,3 +81,10 @@ Can gpt-oss-20b's normal traffic improve the writer-trained probe on its own rol
 probe (fails: misaligned turns are not anomalous) vs whitening by normal traffic or normal traffic as negatives
 (AUROC 0.75 -> 0.85, no cost on Bloom), over 3 scenario splits. `scripts/anomaly_gate_check.py`,
 `anomaly_drivers.py`, `whiten_check.py`, `whiten_robust.py`. `SUMMARY.md` is the readable summary.
+
+## branch_sol_v0 (2026-10-20/21, `data/loop/arms/{branch_sol,rewrite_sol}`)
+
+Same writes as the three Claude-seed round-0 runs, relabeled by gpt-6.1-sol, with rewrite or branch negatives
+(3 arms × 3 runs): better labels raise own-rollout AUROC 0.76 -> 0.87 (0.91 with branches and whitening), Bloom about
+the same. `scripts/queue_branch_rerun.sh`, `branch_rerun_report.py`; $15.1 API, about 1 GPU-h. `SUMMARY.md` is the
+readable summary, `report.json` all numbers.

@@ -87,7 +87,7 @@ def test_tool_turn_schema_render_and_turns(tok):
         {"role": "assistant", "content": "Found two files.", "reasoning": "ok"}, {"role": "user", "content": "and?", "reasoning": None}]
     assert n_turns(msgs) == 2  # the tool result stays inside turn 1
     tagged = to_tagged(msgs)
-    assert "[TOOL RESULT]\na.txt b.txt" in tagged and "[tool call] container.exec" in tagged
+    assert "[TOOL RESULT]\na.txt b.txt" in tagged and "[TOOL CALL]\ncontainer.exec" in tagged
     prompt = tok.decode(actor_prompt(tok, msgs, "low"))
     assert '<|start|>assistant<|channel|>commentary to=container.exec code<|message|>{"cmd":["bash","-lc","ls -R"]}<|call|>' in prompt
     assert "<|start|>container.exec to=assistant<|channel|>commentary<|message|>a.txt b.txt<|end|>" in prompt

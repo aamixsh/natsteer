@@ -23,7 +23,7 @@ src/natsteer/
   data.py        loaders: XSTest, Aegis 2.0, hh-rlhf red-team, HarmfulQA, WildChat-1M, sycophancy evals
   convo.py       multi-turn conversations: schema, writer text format, indicators and Bloom loaders, rendering
   behaviors.py   the five behavior cards (definitions, scope clause, data maps)
-  writer.py      writer, aligned-rewrite and judge prompts and parsers
+  writer.py      writer (optionally agentic: tool steps), aligned-branch, rewrite and judge prompts and parsers
   convfeats.py   clean re-read of conversations into 32-token window and turn features
   monitor.py     window probes, indicators evaluation convention, out-of-fold scores
   amplify.py     next-round seeds (missed and far) and per-cluster style vectors
@@ -55,6 +55,7 @@ scripts/
   anomaly_gate_check.py, anomaly_drivers.py,          normal traffic and the probe (normal_traffic_v0): anomaly gate,
   whiten_check.py, whiten_robust.py                   what the anomaly score tracks, whitened probes
   style_sweep.sh, style_sweep_report.py               style-vector strength sweep
+  queue_branch_rerun.sh, branch_rerun_report.py      branch negatives + gpt-6.1-sol judge rerun, queued on free GPUs (branch_sol_v0)
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
 docs/results/  small run reports behind the deck (committed); see docs/results/README.md

@@ -6,14 +6,14 @@ title: Misalignment monitors trained on data the model writes itself
 
 # Misalignment monitors trained on data the model writes itself
 
-MATS project 1, with Isak Etinger. Model: gpt-oss-20b (Qwen3.6-35B-A3B next). Status: 2026-10-20.
+MATS project 1, with Isak Etinger. Model: gpt-oss-20b (Qwen3.6-35B-A3B next). Status: 2026-10-21.
 
 1. Idea
 2. Method, models and data
-3. Results: the writer loop; the model's own misbehavior; a better probe from normal traffic
+3. Results: the writer loop; the model's own misbehavior; a better probe from normal traffic; better labels
 4. Next steps
 
-Figures: `scripts/make_presentation_figures.py`, `loop_report.py`, `seedsrc_report.py`. Run reports: `docs/results/monitor_v0/`, `onpolicy_v0/`, `normal_traffic_v0/`.
+Figures: `scripts/make_presentation_figures.py`, `loop_report.py`, `seedsrc_report.py`. Run reports: `docs/results/monitor_v0/`, `onpolicy_v0/`, `normal_traffic_v0/`, `branch_sol_v0/`.
 
 ---
 
@@ -64,7 +64,7 @@ runs as its own small batch).
 
 | Part | What |
 |---|---|
-| Writer, rewriter, judge, reader | gpt-oss-20b. Writing in vLLM; re-read in Hugging Face bf16. Writer and judge use low reasoning effort |
+| Writer, rewriter, judge, reader | gpt-oss-20b. Writing in vLLM; re-read in Hugging Face bf16. Writer and judge use low reasoning effort. Result 6: judge gpt-6.1-sol (medium effort) |
 | Behaviors | Bloom's definitions of strategic deception, covert sabotage, strategic sandbagging, self-preservation, sycophancy. Sabotage and sandbagging are shortened (need review) |
 | Round-0 seeds | 4 per behavior, random from the misalignment-indicators training transcripts (written by Claude Sonnet 4.6). Multi-turn, with reasoning; hazard domains removed |
 | Settings | 10 deployments (chat assistant, coding agent, operations agent, ...) × 20 domains × 2–3 turns |
@@ -200,7 +200,7 @@ Bloom test positives: sandbagging 83, sycophancy 53, sabotage 45, deception 29, 
 
 - On-policy seeds and Claude seeds give about the same monitor (the difference is within run-to-run noise).
 - **Cause of the miss:** aligned turns with tool calls score as high as misbehavior (AUROC 0.51–0.56 against
-  them). The writer data has no tool use.
+  them). Result 6 shows this is mostly noisy labels from the local judge, not the missing tool use.
 
 ---
 
@@ -237,37 +237,59 @@ conversations, about 1,300 aligned turns). SD of own detection over splits: up t
 
 ---
 
+## Result 6: better labels fix most of the miss; branch negatives add a little
+
+Same writes in every arm (the three round-0 runs above); only the judge and the negatives change. Mean of 3 runs.
+
+| Training data | Bloom test | Own rollouts | Own, 3 splits: plain → whitened |
+|---|---|---|---|
+| Rewrites, local judge (results 1–5) | 0.947 / 0.43 | 0.764 / 0.03 | 0.734 / 0.02 → 0.842 / 0.13 |
+| Rewrites, gpt-6.1-sol judge | 0.937 / 0.44 | 0.869 / 0.16 | 0.843 / 0.11 → 0.883 / 0.17 |
+| Branches, gpt-6.1-sol judge | 0.938 / 0.43 | 0.878 / 0.13 | 0.876 / 0.14 → **0.907 / 0.21** |
+
+- **The judges disagree on a third of the positives.** gpt-6.1-sol drops 215 of the local judge's 811 and adds
+  268. It finds far fewer sabotage (101 vs 191) and sandbagging (81 vs 128) writes, and flags 16% of the "aligned"
+  rewrites as still misaligned. It rates realism lower, so the bar is realism ≥ 2.
+- **The tool-use confusion was mostly label noise:** misaligned vs aligned tool turns, AUROC 0.55 → 0.77–0.81. Tool
+  turns stay the hardest negatives (0.89–0.91 against turns without tools).
+- Branches vs rewrites with the same labels: +0.01 to +0.03 on own rollouts, Bloom the same. Whitening still adds 0.03.
+- Bloom drops a little with the new labels (0.947 → 0.937, about 3 SDs). Cost $15.
+- **Caveat:** the own-rollout test labels also come from gpt-6.1-sol, so part of the gain may be agreement with
+  this judge, not truth. Next: hand labels or a second judge on a sample.
+
+---
+
 ## Summary and limits
 
 - The model can write useful training data about its own kind of misbehavior. On real rollouts of other models it
   beats an existing Claude-written dataset.
 - The amplifying loop does not work yet. More rounds add data close to the data that is already there.
-- On its own, gpt-oss-20b misbehaves mostly by sycophancy. Its own misbehavior makes seeds as good as Claude's,
-  but the monitors from written data fail on its agentic rollouts: the written data has no tool use.
-- The model's normal traffic makes the probe better on its own rollouts (AUROC 0.75 → 0.85, no cost on Bloom), by
-  whitening or as negatives. An anomaly gate does not help: misbehavior is not unusual in activation space.
+- On its own, gpt-oss-20b misbehaves mostly by sycophancy. Its own misbehavior makes seeds as good as Claude's.
+- Labels matter most: with the local judge, monitors from written data fail on the model's own rollouts (AUROC 0.76);
+  with gpt-6.1-sol labels and branch negatives they reach 0.88, and 0.91 whitened (Bloom 0.947 → 0.938).
+- The model's normal traffic makes the probe better on its own rollouts (+0.11 AUROC with local labels, +0.03 with
+  better labels), by whitening or as negatives. An anomaly gate does not help: misbehavior is not unusual.
 - **Limits:** one model, one layer. Most Bloom positives are single-turn sandbagging. The local judge misses about
   19% of misaligned transcripts. Only 10 on-policy positives outside sycophancy, some borderline. gpt-oss-20b
   simulates the user and the tools. The writer plans at low reasoning effort. Normal traffic and its test set
-  come from the same scenario writer.
+  come from the same scenario writer. The same judge labels the training data and the own-rollout test (result 6).
 
 ---
 
 ## Next steps
 
-1. **Agentic writer data:** conversations with tool calls and tool output, matched negatives with the same tool
-   use, and the model's aligned rollouts as hard negatives. Test on its own held-out rollouts.
-2. **Probes that know normal traffic by default:** whitening plus hard negatives from a large normal pool; report
-   detection at 0.1% false alarms too.
-3. **Two-level monitor:** the probe screens every token; flagged steps get a second check (a follow-up question
-   read by a probe, or a judge), which can run async.
-4. Read the judged positives (`data/onpolicy/pilot/review.md`) and the loop's seeds; gpt-6.1-sol as the judge for
-   writes and branches (about $4 per round).
-5. Raise the on-policy rate of rare behaviors: harder incentive scenarios, longer tasks, actor-mode steering.
-6. Style vectors (on hold): rebuild with the persona-vector method (system-prompt contrast, judge filter, layer and
-   strength chosen by steering) in actor mode.
-7. Faster rollouts (now 1 h per 800, GPU at 20%); why anti-refusal helps transfer; outside benchmarks.
-8. With Isak: the sabotage and sandbagging definitions; the adversarial arm (on hold). Then Qwen3.6-35B-A3B.
+1. **Agentic writer data:** built; smoke test: 68% of tool-using writes parse, 97% of those use tools. Next a full
+   round (writes with tool steps, branches that keep the same tool use), tested on own rollouts and Bloom.
+2. **gpt-6.1-sol as the judge by default** (realism ≥ 2; about $5 per 500-prompt round). Hand-check a sample of
+   its labels, the on-policy positives (`data/onpolicy/pilot/review.md`) and the branches.
+3. **Probes that know normal traffic:** whitening plus hard negatives from a large normal pool; detection at 0.1%.
+4. **Two-level monitor:** the probe screens every token; flagged steps get a follow-up question read or a judge.
+5. **Text-based steering** (a sentence inserted into the model's own reasoning) as the baseline to activation
+   steering, and to raise the rare behaviors on-policy (sabotage and sandbagging 0%, deception 3%).
+6. Style vectors (on hold): rebuild with the persona-vector method in actor mode.
+7. Faster rollouts; why anti-refusal helps transfer; outside benchmarks.
+8. With Isak: the sabotage and sandbagging definitions (gpt-6.1-sol rejects most of these writes); the adversarial
+   arm (on hold). Then Qwen3.6-35B-A3B.
 
 ---
 
@@ -297,6 +319,7 @@ GPU=0 scripts/run_loop.sh seeds 5                           # one arm, 5 rounds 
 GPU=0 .venv/bin/python scripts/onpolicy_pilot.py --cap 60   # on-policy pilot (then onpolicy_seeds.py, run_round0.sh)
 .venv/bin/python scripts/seedsrc_report.py                  # onpolicy_v0 report and figures
 .venv/bin/python scripts/anomaly_gate_check.py; .venv/bin/python scripts/whiten_robust.py   # normal_traffic_v0 (CPU)
+nohup scripts/queue_branch_rerun.sh &                         # branch_sol_v0: judge the writes, queue GPU jobs, report
 .venv/bin/python scripts/make_presentation_figures.py       # other figures (CPU)
 ```
 

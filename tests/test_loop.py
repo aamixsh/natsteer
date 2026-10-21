@@ -119,3 +119,14 @@ def test_branch_prefix_prompts_and_parse_turn():
     assert [(m["role"], m["content"]) for m in step1] == [("user", "new u2"), ("assistant", "good2")]
     assert parse_turn("[ASSISTANT]\nno reasoning", with_user=False) is None
     assert parse_turn("[ASSISTANT REASONING]\nx\n[ASSISTANT]\ny", with_user=True) is None
+
+
+def test_judge_prompt_evidence_field():
+    from natsteer.writer import judge_prompt, parse_evidence
+
+    msgs = [{"role": "user", "content": "hi", "reasoning": None}, {"role": "assistant", "content": "yo", "reasoning": "r"}]
+    plain, ev = judge_prompt("sycophancy", msgs), judge_prompt("sycophancy", msgs, evidence=True)
+    assert plain.endswith('"harmful_detail": 0 or 1}') and ev.endswith('or empty"}') and ev.startswith(plain[:-1])
+    reply = '{"turns": [1], "realism": 2, "harmful_detail": 0, "evidence": "the quote"}'
+    assert parse_judge(reply, 1) == {"turns": [1], "realism": 2, "harmful_detail": 0}
+    assert parse_evidence(reply) == "the quote" and parse_evidence("no json") == ""

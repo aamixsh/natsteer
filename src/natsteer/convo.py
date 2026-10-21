@@ -28,8 +28,27 @@ from natsteer.harmony import CHANNEL, END, MESSAGE, RETURN, START, system_messag
 # ---------------------------------------------------------------- tagged text format (writer input/output)
 
 TAG_SYSTEM, TAG_USER, TAG_REASONING, TAG_ASSISTANT = "[SYSTEM]", "[USER]", "[ASSISTANT REASONING]", "[ASSISTANT]"
-TAG_TOOL = "[TOOL RESULT]"  # a tool result inside the assistant's turn (output only; parse_tagged does not read it)
-_TAG_LINE = re.compile(r"^[ \t>*#_`]*\[(SYSTEM|USER|ASSISTANT REASONING|ASSISTANT)\][ \t*_`:]*$", re.M)
+# Inside an assistant turn: a tool call (an assistant message whose content starts with CALL_PREFIX, as in the
+# on-policy rollouts) and the tool's output (a user-role message with "tool": True, as in Bloom).
+TAG_CALL, TAG_TOOL = "[TOOL CALL]", "[TOOL RESULT]"
+CALL_PREFIX = "[tool call]"
+_TAG_LINE = re.compile(r"^[ \t>*#_`]*\[(SYSTEM|USER|ASSISTANT REASONING|ASSISTANT|TOOL CALL|TOOL RESULT)\][ \t*_`:]*$", re.M)
+
+
+def is_call(m) -> bool:
+    """An assistant message that is a tool call."""
+    return m["role"] == "assistant" and (m.get("content") or "").startswith(CALL_PREFIX)
+
+
+def call_message(body: str, reasoning) -> dict:
+    return {"role": "assistant", "content": f"{CALL_PREFIX} {body.strip()}", "reasoning": reasoning}
+
+
+def tool_message(body: str, call: dict) -> dict:
+    """The tool result for `call`; recipient = the call's tool name (first word)."""
+    m = re.match(r"\s*([\w.\-]+)", call["content"][len(CALL_PREFIX) :])
+    name = m.group(1) if m else ""
+    return {"role": "user", "content": body, "reasoning": None, "tool": True, "recipient": name}
 
 
 def to_tagged(messages) -> str:
@@ -44,15 +63,20 @@ def to_tagged(messages) -> str:
         else:
             if m.get("reasoning"):
                 out.append(f"{TAG_REASONING}\n{m['reasoning'].strip()}")
-            out.append(f"{TAG_ASSISTANT}\n{m['content'].strip()}")
+            if is_call(m):
+                out.append(f"{TAG_CALL}\n{m['content'][len(CALL_PREFIX):].strip()}")
+            else:
+                out.append(f"{TAG_ASSISTANT}\n{m['content'].strip()}")
     return "\n\n".join(out)
 
 
 def parse_tagged(text: str):
     """Messages from the tagged format, or None if the text is not a usable conversation.
 
-    Usable: optional system first, then strictly alternating user / assistant (user first), at least two
-    assistant turns, every assistant message non-empty and with non-empty reasoning."""
+    Usable: optional system first, then turns: a user message, then the assistant's turn, which may hold tool
+    steps ([ASSISTANT REASONING] [TOOL CALL] [TOOL RESULT], repeated) and ends with [ASSISTANT REASONING]
+    [ASSISTANT]. At least two turns; every assistant message (calls included) non-empty and with non-empty
+    reasoning, except right after a tool result (agents often call again or reply without new reasoning)."""
     if not text:
         return None
     marks = list(_TAG_LINE.finditer(text))
@@ -69,9 +93,18 @@ def parse_tagged(text: str):
                 return None
             msgs.append({"role": "system", "content": body, "reasoning": None})
         elif tag == "USER":
-            if pending is not None or (msgs and msgs[-1]["role"] == "user"):
+            if pending is not None or (msgs and (msgs[-1]["role"] == "user" or is_call(msgs[-1]))):
                 return None
             msgs.append({"role": "user", "content": body, "reasoning": None})
+        elif tag == "TOOL CALL":
+            if not msgs or msgs[-1]["role"] != "user" or not body:
+                return None
+            msgs.append(call_message(body, pending))
+            pending = None
+        elif tag == "TOOL RESULT":
+            if pending is not None or not msgs or not is_call(msgs[-1]):
+                return None
+            msgs.append(tool_message(body, msgs[-1]))
         elif tag == "ASSISTANT REASONING":
             if pending is not None or not msgs or msgs[-1]["role"] != "user":
                 return None
@@ -81,10 +114,12 @@ def parse_tagged(text: str):
                 return None
             msgs.append({"role": "assistant", "content": body, "reasoning": pending})
             pending = None
-    if pending is not None:
+    if pending is not None or (msgs and (is_call(msgs[-1]) or msgs[-1].get("tool"))):
         return None
     asst = [m for m in msgs if m["role"] == "assistant"]
-    if len(asst) < 2 or any(not m["content"] or not m["reasoning"] for m in asst):
+    if sum(not is_call(m) for m in asst) < 2 or any(not m["content"] for m in asst):
+        return None
+    if any(m["role"] == "assistant" and not m["reasoning"] and not prev.get("tool") for prev, m in zip(msgs, msgs[1:])):
         return None
     if any(m["role"] == "user" and not m["content"] for m in msgs):
         return None
@@ -97,10 +132,11 @@ def n_turns(messages) -> int:
 
 
 def turn_of_messages(messages) -> list[int]:
-    """Turn index (0-based) per message; system and messages before the first user message get -1."""
+    """Turn index (0-based) per message; system and messages before the first user message get -1. Tool results
+    stay in the turn of the call."""
     out, t = [], -1
     for m in messages:
-        if m["role"] == "user":
+        if m["role"] == "user" and not m.get("tool"):
             t += 1
         out.append(t if m["role"] != "system" else -1)
     return out

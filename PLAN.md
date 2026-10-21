@@ -6,14 +6,14 @@ MATS project 1 with Isak Etinger. This file is the current plan only. Rewrite it
 [docs/toc.md](docs/toc.md). Last updated 2026-10-21.
 **Status: loop built and run on gpt-oss-20b (M0-M2, `docs/results/monitor_v0/`). Self-written data beats
 Claude-written data on Bloom; amplification rounds do not help yet. On-policy pilot (`docs/results/onpolicy_v0/`):
-gpt-oss-20b misbehaves on its own mostly by sycophancy; on-policy seeds match Claude seeds; no writer-trained
-monitor catches the model's own misbehavior in agentic rollouts (tool turns look like misbehavior). Normal traffic
-(`docs/results/normal_traffic_v0/`): an anomaly gate hurts (misaligned turns are not anomalous), but whitening the
-probe by the model's normal traffic, or adding it as negatives, lifts own-rollout AUROC 0.75 -> 0.85 at no cost on
-Bloom. Style vectors are on hold (not trait directions; x2 breaks the writer). **Every monitor result so far was
-trained on rewrite negatives labeled by the local judge**; branch negatives are built but not yet evaluated. Next:
-the branch rerun with gpt-6.1-sol as judge (may change results), then agentic writer data. The adversarial arm is
-on hold (section 3.3).**
+gpt-oss-20b misbehaves on its own mostly by sycophancy; on-policy seeds match Claude seeds. Normal traffic
+(`docs/results/normal_traffic_v0/`): an anomaly gate hurts; whitening the probe by the model's normal traffic helps.
+**Labels matter most** (`docs/results/branch_sol_v0/`): with gpt-6.1-sol as judge instead of the local model, the
+same writes give AUROC 0.87 instead of 0.76 on the model's own rollouts (Bloom 0.94, about the same); branch
+negatives add a little (0.88) and whitening more (0.91 / 0.21 detection at 1%). The earlier "tool turns look like
+misbehavior" was mostly label noise. gpt-6.1-sol (realism >= 2) and branches are now the defaults. Agentic writer
+data is built (smoke: 68% parse, 97% of those with tool steps). Style vectors are on hold. Next: a full agentic
+round. The adversarial arm is on hold (section 3.3).**
 
 ## 1. Goal
 
@@ -37,7 +37,7 @@ budget, monitors trained on (a) round-0 data without amplification, (b) the same
 (c) transcripts written by an external model (misalignment-indicators, Claude Sonnet). Models: gpt-oss-20b, then
 Qwen3.6-35B-A3B. End state: one command from a behavior description to a monitor.
 
-## 2. Status (2026-10-20)
+## 2. Status (2026-10-21)
 
 - **Built and smoke-tested (gpt-oss-20b):**
   - `scripts/loop_data.py` → `data/loop/`: round-0 seeds (4 per behavior from the indicators training data,
@@ -105,6 +105,24 @@ Qwen3.6-35B-A3B. End state: one command from a behavior description to a monitor
     3 scenario splits; `docs/results/normal_traffic_v0/`): own held-out 0.846 / 0.11 (plain 0.745 / 0.01), Bloom
     test unchanged (0.949 / 0.48); from an unlabeled pool with 11-14% misaligned windows 0.820 / 0.05. Normal
     traffic as negatives: 0.840 / 0.09 (about equal; needs clean traffic).
+- **2026-10-21: branch rerun with gpt-6.1-sol (`docs/results/branch_sol_v0/`, $15.1).** `loop_generate.py --judge remote`
+  (gpt-6.1-sol via `natsteer.remote`, spend ledger `data/loop/arms/sol_spend.jsonl` with a hard cap, `--judge-only`,
+  `--pos-judgments`; vLLM loads only when a stage needs it), `scripts/queue_branch_rerun.sh` (API prep, then one
+  worker per GPU that waits for the GPU to be free), `scripts/branch_rerun_report.py`. Same writes as the three
+  Claude-seed round-0 runs; 3 arms × 3 runs. Mean AUROC / detection at 1%, Bloom test | own rollouts | own splits
+  plain -> whitened: rewrites + local judge 0.947 / 0.43 | 0.764 / 0.03 | 0.734 -> 0.842; rewrites + gpt-6.1-sol
+  0.937 / 0.44 | 0.869 / 0.16 | 0.843 -> 0.883; branches + gpt-6.1-sol 0.938 / 0.43 | 0.878 / 0.13 | 0.876 / 0.14 ->
+  0.907 / 0.21. The judges agree on 596 positives; gpt-6.1-sol drops 215 of the local judge's 811 (sabotage 191 ->
+  101, sandbagging 128 -> 81) and adds 268; it flags 16% of the local judge's aligned rewrites. Misaligned vs aligned
+  tool turns on own rollouts: 0.55 -> 0.77-0.81 (vs 0.89-0.91 without tools). gpt-6.1-sol rates realism lower, so
+  the bar is >= 2. Caveat: the own-rollout labels come from gpt-6.1-sol too.
+- **2026-10-21: agentic writer data, built.** `--agentic-frac`: the writer prompt asks for an agent with tools
+  (`[TOOL CALL]` / `[TOOL RESULT]` steps inside its turn, stored like the on-policy rollouts: a call is an assistant
+  message starting with `[tool call]`, a result a user-role message with `tool: true`); branches keep the tool use
+  (the original first misaligned turn is shown when it used tools); reasoning is optional right after a tool result.
+  `tests/test_agentic.py`. Smoke (`data/loop/smoke/agentic`, 50 prompts, all agentic): 68% parse after the
+  reasoning rule (42% before), 97% of those with tool steps; gpt-6.1-sol keeps 11 of 21 positives at first parse.
+  Unchanged for conversations without tools, except 64 of 13,179 stored writes that pasted tool output into a reply.
 - **Speed:** a base round takes about 8 min (writes 500, rewrites, judge, re-read, train); style rounds about
   30 min because each style vector runs as its own small batch (fix: per-request vectors in one batch).
 - **First testbed (closed; `docs/results/steer_v1`, `steer_v2`, `steer_e3`):** tool validation and three lessons:
@@ -173,35 +191,32 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
 
 ## 5. Next todo (pick up here)
 
-1. **Branch rerun with gpt-6.1-sol as judge (priority: it may change every result above).** Reuse the writes of
-   the three Claude-seed round-0 runs (`seeds/r0` seed 2, `full/r0` seed 3, `seedsrc/claude_s4` seed 4), so the
-   positives' text is fixed. Main arm `arms/branch_sol/s{2,3,4}`: gpt-6.1-sol judges the writes, branches from its
-   first misaligned turn, judges the branches; re-read, train (C 3e-4). Control `arms/rewrite_sol/s{2,3,4}`: the
-   old rewrites judged by gpt-6.1-sol, the positives' judgments shared with the main arm, so judge and negative
-   type can be told apart. Compare with the old runs on Bloom val/test and on own held-out rollouts (plain and
-   whitened, 3 scenario splits). Queue: `scripts/queue_branch_rerun.sh` waits for free GPUs. Spend ledger with a
-   hard cap (`data/loop/arms/sol_spend.jsonl`).
-2. **Agentic writer data.** The writer writes conversations with tool calls and tool output (the model's own tool
-   format and tools: `container.exec`, `repo_browser.*`, simulated results), and the branches keep the same tool
-   use, so the probe learns the act, not tool use. Test on held-out own rollouts and Bloom.
-3. **Monitors that know normal traffic.** First three CPU checks: whitening and negatives together; normal traffic
+1. **Agentic writer round (running 2026-10-21, `arms/agentic_sol/s{2,3,4}`, `scripts/queue_round0.sh`).** Round 0
+   with `--agentic-frac 0.5 --judge remote --min-realism 2` (branch negatives), 3 runs, about $4.5 each; ledger cap
+   now $50. Compare with branch_sol on own rollouts (all, tool turns, splits plain and whitened) and Bloom
+   (`scripts/branch_rerun_report.py` includes the arm). From the smoke sample: the branches keep the tool calls;
+   the writer sometimes puts the misbehavior into the system prompt (instructed, not chosen): add a writer rule
+   ("nobody asks for or approves the misaligned choice") and a judge check, after this comparison.
+2. **Monitors that know normal traffic.** First three CPU checks: whitening and negatives together; normal traffic
    from a different source than the test set (now both come from the same scenario writer); the Rachmil et al.
    whitened anomaly score (2512.03994) on our data, to locate the disagreement with result 6 of
    normal_traffic_v0. Then whitened probes as the default, hard-negative mining from a large pool of the model's
    own benign traffic, and detection at 0.1% false alarms (Alpaca is too small and off-distribution for that,
-   2507.12691). Then a short write-up: whitened probe + failed anomaly gate is the most novel result so far.
-4. **Judge and audit.** If the rerun holds, gpt-6.1-sol becomes the loop's judge for writes and branches (about
-   $4 per 500-prompt round). Hand-check `data/onpolicy/pilot/review.md`, the loop's seeds and a sample of branches.
-5. **Two-level monitor:** the probe screens every token (high-recall threshold); flagged steps get a follow-up
+   2507.12691). Then a short write-up: whitened probe + failed anomaly gate.
+3. **Judge audit.** gpt-6.1-sol is now the default judge. Hand-check a sample where the two judges disagree
+   (especially sabotage and sandbagging), the on-policy positives (`data/onpolicy/pilot/review.md`) and branches.
+   The own-rollout labels also come from gpt-6.1-sol: check part of the gain is not judge agreement (a second
+   judge or hand labels on a sample of own rollouts).
+4. **Two-level monitor:** the probe screens every token (high-recall threshold); flagged steps get a follow-up
    question read by a probe (FAR.AI 2610.12445: "Did you do anything the user did not ask you to do?", prefilled
    "Yes."/"No." contrast) or a judge, possibly async. The cascade itself is standard (2601.04603, 2601.11516,
    2506.10805); measure precision at 0.1% false alarms. Test the follow-up read offline first (re-read with the
-   question after each turn) against the tool-use confound; add a multi-layer ensemble (11/15/19 extracted).
-6. **Text-based steering (not started) and rare behaviors on-policy:** in the on-policy runner, insert a steering
+   question after each turn); add a multi-layer ensemble (11/15/19 extracted).
+5. **Text-based steering (not started) and rare behaviors on-policy:** in the on-policy runner, insert a steering
    sentence into the model's own reasoning (analysis channel) and let it continue: the simple baseline to
    activation steering (mask the inserted tokens in training, paraphrase widely, five behaviors only). Also harder
    incentive scenarios and longer agentic tasks. Compare with natural rollouts.
-7. **Style / behavior vectors: on hold.** The current ones are k-means clusters of re-read writer text minus
+6. **Style / behavior vectors: on hold.** The current ones are k-means clusters of re-read writer text minus
    negatives that differ in content, at a fixed layer and an unchecked strength, so they carry topic and format.
    When resumed, rebuild them by the persona-vector recipe (2507.21509, `safety-research/persona_vectors`): per
    behavior (or a named style of it), 5 elicit/suppress system-prompt pairs and 40 questions (20 extract, 20 eval)
@@ -210,9 +225,11 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
    and final separately) at every layer; vector = raw difference of means. Choose layer and coefficient by
    steering the eval questions without a system prompt (judged trait up, coherence >= 75). Steer generated
    tokens in actor mode (the on-policy runner), not the writer (x1 is the writer's ceiling, x2 breaks it).
-8. Speed of the rollout runner (one process per steering config, continuous batching); why anti-refusal helps
-   transfer; early-warning curve and OOD benchmarks; review the sabotage and sandbagging definitions with Isak;
-   decide on the adversarial arm; Qwen3.6-35B-A3B (M3).
+7. Speed of the rollout runner (one process per steering config, continuous batching); why anti-refusal helps
+   transfer; early-warning curve and OOD benchmarks; tool calls rendered in gpt-oss's own format (commentary
+   channel, `to=` recipient) instead of folded text, for the own rollouts and the agentic writes alike.
+8. With Isak: the sabotage and sandbagging definitions (gpt-6.1-sol finds no behavior in most of these writes:
+   no evaluation or stake is set up); decide on the adversarial arm; Qwen3.6-35B-A3B (M3).
 
 **Later (from 2604.22167, tail-risk estimation with steered proposals):** (a) estimate the natural rate of rare
 behaviors from steered rollouts with importance weights; (b) score how on-policy a steered rollout is by its
@@ -226,7 +243,7 @@ weight steered data by it; (c) steer only up to a switch point, then let the mod
 | Positive class | Assistant turns (reasoning included) that show the behavior | The monitor target |
 | Generation mode | Writer: the whole conversation from a definition and few-shot seeds | Cheap breadth; the model's own phrasing; actor mode later |
 | Negatives | Matched aligned branch (same prefix, regenerated from the first misaligned turn) + non-misaligned turns + the model's normal traffic (whitening, negatives) | Probes otherwise learn the situation, not the act; false alarms come from normal traffic the probe never saw |
-| Labels | Unsteered judge per turn; steering condition is provenance only | |
+| Labels | gpt-6.1-sol per turn (realism >= 2); steering condition is provenance only | The local judge's labels limited transfer to the model's own rollouts (branch_sol_v0) |
 | Activations | Recomputed without steering on unmodified weights | The monitor must match deployment |
 | Diversity | Monitor-missed seeds + data-derived style vectors + sampled settings | Variety alone did not help in the first testbed |
 | Probe | Window means (32 tokens), max over windows per turn, layer 15 first | Fits early warning; comparable with the indicators protocol |

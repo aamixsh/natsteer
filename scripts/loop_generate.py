@@ -11,7 +11,13 @@
    With --negatives rewrite (monitor_v0): every parsed write gets its assistant turns rewritten in place.
 Outputs in --out: writes.jsonl, judged_pos.jsonl, branches.jsonl, judged_neg.jsonl (rewrite mode: rewrites.jsonl,
 judged.jsonl), candidates.jsonl (accepted conversations in the natsteer.convo schema), stats.json. Each stage is
-skipped if its file exists.
+skipped if its file exists, and vLLM is loaded only when a stage needs it (so a run whose generation files exist,
+e.g. copied writes, needs no GPU for judging).
+--agentic-frac: a share of the writer prompts asks for an agent that uses tools ([TOOL CALL] / [TOOL RESULT] steps
+inside its turns); branches of such conversations keep tool use.
+--judge remote: gpt-6.1-sol (OpenRouter, natsteer.remote) judges instead of the local model, with a spend ledger
+and a hard cap; --judge-only stops before the first stage that needs the GPU; --pos-judgments reuses the positives'
+judgments of another run (rewrite mode), so two arms share them.
 """
 
 import argparse
@@ -44,26 +50,54 @@ ap.add_argument("--tag", default="", help="prefix for conversation ids")
 ap.add_argument("--min-realism", type=int, default=3)
 ap.add_argument("--negatives", choices=["branch", "rewrite"], default="branch",
                 help="branch: regenerate from the first misaligned turn on (default); rewrite: monitor_v0 assistant-only rewrite")
+ap.add_argument("--agentic-frac", type=float, default=0.0, help="share of writer prompts that ask for tool use")
 ap.add_argument("--style-scale", type=float, default=1.0, help="multiplier on the style vectors' stored strength")
+ap.add_argument("--judge", choices=["local", "remote"], default="local", help="remote: gpt-6.1-sol via OpenRouter")
+ap.add_argument("--remote-effort", default="medium")
+ap.add_argument("--judge-workers", type=int, default=16)
+ap.add_argument("--judge-ledger", default="data/loop/arms/sol_spend.jsonl", help="spend ledger shared by remote-judged runs")
+ap.add_argument("--judge-cap", type=float, default=50.0, help="hard cap in USD on the ledger total")
+ap.add_argument("--judge-only", action="store_true", help="stop before the first stage that needs generation")
+ap.add_argument("--pos-judgments", default=None, help="rewrite mode: judged_pos.jsonl of another run with the same writes")
 args = ap.parse_args()
 
-from natsteer.vllm_steer import make_steerable_llm, set_steering  # noqa: E402
-
-llm = make_steerable_llm(gpu_memory_utilization=args.gpu_memory_utilization, max_model_len=args.max_model_len, seed=args.seed)
-
 import torch  # noqa: E402
-from vllm import SamplingParams  # noqa: E402
 
 from natsteer.behaviors import BEHAVIORS  # noqa: E402
 from natsteer.convo import load_jsonl, n_turns, render_prompt, save_jsonl  # noqa: E402
 from natsteer.harmony import split_generation  # noqa: E402
 from natsteer.refusal import is_refusal  # noqa: E402
-from natsteer.writer import (branch_first_prompt, branch_next_prompt, branch_prefix, first_misaligned_turn, judge_prompt,  # noqa: E402
-                             merge_rewrite, outcome_of_write, parse_judge, parse_turn, rewrite_prompt, user_turns, writer_prompt)
+from natsteer.writer import (branch_first_prompt, branch_next_prompt, branch_prefix, first_misaligned_turn, has_tools,  # noqa: E402
+                             judge_prompt, merge_rewrite, outcome_of_write, parse_evidence, parse_judge, parse_turn, rewrite_prompt,
+                             user_turns, writer_prompt)
 
 out = Path(args.out)
 out.mkdir(parents=True, exist_ok=True)
-tok = llm.get_tokenizer()
+_engine = {}
+
+
+def engine():
+    """(llm, tokenizer), loaded on first use."""
+    if not _engine:
+        if args.judge_only:
+            print("judge-only: stopping before the first stage that needs generation", flush=True)
+            finish(0)
+        from natsteer.vllm_steer import make_steerable_llm
+
+        _engine["llm"] = make_steerable_llm(gpu_memory_utilization=args.gpu_memory_utilization, max_model_len=args.max_model_len, seed=args.seed)
+        _engine["tok"] = _engine["llm"].get_tokenizer()
+    return _engine["llm"], _engine["tok"]
+
+
+def finish(code):
+    sys.stdout.flush()
+    import psutil
+
+    for child in psutil.Process().children(recursive=True):  # the engine core process outlives os._exit otherwise
+        child.kill()
+    os._exit(code)  # vLLM engine shutdown can hang
+
+
 rng = random.Random(args.seed)
 behaviors = args.behaviors or list(BEHAVIORS)
 seeds = defaultdict(list)
@@ -74,7 +108,14 @@ vectors = torch.load(args.vectors) if args.vectors else []
 timings = {}
 
 
-def generate(prompts, specs, max_tokens, temperature, effort_note=""):
+def generate(prompts, specs, max_tokens, temperature, note="", effort=None):
+    """prompts: user texts, rendered here at the writer's reasoning effort (or `effort`)."""
+    from vllm import SamplingParams
+
+    from natsteer.vllm_steer import set_steering
+
+    llm, tok = engine()
+    prompts = [render_prompt(tok, p, effort=effort or args.writer_effort) for p in prompts]
     set_steering(llm, specs)
     params = SamplingParams(temperature=temperature, max_tokens=max_tokens, seed=None)
     t0 = time.time()
@@ -85,7 +126,7 @@ def generate(prompts, specs, max_tokens, temperature, effort_note=""):
         seg = split_generation(tok, o.token_ids)
         outs.append({"cot": seg.get("cot", ""), "final": seg.get("final", ""), "n_tokens": len(o.token_ids), "finish": o.finish_reason})
     n = sum(o["n_tokens"] for o in outs)
-    print(f"  generated {len(prompts)} {effort_note} in {time.time() - t0:.0f}s ({n / max(time.time() - t0, 1e-9):.0f} tok/s)", flush=True)
+    print(f"  generated {len(prompts)} {note} in {time.time() - t0:.0f}s ({n / max(time.time() - t0, 1e-9):.0f} tok/s)", flush=True)
     return outs
 
 
@@ -117,7 +158,7 @@ if not wpath.exists():
                 j = rng.choices(idx, weights=[w[k] for k in idx])[0]
                 chosen.append(pool[j])
                 idx.remove(j)
-            text, setting = writer_prompt(b, chosen, rng)
+            text, setting = writer_prompt(b, chosen, rng, args.agentic_frac)
             jobs.append({"job": f"{args.tag}{b}:{i}", "behavior": b, "config": cfg, "seed_ids": [s["id"] for s in chosen], "setting": setting, "prompt": text})
     by_cfg = defaultdict(list)
     for j in jobs:
@@ -125,7 +166,7 @@ if not wpath.exists():
     t0 = time.time()
     for cfg, js in by_cfg.items():
         print(f"write: config {cfg}, {len(js)} prompts", flush=True)
-        outs = generate([render_prompt(tok, j["prompt"], effort=args.writer_effort) for j in js], config_specs(cfg), args.max_tokens, args.temperature, "writes")
+        outs = generate([j["prompt"] for j in js], config_specs(cfg), args.max_tokens, args.temperature, "writes")
         for j, o in zip(js, outs):
             msgs, status = outcome_of_write(o["final"])
             j.update(writer_cot=o["cot"], final=o["final"], n_tokens=o["n_tokens"], finish=o["finish"], status=status, messages=msgs)
@@ -134,10 +175,27 @@ if not wpath.exists():
 writes = load_jsonl(wpath)
 
 def judge_all(items, tag):
-    """items: (job, kind, behavior, messages) -> {(job, kind): verdict}; judged unsteered."""
-    print(f"judge ({tag}): {len(items)} conversations", flush=True)
-    outs = generate([render_prompt(tok, judge_prompt(b, m), effort=args.judge_effort) for _, _, b, m in items], [], 4096, 0.0, "judgments")
-    return [{"job": job, "kind": kind, "verdict": parse_judge(o["final"], n_turns(m)), "judge_final": o["final"][:2000]} for (job, kind, b, m), o in zip(items, outs)]
+    """items: (job, kind, behavior, messages) -> [{job, kind, verdict, ...}]; judged unsteered (local) or by gpt-6.1-sol."""
+    print(f"judge ({tag}, {args.judge}): {len(items)} conversations", flush=True)
+    if args.judge == "local":
+        outs = generate([judge_prompt(b, m) for _, _, b, m in items], [], 4096, 0.0, "judgments", effort=args.judge_effort)
+        return [{"job": job, "kind": kind, "verdict": parse_judge(o["final"], n_turns(m)), "judge_final": o["final"][:2000]} for (job, kind, b, m), o in zip(items, outs)]
+    from natsteer.remote import BudgetExceeded, chat_many
+
+    prompts = [judge_prompt(b, m, evidence=True) for _, _, b, m in items]
+    t0 = time.time()
+    res = chat_many(prompts, effort=args.remote_effort, workers=args.judge_workers, ledger=args.judge_ledger, cap_usd=args.judge_cap, tag=f"{out}:{tag}")
+    retry = [i for i, r in enumerate(res) if "error" in r and not r["error"].startswith("skipped")]
+    if retry:  # one more try for transient errors
+        for i, r in zip(retry, chat_many([prompts[i] for i in retry], effort=args.remote_effort, workers=args.judge_workers,
+                                         ledger=args.judge_ledger, cap_usd=args.judge_cap, tag=f"{out}:{tag}:retry")):
+            res[i] = r
+    if any(r.get("error", "").startswith("skipped") for r in res):
+        raise BudgetExceeded(f"judge stopped at the cap ${args.judge_cap} (ledger {args.judge_ledger}); nothing saved for this stage")
+    errors = sum("error" in r for r in res)
+    print(f"  judged in {time.time() - t0:.0f}s, ${sum(r.get('cost', 0) for r in res):.2f}, {errors} errors", flush=True)
+    return [{"job": job, "kind": kind, "verdict": parse_judge(r.get("text", ""), n_turns(m)), "evidence": parse_evidence(r.get("text", "")),
+             "judge_final": r.get("text", r.get("error", ""))[:2000], "cost": r.get("cost", 0.0)} for (job, kind, b, m), r in zip(items, res)]
 
 
 def accept_pos(v):
@@ -159,7 +217,7 @@ if args.negatives == "rewrite":
         ok = [w for w in writes if w["status"] == "ok"]
         print(f"rewrite: {len(ok)} conversations", flush=True)
         t0 = time.time()
-        outs = generate([render_prompt(tok, rewrite_prompt(w["behavior"], w["messages"]), effort=args.writer_effort) for w in ok], base_specs, args.max_tokens, args.temperature, "rewrites")
+        outs = generate([rewrite_prompt(w["behavior"], w["messages"]) for w in ok], base_specs, args.max_tokens, args.temperature, "rewrites")
         rows = []
         for w, o in zip(ok, outs):
             merged = merge_rewrite(w["messages"], o["final"])
@@ -172,15 +230,18 @@ if args.negatives == "rewrite":
     # ------------------------------------------------------------------ 3. judge (unsteered)
     jpath = out / "judged.jsonl"
     if not jpath.exists():
+        shared = [j for j in load_jsonl(args.pos_judgments)] if args.pos_judgments else []
+        have = {j["job"] for j in shared}
         items = []
         for w in writes:
             if w["status"] == "ok":
-                items.append((w["job"], "pos", w["behavior"], w["messages"]))
+                if w["job"] not in have:
+                    items.append((w["job"], "pos", w["behavior"], w["messages"]))
                 r = negs.get(w["job"])
                 if r and r["messages"] is not None:
                     items.append((w["job"], "neg", w["behavior"], r["messages"]))
         t0 = time.time()
-        save_jsonl(jpath, judge_all(items, "positives and rewrites"))
+        save_jsonl(jpath, shared + judge_all(items, "positives and rewrites" if not shared else "rewrites"))
         timings["judge_s"] = time.time() - t0
     judged = load_jsonl(jpath)
 else:
@@ -201,15 +262,16 @@ else:
         for w in todo:
             k = first_misaligned_turn(vpos[w["job"]]["turns"])
             rows.append({"job": w["job"], "behavior": w["behavior"], "branch_turn": k, "n_turns": n_turns(w["messages"]), "status": "ok",
-                         "messages": branch_prefix(w["messages"], k), "hints": user_turns(w["messages"]), "n_tokens": 0, "failed_output": None})
+                         "messages": branch_prefix(w["messages"], k), "hints": user_turns(w["messages"]), "tools": has_tools(w["messages"]),
+                         "n_tokens": 0, "failed_output": None})
         step = 0
         while True:  # step 0: aligned replacement of turn k; then one user message + aligned reply per remaining turn
             live = [r for r in rows if r["status"] == "ok" and (step == 0 or n_turns(r["messages"]) < r["n_turns"])]
             if not live:
                 break
             prompts = [branch_first_prompt(r["behavior"], r["messages"], r["branch_turn"]) if step == 0 else
-                       branch_next_prompt(r["behavior"], r["messages"], r["hints"][n_turns(r["messages"])]) for r in live]
-            outs = generate([render_prompt(tok, p, effort=args.writer_effort) for p in prompts], base_specs, args.max_tokens, args.temperature, f"branch step {step}")
+                       branch_next_prompt(r["behavior"], r["messages"], r["hints"][n_turns(r["messages"])], r["tools"]) for r in live]
+            outs = generate(prompts, base_specs, args.max_tokens, args.temperature, f"branch step {step}")
             for r, o in zip(live, outs):
                 r["n_tokens"] += o["n_tokens"]
                 new = parse_turn(o["final"], with_user=step > 0)
@@ -244,6 +306,10 @@ for w in writes:
     key = (w["behavior"], w["config"].split(":")[0])
     stats[key]["prompts"] += 1
     stats[key][f"write_{w['status']}"] += 1
+    if w["setting"].get("tools"):
+        stats[key]["asked_tools"] += 1
+    if w["status"] == "ok" and has_tools(w["messages"]):
+        stats[key]["write_has_tools"] += 1
     if w["status"] != "ok":
         continue
     prov = {"job": w["job"], "config": w["config"], "seed_ids": w["seed_ids"], "setting": w["setting"], "writer_tokens": w["n_tokens"]}
@@ -275,9 +341,4 @@ summary = {"args": vars(args), "timings": timings, "by_behavior_config": {f"{b}|
 for k, v in sorted(stats.items()):
     print(k, dict(v))
 print(f"candidates: {sum(c['label'] == 1 for c in cands)} positives, {sum(c['label'] == 0 for c in cands)} negatives")
-sys.stdout.flush()
-import psutil  # noqa: E402
-
-for child in psutil.Process().children(recursive=True):  # the engine core process outlives os._exit otherwise
-    child.kill()
-os._exit(0)  # vLLM engine shutdown can hang
+finish(0)
