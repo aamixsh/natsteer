@@ -61,6 +61,14 @@ negatives **0.905 / 0.30 (0.893)**, Bloom 0.938 / 0.45; plus all own aligned win
 1% falls 0.43 -> 0.39 (with own negatives too, 0.34). Caveat: the added negatives and the test come from the same
 scenario writer and simulators.
 
+Two checks of the fix (`tool_balance_sources.json`, same splits). **Unlabeled:** all own tool-turn windows of the fit
+half, misaligned ones included (3.5-6.6% of them), give 0.898 / 0.28 (tool turns 0.884), Bloom 0.938 / 0.45; branch
+arm 0.898 / 0.21 (0.941). So the fix needs no labels. **Another source:** the 57,581 aligned tool-turn windows of
+Bloom val (other models' rollouts, gpt-oss-20b reading them) give 0.889 / 0.17 (tool turns 0.818) and lower Bloom test
+to 0.912 / 0.41; branch arm 0.893 / 0.13 (0.923), Bloom 0.910 / 0.40. Part of the gain from own tool turns may come
+from the shared source; the Bloom test drop is likely because Bloom positives have the same style as the added
+negatives.
+
 ## What it shows
 
 - Label quality was the main limit on the model's own rollouts, not the missing tool use: the local judge (the

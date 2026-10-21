@@ -11,9 +11,10 @@ gpt-oss-20b misbehaves on its own mostly by sycophancy; on-policy seeds match Cl
 **Labels matter most** (`docs/results/branch_sol_v0/`): with gpt-6.1-sol as judge instead of the local model, the
 same writes give AUROC 0.87 instead of 0.76 on the model's own rollouts (Bloom 0.94, about the same); branch
 negatives add a little (0.88) and whitening more (0.91 / 0.21 detection at 1%). The earlier "tool turns look like
-misbehavior" was mostly label noise. gpt-6.1-sol (realism >= 2) and branches are now the defaults. Agentic writer
-data is built (smoke: 68% parse, 97% of those with tool steps). Style vectors are on hold. Next: a full agentic
-round. The adversarial arm is on hold (section 3.3).**
+misbehavior" was mostly label noise. gpt-6.1-sol (realism >= 2) and branches are now the defaults. Agentic writes
+(round 1) made tool turns a shortcut for "misaligned"; the model's own tool turns as negatives remove it, labeled or
+not (own rollouts 0.90 / 0.28-0.30). Style vectors are on hold. Next: agentic round 2 with balanced tool use. The
+adversarial arm is on hold (section 3.3).**
 
 ## 1. Goal
 
@@ -198,9 +199,10 @@ from `ood_misalignment_eval/`; early-warning curve (detection vs window position
    acting through tools as much as the original; (c) a CPU check first: the model's own aligned tool turns from the
    fit half as negatives, and turn weights that equalize the tool share. **Done (`scripts/tool_balance_check.py`):**
    own aligned tool turns as negatives fix it (own rollouts 0.905 / 0.30, tool turns 0.893, Bloom 0.938 / 0.45);
-   weights help only partly (0.871 / 0.15); whitening now costs Bloom detection (0.43 -> 0.39). Next free checks:
-   the same from unlabeled tool turns (misaligned ones included), and aligned tool turns from another source (Bloom
-   val, other models) to test the shared-scenario-writer caveat. Also fix replies without an `[ASSISTANT]`
+   weights help only partly (0.871 / 0.15); whitening now costs Bloom detection (0.43 -> 0.39). Unlabeled own tool
+   turns (3.5-6.6% misaligned) work as well (0.898 / 0.28), so the fix needs no labels; aligned tool turns of other
+   models (Bloom val) fix less (0.889 / 0.17) and lower Bloom test (0.938 -> 0.912). Still to do (paid, about $14):
+   (a) and (b), to fix the data itself rather than the training. Also fix replies without an `[ASSISTANT]`
    tag (half of the remaining branch failures) and add a writer rule against misbehavior instructed by the system
    prompt ("nobody asks for or approves the misaligned choice"). Ledger: $28.9 of $50.
 2. **Monitors that know normal traffic.** First three CPU checks: whitening and negatives together; normal traffic

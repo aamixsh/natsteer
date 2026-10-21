@@ -8,10 +8,13 @@ turns, so the probe learns "tool calls = misaligned". Variants, each trained on 
   +own_all     plus all the model's own aligned windows from the fit half as negatives
   white        whitened by the fit half's aligned windows (C 1e-4)
   white+own    whitened, plus all own aligned windows as negatives (C 1e-4)
+  +own_tool_unlab  plus all own tool-turn windows of the fit half, misaligned ones included (no labels needed)
+  +bloomval_tool   plus aligned tool-turn windows of Bloom val (other models' rollouts: another source than the test)
 3 scenario splits (as normal_traffic_v0): test = own rollouts of the other half: all, misaligned vs aligned turns
 with tool calls, and vs turns without; also Bloom test. Arms: agentic_sol and branch_sol, 3 runs each.
-Output: docs/results/branch_sol_v0/tool_balance.json."""
+Output: docs/results/branch_sol_v0/tool_balance.json (--variants and --out to run a subset)."""
 
+import argparse
 import json
 from pathlib import Path
 
@@ -28,7 +31,13 @@ from natsteer.monitor import evaluate_scores, load, turn_table
 A = Path("data/loop/arms")
 OUT = Path("docs/results/branch_sol_v0/tool_balance.json")
 RUNS = {arm: [A / arm / f"s{k}" / "r0" for k in (2, 3, 4)] for arm in ("agentic_sol", "branch_sol")}
-VARIANTS = ("plain", "reweight", "+own_tool", "+own_all", "white", "white+own")
+VARIANTS = ("plain", "reweight", "+own_tool", "+own_all", "white", "white+own", "+own_tool_unlab", "+bloomval_tool")
+ap = argparse.ArgumentParser()
+ap.add_argument("--variants", nargs="*", default=list(VARIANTS))
+ap.add_argument("--out", default=str(OUT))
+args = ap.parse_args()
+VARIANTS = tuple(args.variants)
+OUT = Path(args.out)
 
 
 def window_tool_flags(fs):
@@ -43,6 +52,9 @@ def window_tool_flags(fs):
 
 
 bt = load(["data/loop/eval/bloom_test.jsonl"], 15)
+bv = load(["data/loop/eval/bloom_val.jsonl"], 15)
+BV_TOOL = bv.X[(bv.y == 0) & window_tool_flags(bv)].astype(np.float32)
+print(f"Bloom val aligned tool-turn windows {len(BV_TOOL)}", flush=True)
 splits = []
 for seed in (0, 1, 2):
     op = load([A / "seedsrc" / "onpolicy_direct" / "r0" / "candidates.jsonl"], 15)
@@ -53,7 +65,9 @@ for seed in (0, 1, 2):
     clean = in_fit & (op.y == 0)
     sub = op.X[clean][np.random.default_rng(seed).choice(int(clean.sum()), min(20000, int(clean.sum())), replace=False)].astype(np.float64)
     ev, V = np.linalg.eigh(LedoitWolf().fit(sub).covariance_)
+    unlab = in_fit & ~np.isnan(op.y) & tool_w
     sp = {"own_all": op.X[clean].astype(np.float32), "own_tool": op.X[clean & tool_w].astype(np.float32),
+          "own_tool_unlab": op.X[unlab].astype(np.float32), "unlab_mis_share": float((op.y[unlab] == 1).mean()),
           "mu": sub.mean(0).astype(np.float32), "W": (V / np.sqrt(np.clip(ev, 1e-8, None))).astype(np.float32)}
     for c in op.convs:  # test on the other half only
         if c["group"] in fit_g:
@@ -62,7 +76,8 @@ for seed in (0, 1, 2):
                for ci, c in enumerate(op.convs) for t, lab in enumerate(c["turn_labels"] or []) if lab == 0}
     sp |= {"fs": op, "tool_turn": tt_tool, "pos": [ci for ci, c in enumerate(op.convs) if c["turn_labels"] and c["label"] == 1]}
     splits.append(sp)
-    print(f"split {seed}: own aligned windows {len(sp['own_all'])} (tool turns {len(sp['own_tool'])})", flush=True)
+    print(f"split {seed}: own aligned windows {len(sp['own_all'])} (tool turns {len(sp['own_tool'])}); unlabeled tool-turn windows "
+          f"{len(sp['own_tool_unlab'])} ({sp['unlab_mis_share']:.1%} misaligned)", flush=True)
 
 
 def fit(d, variant, k):
@@ -81,8 +96,8 @@ def fit(d, variant, k):
             if 0 < share < 1:
                 w[m & tool] = target / share
                 w[m & ~tool] = (1 - target) / (1 - share)
-    if variant in ("+own_tool", "+own_all", "white+own"):
-        extra = sp["own_tool"] if variant == "+own_tool" else sp["own_all"]
+    if variant in ("+own_tool", "+own_all", "white+own", "+own_tool_unlab", "+bloomval_tool"):
+        extra = {"+own_tool": sp["own_tool"], "+own_tool_unlab": sp["own_tool_unlab"], "+bloomval_tool": BV_TOOL}.get(variant, sp["own_all"])
         X, y = np.concatenate([X, extra]), np.concatenate([y, np.zeros(len(extra))])
     if variant.startswith("white"):
         Z = (X - sp["mu"]) @ sp["W"]
@@ -113,12 +128,12 @@ jobs = [(arm, d, v, k) for arm, ds in RUNS.items() for d in ds for v in VARIANTS
 res = Parallel(n_jobs=min(len(jobs), 64))(delayed(fit)(d, v, k) for arm, d, v, k in jobs)
 out = {"runs": [{"arm": arm, "run": str(d), "variant": v, "split": k} | r for (arm, d, v, k), r in zip(jobs, res)], "mean": {}}
 KEYS = ("own_auroc", "own_tpr@1", "vs_tool_turns", "vs_no_tool_turns", "bloom_auroc", "bloom_tpr@1")
-print(f"\n{'arm':12s} {'variant':10s} " + " ".join(f"{k:>16s}" for k in KEYS))
+print(f"\n{'arm':12s} {'variant':16s} " + " ".join(f"{k:>16s}" for k in KEYS))
 for arm in RUNS:
     for v in VARIANTS:
         rs = [r for r in out["runs"] if r["arm"] == arm and r["variant"] == v]
         mean = {k: float(np.mean([r[k] for r in rs])) for k in KEYS}
         out["mean"][f"{arm}|{v}"] = mean
-        print(f"{arm:12s} {v:10s} " + " ".join(f"{mean[k]:16.3f}" for k in KEYS), flush=True)
+        print(f"{arm:12s} {v:16s} " + " ".join(f"{mean[k]:16.3f}" for k in KEYS), flush=True)
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(json.dumps(out, indent=1))

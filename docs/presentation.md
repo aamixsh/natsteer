@@ -258,7 +258,9 @@ Same writes in every arm (the three round-0 runs above); only the judge and the 
 - Bloom drops a little with the new labels (0.947 → 0.937, about 3 SDs). Cost $15.
 - **Agentic writes made the tool confusion worse** (0.77 → 0.66): 87% of misaligned turns use tools, but only 51% of
   the aligned branch turns ($14). **Fix at training time:** add the model's own aligned tool turns as negatives: own
-  rollouts 0.905 / 0.30, tool turns 0.89, Bloom 0.938 / 0.45 (negatives and test share the scenario writer).
+  rollouts 0.905 / 0.30, tool turns 0.89, Bloom 0.938 / 0.45. No labels needed: all own tool turns (4–7%
+  misaligned) give 0.898 / 0.28. Aligned tool turns of other models (Bloom val) fix less (0.889 / 0.17, tool turns
+  0.82) and lower Bloom test to 0.912, so the source of the negatives matters.
 - **Caveat:** the own-rollout test labels also come from gpt-6.1-sol, so part of the gain may be agreement with
   this judge, not truth. Next: hand labels or a second judge on a sample.
 
