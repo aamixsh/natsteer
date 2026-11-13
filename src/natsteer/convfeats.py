@@ -12,9 +12,14 @@ windows after the cut are lost and the conversation is marked truncated.
 
 Saved arrays (npz): ids [n_conv]; n_tok, truncated [n_conv]; w_conv, w_turn, w_seg (0 cot, 1 final), w_pos
 (window index within the turn), w_len [n_win]; W{L} [n_win, d] float16; t_conv, t_turn [n_turn];
-T{L} [n_turn, d] float16; norm{L} [n_conv] median token norm over assistant tokens.
+T{L} [n_turn, d] float16; norm{L} [n_conv] median token norm over assistant tokens; render_sha [n_conv] (a hash of
+the rendered token ids, so stale features can be detected) and renderer.
+
+renderer="actor" re-reads what the acting model read instead (natsteer.onpolicy.actor_turn_renders: one sequence
+per turn, earlier reasoning dropped, native tool messages); the windows and turn features are the same kind.
 """
 
+import hashlib
 import time
 
 import numpy as np
@@ -88,17 +93,43 @@ def _forward_chunked(model, ids, layers, chunk):
     return {L: torch.cat(parts[L]) for L in layers}
 
 
+def render_items(tok, convs, renderer: str = "reread", effort: str = "medium"):
+    """[(conv index, ids, seg, turn)]: one sequence per conversation (reread: natsteer.convo.render_with_turns) or
+    one per assistant turn (actor: natsteer.onpolicy.actor_turn_renders, the tokens the acting model read). A
+    conversation's meta["effort"] overrides `effort` (the reasoning effort in the system message)."""
+    items = []
+    for ci, c in enumerate(convs):
+        eff = (c.get("meta") or {}).get("effort") or effort
+        if renderer == "actor":
+            from natsteer.onpolicy import actor_turn_renders
+
+            items += [(ci, *r) for r in actor_turn_renders(tok, c, eff)]
+        else:
+            items.append((ci, *render_with_turns(tok, c, eff)))
+    return items
+
+
+def render_sha(items, n_conv: int):
+    """Per conversation: the first 16 hex digits of a sha1 over its rendered token ids (feature provenance)."""
+    hs = [hashlib.sha1() for _ in range(n_conv)]
+    for ci, ids, _, _ in items:
+        hs[ci].update(np.asarray(ids, np.int64).tobytes())
+    return np.array([h.hexdigest()[:16] for h in hs])
+
+
 @torch.no_grad()
-def extract(model, tok, convs, layers=(11, 15, 19), W: int = 32, token_budget: int = 16384, chunk: int = 4096, max_len: int = 32768, log_every: int = 200):
+def extract(model, tok, convs, layers=(11, 15, 19), W: int = 32, token_budget: int = 16384, chunk: int = 4096, max_len: int = 32768,
+            log_every: int = 200, renderer: str = "reread", effort: str = "medium"):
+    items = render_items(tok, convs, renderer, effort)
+    sha = render_sha(items, len(convs))
     rendered = []
     n_tok, truncated = [], []
-    for c in convs:
-        ids, seg, turn = render_with_turns(tok, c)
+    for _, ids, seg, turn in items:
         truncated.append(len(ids) > max_len)
         rendered.append((ids[:max_len], seg[:max_len], turn[:max_len]))
         n_tok.append(min(len(ids), max_len))
     order = np.argsort(n_tok)
-    results = [None] * len(convs)
+    results = [None] * len(items)
     t0, done, i = time.time(), 0, 0
     while i < len(order):
         k = order[i]
@@ -124,20 +155,27 @@ def extract(model, tok, convs, layers=(11, 15, 19), W: int = 32, token_budget: i
             done += len(batch)
             i = j
         if log_every and (done // log_every) != ((done - 1) // log_every):
-            print(f"  re-read {done}/{len(convs)} conversations, {sum(n_tok[o] for o in order[:i]):,} tokens, {time.time() - t0:.0f}s", flush=True)
-    out = {"ids": np.array([c["id"] for c in convs]), "n_tok": np.array(n_tok, np.int32), "truncated": np.array(truncated)}
+            print(f"  re-read {done}/{len(items)} sequences, {sum(n_tok[o] for o in order[:i]):,} tokens, {time.time() - t0:.0f}s", flush=True)
+    # merge the sequences of each conversation (actor: one per turn) in turn order; norms: mean over its sequences
+    by_conv = [[] for _ in convs]
+    for k, (ci, *_) in enumerate(items):
+        by_conv[ci].append(k)
+    out = {"ids": np.array([c["id"] for c in convs]), "n_tok": np.array([sum(n_tok[k] for k in ks) for ks in by_conv], np.int32),
+           "truncated": np.array([any(truncated[k] for k in ks) for ks in by_conv]), "render_sha": sha, "renderer": np.array(renderer)}
     w_meta, w_conv, t_conv, t_turn = [], [], [], []
-    for ci, (meta, _, turns, _, _) in enumerate(results):
-        w_meta.append(meta)
-        w_conv.append(np.full(len(meta), ci, np.int32))
-        t_conv.append(np.full(len(turns), ci, np.int32))
-        t_turn.append(turns)
-    w_meta = np.concatenate(w_meta)
+    for ci, ks in enumerate(by_conv):
+        for k in ks:
+            meta, _, turns, _, _ = results[k]
+            w_meta.append(meta)
+            w_conv.append(np.full(len(meta), ci, np.int32))
+            t_conv.append(np.full(len(turns), ci, np.int32))
+            t_turn.append(turns)
+    w_meta = np.concatenate(w_meta) if w_meta else np.zeros((0, 4), np.int32)
     out.update(w_conv=np.concatenate(w_conv), w_turn=w_meta[:, 0], w_seg=w_meta[:, 1], w_pos=w_meta[:, 2], w_len=w_meta[:, 3],
                t_conv=np.concatenate(t_conv), t_turn=np.concatenate(t_turn))
     for L in layers:
-        out[f"W{L}"] = np.concatenate([r[1][L] for r in results])
-        out[f"T{L}"] = np.concatenate([r[3][L] for r in results])
-        out[f"norm{L}"] = np.array([r[4][L] for r in results], np.float32)
+        out[f"W{L}"] = np.concatenate([results[k][1][L] for ks in by_conv for k in ks])
+        out[f"T{L}"] = np.concatenate([results[k][3][L] for ks in by_conv for k in ks])
+        out[f"norm{L}"] = np.array([np.nanmean([results[k][4][L] for k in ks]) if ks else np.nan for ks in by_conv], np.float32)
     out["seconds"] = np.array(time.time() - t0)
     return out

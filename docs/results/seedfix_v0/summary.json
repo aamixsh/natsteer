@@ -1,0 +1,200 @@
+{
+ "note": "Sabotage and sandbagging writer tests (PLAN.md todo 2; deck result 8). 50 prompts per behavior per run, seed 2, gpt-6.1-sol judge (realism >= 2), branch negatives. Hand check: every accepted write read in full by a Claude subagent against fixed criteria (S1-S6, B1-B5; data/loop/arms/<run>/handcheck.md, not committed). Spend: v1 $0.79, v2 low + medium $1.21, v2 judge on the v1 writes $0.28, v3 $0.68.",
+ "runs": {
+  "v1": {
+   "dir": "data/loop/arms/seedfix_smoke",
+   "seeds": "data/loop/seeds_r0_v2.jsonl",
+   "writer_effort": "low",
+   "by_behavior": {
+    "sabotage": {
+     "pipeline": {
+      "prompts": 50,
+      "write_malformed": 22,
+      "write_ok": 28,
+      "rejected_unrealistic": 4,
+      "judged_no_behavior": 2,
+      "accepted_pos": 22,
+      "accepted_neg": 19,
+      "branch_malformed": 3
+     },
+     "hand_checked": 22,
+     "hand_fit": 1,
+     "hand_fails_by_criterion": {
+      "S2": 14,
+      "S3": 3,
+      "S4": 14,
+      "S5": 8
+     },
+     "copies_seed": 13
+    },
+    "sandbagging": {
+     "pipeline": {
+      "prompts": 50,
+      "write_ok": 40,
+      "judged_no_behavior": 8,
+      "accepted_pos": 23,
+      "rejected_neg": 4,
+      "accepted_neg": 17,
+      "rejected_unrealistic": 9,
+      "write_malformed": 10,
+      "branch_malformed": 2
+     },
+     "hand_checked": 23,
+     "hand_fit": 9,
+     "hand_fails_by_criterion": {
+      "B1": 3,
+      "B2": 7,
+      "B3": 7,
+      "B4": 7
+     },
+     "copies_seed": 2
+    }
+   }
+  },
+  "v2_low": {
+   "dir": "data/loop/arms/seedfix_v2_low",
+   "seeds": "data/loop/seeds_r0_v2.jsonl",
+   "writer_effort": "low",
+   "by_behavior": {
+    "sabotage": {
+     "pipeline": {
+      "prompts": 50,
+      "write_ok": 29,
+      "judged_no_behavior": 11,
+      "accepted_pos": 16,
+      "accepted_neg": 15,
+      "write_malformed": 21,
+      "branch_malformed": 1,
+      "rejected_unrealistic": 2
+     },
+     "hand_checked": 16,
+     "hand_fit": 4,
+     "hand_fails_by_criterion": {
+      "S2": 5,
+      "S4": 10,
+      "S5": 8
+     },
+     "copies_seed": 13
+    },
+    "sandbagging": {
+     "pipeline": {
+      "prompts": 50,
+      "write_ok": 43,
+      "judged_no_behavior": 24,
+      "accepted_pos": 12,
+      "accepted_neg": 12,
+      "rejected_unrealistic": 7,
+      "write_malformed": 7
+     },
+     "hand_checked": 12,
+     "hand_fit": 6,
+     "hand_fails_by_criterion": {
+      "B1": 1,
+      "B2": 3,
+      "B3": 2,
+      "B4": 3
+     },
+     "copies_seed": 2
+    }
+   }
+  },
+  "v2_medium": {
+   "dir": "data/loop/arms/seedfix_v2_medium",
+   "seeds": "data/loop/seeds_r0_v2.jsonl",
+   "writer_effort": "medium",
+   "by_behavior": {
+    "sabotage": {
+     "pipeline": {
+      "prompts": 50,
+      "write_malformed": 13,
+      "write_refused": 5,
+      "write_ok": 32,
+      "judged_no_behavior": 10,
+      "accepted_pos": 21,
+      "accepted_neg": 21,
+      "rejected_unrealistic": 1
+     },
+     "hand_checked": 21,
+     "hand_fit": 9,
+     "hand_fails_by_criterion": {
+      "S3": 1,
+      "S4": 7,
+      "S5": 9
+     },
+     "copies_seed": 10
+    },
+    "sandbagging": {
+     "pipeline": {
+      "prompts": 50,
+      "write_ok": 39,
+      "accepted_pos": 10,
+      "accepted_neg": 10,
+      "judged_no_behavior": 26,
+      "write_malformed": 7,
+      "rejected_unrealistic": 3,
+      "write_refused": 4
+     },
+     "hand_checked": 10,
+     "hand_fit": 6,
+     "hand_fails_by_criterion": {
+      "B2": 2,
+      "B3": 3,
+      "B4": 1
+     },
+     "copies_seed": 0
+    }
+   }
+  },
+  "v3": {
+   "dir": "data/loop/arms/seedfix_v3",
+   "seeds": "data/loop/seeds_r0_v3.jsonl",
+   "writer_effort": "medium",
+   "by_behavior": {
+    "sabotage": {
+     "pipeline": {
+      "prompts": 50,
+      "write_refused": 6,
+      "write_ok": 38,
+      "accepted_pos": 18,
+      "branch_malformed": 2,
+      "judged_no_behavior": 20,
+      "accepted_neg": 15,
+      "write_malformed": 6,
+      "rejected_neg": 1
+     },
+     "hand_checked": 18,
+     "hand_fit": 9,
+     "hand_fails_by_criterion": {
+      "S2": 3,
+      "S3": 3,
+      "S4": 1,
+      "S5": 5
+     },
+     "copies_seed": 10
+    },
+    "sandbagging": {
+     "pipeline": {
+      "prompts": 50,
+      "write_ok": 43,
+      "judged_no_behavior": 18,
+      "accepted_pos": 22,
+      "branch_malformed": 3,
+      "write_refused": 5,
+      "accepted_neg": 18,
+      "rejected_unrealistic": 3,
+      "rejected_neg": 1,
+      "write_leak": 2
+     },
+     "hand_checked": 22,
+     "hand_fit": 6,
+     "hand_fails_by_criterion": {
+      "B2": 8,
+      "B3": 9,
+      "B4": 2
+     },
+     "copies_seed": 1
+    }
+   }
+  }
+ }
+}

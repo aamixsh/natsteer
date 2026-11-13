@@ -2,7 +2,10 @@
 
 Adapted from loop_steer's vllm_hooks.py for gpt-oss on vLLM 0.31. Requirements:
   - enforce_eager=True (forward hooks do not run inside compiled CUDA graphs),
-  - enable_prefix_caching=False (cached KV computed under another intervention would be reused),
+  - no plain prefix caching: cached KV computed under another intervention would be reused. make_steerable_llm turns it
+    off unless prefix_caching=True; then every request must carry cache_salt(specs) of the steering it runs under
+    (requests with different salts never share cached blocks), and only position-independent specs are allowed
+    ("all" positions and ablation): the "prompt"/"gen" masks follow query lengths, which cache hits change.
   - VLLM_ALLOW_INSECURE_SERIALIZATION=1 (hooks are shipped to the worker with LLM.apply_model).
 
 gpt-oss decoder blocks return (output, residual) and the residual stream after block l is
@@ -31,6 +34,12 @@ import os
 import torch
 
 os.environ.setdefault("VLLM_ALLOW_INSECURE_SERIALIZATION", "1")
+
+
+def _layers(model):
+    """Decoder layers of a vLLM model: gpt-oss model.model.layers; Qwen3.5 (multimodal wrapper) language_model.model.layers."""
+    inner = model.model if hasattr(model, "model") else model.language_model.model
+    return inner.layers
 
 
 def _prefill_mask(n_tokens: int, device) -> torch.Tensor:
@@ -96,7 +105,7 @@ def clear(model):
 def install(model, specs):
     """Remove previously installed hooks, then install `specs` (list of spec dicts)."""
     clear(model)
-    layers = model.model.layers
+    layers = _layers(model)
     p = next(model.parameters())
     handles = []
     log = model.__dict__.setdefault("_ns_alpha_log", {})
@@ -148,9 +157,15 @@ def _ablation_hooks(model, direction):
     def proj(x):
         return x - (x @ u).unsqueeze(-1) * u
 
-    def pre(module, args):
+    def pre(module, args, kwargs):
+        if "hidden_states" in kwargs:  # Qwen3-Next / Qwen3.5 layers are called with keywords
+            kwargs = dict(kwargs)
+            kwargs["hidden_states"] = proj(kwargs["hidden_states"])
+            if kwargs.get("residual") is not None:
+                kwargs["residual"] = proj(kwargs["residual"])
+            return args, kwargs
         h, pos, res = args[0], args[1], args[2] if len(args) > 2 else None
-        return (proj(h), pos, None if res is None else proj(res), *args[3:])
+        return (proj(h), pos, None if res is None else proj(res), *args[3:]), kwargs
 
     def post(module, args, output):
         if isinstance(output, tuple):
@@ -158,9 +173,11 @@ def _ablation_hooks(model, direction):
         return proj(output)
 
     handles = []
-    for layer in model.model.layers:
-        handles.append(layer.register_forward_pre_hook(pre))
-        handles.append(layer.attn.register_forward_hook(post))
+    for layer in _layers(model):
+        handles.append(layer.register_forward_pre_hook(pre, with_kwargs=True))
+        for name in ("attn", "self_attn", "linear_attn"):  # gpt-oss: attn; Qwen: self_attn or linear_attn per layer
+            if hasattr(layer, name):
+                handles.append(getattr(layer, name).register_forward_hook(post))
         handles.append(layer.mlp.register_forward_hook(post))
     return handles
 
@@ -170,17 +187,40 @@ def stats(model):
     return dict(getattr(model, "_ns_stats", {}))
 
 
+def cache_salt(specs) -> str:
+    """Prefix-cache salt for requests run under `specs`: a hash of their full contents (vectors included)."""
+    import hashlib
+
+    h = hashlib.sha256()
+    for s in specs:
+        for k in sorted(s):
+            v = s[k]
+            h.update(k.encode())
+            h.update(v.detach().float().cpu().numpy().tobytes() if torch.is_tensor(v) else repr(v).encode())
+    return h.hexdigest()[:32]
+
+
 def set_steering(llm, specs):
     """Install specs (possibly empty) in every worker of `llm`."""
+    if getattr(llm, "_ns_prefix_caching", False):
+        bad = [s for s in specs if s.get("kind") != "ablate" and s.get("positions", "all") != "all"]
+        if bad:
+            raise ValueError("with prefix caching only all-position specs and ablation are exact; got positions " + str([s.get("positions") for s in bad]))
     cpu_specs = [s | ({"vec": s["vec"].detach().float().cpu()} if "vec" in s else {"dir": s["dir"].detach().float().cpu()}) for s in specs]
     return llm.apply_model(functools.partial(install, specs=cpu_specs))
 
 
-def make_steerable_llm(**kwargs):
+def make_steerable_llm(prefix_caching=False, **kwargs):
     """Create the engine BEFORE any CPU torch work in the process (loading SAEs, matmuls on CPU): vLLM forks
-    its engine process, and a fork after torch's OpenMP pool is initialized hangs at start-up."""
-    from natsteer.config import MODEL_ID
+    its engine process, and a fork after torch's OpenMP pool is initialized hangs at start-up.
+    prefix_caching=True: pass cache_salt(specs) with every request (see the module docstring)."""
+    from natsteer.config import FAMILY, MODEL_ID
     from natsteer.vllm_utils import make_llm
 
     kwargs.setdefault("max_model_len", 4096)
-    return make_llm(MODEL_ID, enforce_eager=True, enable_prefix_caching=False, **kwargs)
+    if FAMILY == "qwen":  # text only; the linear-attention state cache caps concurrent sequences
+        kwargs.setdefault("limit_mm_per_prompt", {"image": 0, "video": 0})
+        kwargs.setdefault("max_num_seqs", 256)
+    llm = make_llm(MODEL_ID, enforce_eager=True, enable_prefix_caching=prefix_caching, **kwargs)
+    llm._ns_prefix_caching = prefix_caching
+    return llm

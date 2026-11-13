@@ -156,8 +156,15 @@ def oof_conv_scores(fs: FeatureSet, train_mask, C: float = 0.01, folds: int = 5,
     return {c: out.get((c, True), out.get((c, False))) for c, _ in out}
 
 
-def load(paths, layer: int):
-    """One FeatureSet from several jsonl files, each with its .feats.npz next to it."""
+def feats_path(path, tag: str = ""):
+    """The features file of a conversations jsonl: IN.feats.npz, or IN.<tag>.feats.npz (another window size)."""
+    from pathlib import Path
+
+    return Path(path).with_suffix(f".{tag}.feats.npz" if tag else ".feats.npz")
+
+
+def load(paths, layer: int, tag: str = ""):
+    """One FeatureSet from several jsonl files, each with its .feats.npz (or .<tag>.feats.npz) next to it."""
     from pathlib import Path
 
     from natsteer.convo import load_jsonl
@@ -166,7 +173,7 @@ def load(paths, layer: int):
     for p in paths:
         p = Path(p)
         c = load_jsonl(p)
-        z = np.load(p.with_suffix(".feats.npz"))
+        z = np.load(feats_path(p, tag))
         parts.append((len(convs), z))
         convs += c
     keys = ("w_conv", "w_turn", "w_seg", "w_pos", "t_conv", "t_turn")

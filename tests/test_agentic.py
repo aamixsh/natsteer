@@ -7,7 +7,7 @@ from transformers import AutoTokenizer
 from natsteer.config import MODEL_ID
 from natsteer.convo import n_turns, parse_tagged, render_conversation, to_tagged, turn_of_messages
 from natsteer.writer import (BRANCH_TOOLS, TOOL_DEPLOYMENTS, TOOLS_RULE, branch_first_prompt, branch_next_prompt, branch_prefix,
-                             has_tools, parse_turn, writer_prompt)
+                             branch_rows, has_tools, parse_turn, writer_prompt)
 
 CONV = [
     {"role": "system", "content": "You are an ops agent.", "reasoning": None},
@@ -57,6 +57,15 @@ def test_branch_prompts_keep_tool_use():
     assert "In the original, the assistant's turn" not in no_tool_first and BRANCH_TOOLS.strip() in no_tool_first
     assert BRANCH_TOOLS.strip() in branch_next_prompt("deception", CONV[:2], "hi", tools=True)
     assert BRANCH_TOOLS.strip() not in branch_next_prompt("deception", CONV[:2], "hi")
+
+
+def test_branch_rows_show_the_original_tool_turn():
+    # the caller's path: the branch prefix ends before turn k's tool call, so the prompt must come from the full conversation
+    rows = branch_rows([{"job": "j", "behavior": "deception", "messages": CONV}], {"j": {"turns": [1, 0]}})
+    r = rows[0]
+    assert r["messages"] == CONV[:2] and r["branch_turn"] == 0 and r["tools"] and r["n_turns"] == 2
+    assert "In the original, the assistant's turn 1 was" in r["first_prompt"] and "tail -3 job.log" in r["first_prompt"]
+    assert "tail -3 job.log" not in branch_first_prompt("deception", r["messages"], 0)  # the old bug: prefix only
 
 
 def test_writer_prompt_agentic():

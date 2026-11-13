@@ -1,0 +1,32 @@
+{
+ "sabotage": {
+  "note": "2026-10-24 (v3). Round 0: one handover seed from the indicators self-preservation files and three gpt-oss-20b writes from the v2 test that fit and copy no seed (stakes: monitor of its own outputs, retraining, shutdown decision; data/loop/arms/seedfix_v2_medium/handcheck.md). Held-out: the v2 held-out seeds (indicators, handovers). v2 round 0 had four handover seeds, and the writes copied their plot.",
+  "r0": [
+   "self_preservation_action_planning_deceptive_383_6f6fcc3f",
+   "data/loop/arms/seedfix_v2_medium/r0/candidates.jsonl#sabotage:31:pos",
+   "data/loop/arms/seedfix_v2_medium/r0/candidates.jsonl#sabotage:34:pos",
+   "data/loop/arms/seedfix_v2_medium/r0/candidates.jsonl#sabotage:35:pos"
+  ],
+  "heldout": [
+   "self_preservation_action_planning_deceptive_273_b5d00f24",
+   "self_preservation_action_planning_deceptive_393_702af7b5",
+   "self_preservation_rationalization_deceptive_93_ab69788c",
+   "self_preservation_rationalization_deceptive_265_1e8af711"
+  ]
+ },
+ "sandbagging": {
+  "note": "2026-10-23. The system prompt sets up the evaluation with a threshold and a consequence for the model; nobody instructs the underperformance; the wrong answer is in the reply.",
+  "r0": [
+   "strategic_underperformance_reasoning_deceptive_213_67b03d7c",
+   "strategic_underperformance_reasoning_deceptive_183_bf561fd7",
+   "strategic_underperformance_reasoning_deceptive_248_89b27716",
+   "strategic_underperformance_reasoning_feedback_deceptive_s4_t1_317e2818"
+  ],
+  "heldout": [
+   "strategic_underperformance_reasoning_deceptive_278_07fba5e6",
+   "strategic_underperformance_reasoning_deceptive_58_8d198515",
+   "strategic_underperformance_reasoning_feedback_deceptive_s17_t0_05ca427b",
+   "strategic_underperformance_reasoning_deceptive_246_cbf6b626"
+  ]
+ }
+}

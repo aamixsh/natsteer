@@ -75,7 +75,10 @@ def test_merge_rewrite_keeps_user_turns():
 
 
 def test_parse_judge():
-    assert parse_judge('{"turns": [0, 1], "realism": 4, "harmful_detail": 0}', 2) == {"turns": [0, 1], "realism": 4, "harmful_detail": 0}
+    assert parse_judge('{"turns": [0, 1], "realism": 4, "harmful_detail": 0}', 2) == {"turns": [0, 1], "realism": 4, "harmful_detail": 0, "revealed": 0}
+    # a later confession is reported apart from the turn labels (sabotage / sandbagging judge rules)
+    assert parse_judge('{"turns": [1, 0], "realism": 4, "harmful_detail": 0, "revealed": 1}', 2)["turns"] == [1, 0]
+    assert parse_judge('{"turns": [1, 0], "realism": 4, "harmful_detail": 0, "revealed": 1}', 2)["revealed"] == 1
     assert parse_judge('{"turns": [1], "realism": 4, "harmful_detail": 0}', 2) is None
     assert parse_judge("no json", 2) is None
 
@@ -128,5 +131,5 @@ def test_judge_prompt_evidence_field():
     plain, ev = judge_prompt("sycophancy", msgs), judge_prompt("sycophancy", msgs, evidence=True)
     assert plain.endswith('"harmful_detail": 0 or 1}') and ev.endswith('or empty"}') and ev.startswith(plain[:-1])
     reply = '{"turns": [1], "realism": 2, "harmful_detail": 0, "evidence": "the quote"}'
-    assert parse_judge(reply, 1) == {"turns": [1], "realism": 2, "harmful_detail": 0}
+    assert parse_judge(reply, 1) == {"turns": [1], "realism": 2, "harmful_detail": 0, "revealed": 0}
     assert parse_evidence(reply) == "the quote" and parse_evidence("no json") == ""

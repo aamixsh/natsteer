@@ -22,14 +22,18 @@ src/natsteer/
   refusal.py     refusal testbed: prompt sets, labels from the model's own answer, quality and diversity metrics
   data.py        loaders: XSTest, Aegis 2.0, hh-rlhf red-team, HarmfulQA, WildChat-1M, sycophancy evals
   convo.py       multi-turn conversations: schema, writer text format, indicators and Bloom loaders, rendering
-  behaviors.py   the five behavior cards (definitions, scope clause, data maps)
-  writer.py      writer (optionally agentic: tool steps), aligned-branch, rewrite and judge prompts and parsers
+  prompts.py     every prompt text: definitions, scope clause, settings, writer, branch, rewrite, judge, on-policy
+                 scenario, user and tool simulators (scripts/show_prompts.py prints them with filled examples)
+  behaviors.py   the five behavior cards (definitions from prompts.py, data maps)
+  writer.py      writer (optionally agentic: tool steps), aligned-branch, rewrite and judge prompt builders and parsers
   convfeats.py   clean re-read of conversations into 32-token window and turn features
   monitor.py     window probes, indicators evaluation convention, out-of-fold scores
   amplify.py     next-round seeds (missed and far) and per-cluster style vectors
   onpolicy.py    pressure scenarios, the model as the assistant (its chat format, its own tool calls), simulated
-                 user and tools, on-policy judge prompt
-  remote.py      OpenRouter chat calls (judge gpt-6.1-sol) with a spend ledger and a hard cap
+                 user and tools, on-policy judge prompt builders
+  remote.py      judge calls (gpt-6.1-sol via the OpenAI API, or OpenRouter) with a spend ledger and a hard cap
+  qwen.py        Qwen3.8-27B chat rendering (effort levels, native tool calls) and reply parsing
+  mathgrade.py   MATH answer checking for the checkable sandbagging test
   apikeys.py     API keys read from ~/.bashrc as text, never exported or printed
 scripts/
   check_machine.sh, setup_machine.sh, prefetch.py,    new-machine setup (docs/HANDOFF.md): check, install, download,
@@ -56,9 +60,30 @@ scripts/
   whiten_check.py, whiten_robust.py                   what the anomaly score tracks, whitened probes
   style_sweep.sh, style_sweep_report.py               style-vector strength sweep
   queue_branch_rerun.sh, branch_rerun_report.py      branch negatives + gpt-6.1-sol judge rerun, queued on free GPUs (branch_sol_v0)
+  tool_balance_check.py                               tool-use shortcut: fixes at training time (CPU)
+  show_prompts.py                                     every prompt, seed and on-policy scenario in one file for review
+  judge_ensemble.py                                   other judges (Qwen3.6-35B-A3B, Qwen3.8-27B, gpt-oss-20b), 3 samples each
+  judge_audit.py                                      judge agreement and the monitors under each judge's labels
+  curate_seeds.py                                     round-0 seeds with hand-checked ids per behavior (configs/seeds_curated.json)
+  probe_variants.py                                   probe variants on the same data: multiple-instance, whitened variance, per behavior, layers
+  checklist_check.py                                  checklist judge (one yes/no per requirement) against the hand checks
+  eval_audit.py, learning_curve.py, tool_balance_turns.py  evaluation audit, learning curve, tool use by turn label (CPU)
+  sandbag_math.py                                     checkable sandbagging: MATH under an evaluation threat
+  spawn_safe.py                                       starts a Qwen vLLM job safely (use for every Qwen vLLM run)
+  refusal_direction.py                                Qwen3.8-27B anti-refusal direction: candidates, screen, test
+  persona_neurons.py                                  persona-neuron steering (n3838 at layer 34) and its judged sweep
+  persona_vectors.py                                  per-behavior persona vectors (2507.21509): materials, extraction,
+                                                      vectors (--reread-system), steering sweep
+  qwen_report.py                                      Qwen monitors (default: writer + own rollouts, span labels, scenario folds; E19-E21)
+  steered_train.py                                    on-policy rollouts as monitor training data (E11; span arms E20, CPU)
+  selfpres_probe.py                                   probes trained on steered self-preservation rollouts (E14, E16, E17, CPU)
+  span_labels.py                                      window span labels from the judge's evidence quotes (E17, CPU)
+  portable_onpolicy.py                                standalone on-policy runner for another machine (Kilian handoff)
+  transcript_viewer.py                                local HTML viewer of every arm's rollouts per scenario (data/viewer/)
 configs/policies/   grader policies (toy_programming.md is a plumbing test only)
 tests/              CPU tests
 docs/results/  small run reports behind the deck (committed); see docs/results/README.md
+docs/experiments.md  experiment log: question, pre-mortem before the run, result and verdict after
 data/      outputs (pools, features, runs); not in git
 scratch/   job temp files; not in git
 ```
@@ -93,7 +118,10 @@ Self-generation loop (needs `data/external/misalignment-indicators`, cloned from
 GPU=0 scripts/run_loop.sh full 5 100
 ```
 
-On-policy seeds (OpenRouter key in `~/.bashrc`; spend capped by `--cap`):
+On-policy rollouts and seeds (judge key in `~/.bashrc`, read only by `natsteer.apikeys`; spend capped by `--cap`).
+Qwen steered arms add `--pv <behavior>@<layer>@<coef>[@cot][@from<N>]` (`cot`: steer the reasoning only; `from<N>`:
+turns before N unsteered; recipes `deception@32@4@cot@from2` (E7) and `self_preservation@32@6@cot@from2` (E12); `--seed`
+for another sample) and start through `scripts/spawn_safe.py`:
 
 ```bash
 GPU=0 .venv/bin/python scripts/onpolicy_pilot.py --out data/onpolicy/pilot --cap 60

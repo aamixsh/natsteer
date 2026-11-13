@@ -18,9 +18,13 @@ MODELS_DIR = DATA_ROOT / "models"
 CHECKPOINTS_DIR = DATA_ROOT / "checkpoints"
 SCRATCH_ROOT = Path(os.environ.get("NATSTEER_SCRATCH", REPO_ROOT / "scratch"))
 
-MODEL_ID = "openai/gpt-oss-20b"
-N_LAYERS = 24
-D_MODEL = 2880
+# The model whose activations are monitored and which writes and acts (NATSTEER_MODEL=Qwen/Qwen3.8-27B selects the
+# Qwen port, natsteer.qwen; run it from .venv-qwen, which adds the flash-linear-attention kernels).
+MODEL_ID = os.environ.get("NATSTEER_MODEL", "openai/gpt-oss-20b")
+FAMILY = "qwen" if "qwen" in MODEL_ID.lower() else "gpt-oss"
+N_LAYERS = 64 if FAMILY == "qwen" else 24
+D_MODEL = 5120 if FAMILY == "qwen" else 2880
+SAMPLING = {"top_p": 0.95, "top_k": 20} if FAMILY == "qwen" else {}  # extra vLLM sampling args (Qwen's recommended)
 
 SAE_REPO = "andyrdt/saes-gpt-oss-20b"
 SAE_LAYERS = (3, 7, 11, 15, 19, 23)

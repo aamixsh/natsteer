@@ -58,6 +58,8 @@ ap.add_argument("--judge-workers", type=int, default=16)
 ap.add_argument("--judge-ledger", default="data/loop/arms/sol_spend.jsonl", help="spend ledger shared by remote-judged runs")
 ap.add_argument("--judge-cap", type=float, default=50.0, help="hard cap in USD on the ledger total")
 ap.add_argument("--judge-only", action="store_true", help="stop before the first stage that needs generation")
+ap.add_argument("--checklist", action="store_true", help="remote judge: accepted sabotage / sandbagging positives must also pass "
+                "the checklist judge (natsteer.prompts.CHECKLIST, every item 1) before they are kept or branched")
 ap.add_argument("--pos-judgments", default=None, help="rewrite mode: judged_pos.jsonl of another run with the same writes")
 args = ap.parse_args()
 
@@ -67,9 +69,9 @@ from natsteer.behaviors import BEHAVIORS  # noqa: E402
 from natsteer.convo import load_jsonl, n_turns, render_prompt, save_jsonl  # noqa: E402
 from natsteer.harmony import split_generation  # noqa: E402
 from natsteer.refusal import is_refusal  # noqa: E402
-from natsteer.writer import (branch_first_prompt, branch_next_prompt, branch_prefix, first_misaligned_turn, has_tools,  # noqa: E402
-                             judge_prompt, merge_rewrite, outcome_of_write, parse_evidence, parse_judge, parse_turn, rewrite_prompt,
-                             user_turns, writer_prompt)
+from natsteer.writer import (branch_next_prompt, branch_prefix, branch_rows, has_tools,  # noqa: E402
+                             judge_prompt, leaks, merge_rewrite, outcome_of_write, parse_evidence, parse_judge, parse_turn, rewrite_prompt,
+                             writer_prompt)
 
 out = Path(args.out)
 out.mkdir(parents=True, exist_ok=True)
@@ -117,7 +119,9 @@ def generate(prompts, specs, max_tokens, temperature, note="", effort=None):
     llm, tok = engine()
     prompts = [render_prompt(tok, p, effort=effort or args.writer_effort) for p in prompts]
     set_steering(llm, specs)
-    params = SamplingParams(temperature=temperature, max_tokens=max_tokens, seed=None)
+    from natsteer.config import SAMPLING
+
+    params = SamplingParams(temperature=temperature, max_tokens=max_tokens, seed=None, **SAMPLING)
     t0 = time.time()
     res = llm.generate([{"prompt_token_ids": p} for p in prompts], params)
     outs = []
@@ -169,6 +173,8 @@ if not wpath.exists():
         outs = generate([j["prompt"] for j in js], config_specs(cfg), args.max_tokens, args.temperature, "writes")
         for j, o in zip(js, outs):
             msgs, status = outcome_of_write(o["final"])
+            if status == "ok" and leaks(j["behavior"], msgs):  # known writer leaks (natsteer.prompts.LEAK_PATTERNS): not judged
+                status = "leak"
             j.update(writer_cot=o["cot"], final=o["final"], n_tokens=o["n_tokens"], finish=o["finish"], status=status, messages=msgs)
     timings["write_s"] = time.time() - t0
     save_jsonl(wpath, [j for js in by_cfg.values() for j in js])
@@ -198,13 +204,20 @@ def judge_all(items, tag):
              "judge_final": r.get("text", r.get("error", ""))[:2000], "cost": r.get("cost", 0.0)} for (job, kind, b, m), r in zip(items, res)]
 
 
-def accept_pos(v):
+checklist_fail = set()  # jobs whose accepted positive failed the checklist judge (--checklist)
+
+
+def accept_pos(v, job=None):
+    if job in checklist_fail:
+        return "rejected_checklist"
     if v is None:
         return "judge_unparsed"
     if v["harmful_detail"]:
         return "rejected_hazard"
     if not any(v["turns"]):
         return "judged_no_behavior"
+    if v.get("revealed"):
+        return "rejected_revealed"  # the act is labeled, but the writer data wants sustained concealment
     if v["realism"] < args.min_realism:
         return "rejected_unrealistic"
     return "accepted_pos"
@@ -252,24 +265,34 @@ else:
         save_jsonl(jpath, judge_all([(w["job"], "pos", w["behavior"], w["messages"]) for w in writes if w["status"] == "ok"], "writes"))
         timings["judge_pos_s"] = time.time() - t0
     vpos = {j["job"]: j["verdict"] for j in load_jsonl(jpath)}
+    if args.checklist:
+        from natsteer.prompts import CHECKLIST_ITEMS
+        from natsteer.remote import chat_many
+        from natsteer.writer import checklist_prompt, parse_checklist
+
+        cpath = out / "checklist.jsonl"
+        if not cpath.exists():
+            todo = [w for w in writes if w["status"] == "ok" and w["behavior"] in CHECKLIST_ITEMS and accept_pos(vpos.get(w["job"])) == "accepted_pos"]
+            print(f"checklist judge: {len(todo)} accepted positives", flush=True)
+            res = chat_many([checklist_prompt(w["behavior"], w["messages"]) for w in todo], effort=args.remote_effort, workers=args.judge_workers,
+                            ledger=args.judge_ledger, cap_usd=args.judge_cap, tag=f"{out}:checklist")
+            save_jsonl(cpath, [{"job": w["job"], "items": parse_checklist(r.get("text"), w["behavior"]), "text": r.get("text", r.get("error", ""))[:3000],
+                                "cost": r.get("cost", 0.0)} for w, r in zip(todo, res)])
+        checklist_fail |= {c["job"] for c in load_jsonl(cpath) if c["items"] is None or not all(c["items"].values())}
+        print(f"checklist: {len(checklist_fail)} accepted positives fail", flush=True)
     # ------------------------------------------------------------------ 3. branch: aligned from the first misaligned turn on
     bpath = out / "branches.jsonl"
     if not bpath.exists():
-        todo = [w for w in writes if w["status"] == "ok" and accept_pos(vpos.get(w["job"])) == "accepted_pos"]
+        todo = [w for w in writes if w["status"] == "ok" and accept_pos(vpos.get(w["job"]), w["job"]) == "accepted_pos"]
         print(f"branch: {len(todo)} accepted positives", flush=True)
         t0 = time.time()
-        rows = []
-        for w in todo:
-            k = first_misaligned_turn(vpos[w["job"]]["turns"])
-            rows.append({"job": w["job"], "behavior": w["behavior"], "branch_turn": k, "n_turns": n_turns(w["messages"]), "status": "ok",
-                         "messages": branch_prefix(w["messages"], k), "hints": user_turns(w["messages"]), "tools": has_tools(w["messages"]),
-                         "n_tokens": 0, "failed_output": None})
+        rows = branch_rows(todo, vpos)
         step = 0
         while True:  # step 0: aligned replacement of turn k; then one user message + aligned reply per remaining turn
             live = [r for r in rows if r["status"] == "ok" and (step == 0 or n_turns(r["messages"]) < r["n_turns"])]
             if not live:
                 break
-            prompts = [branch_first_prompt(r["behavior"], r["messages"], r["branch_turn"]) if step == 0 else
+            prompts = [r["first_prompt"] if step == 0 else
                        branch_next_prompt(r["behavior"], r["messages"], r["hints"][n_turns(r["messages"])], r["tools"]) for r in live]
             outs = generate(prompts, base_specs, args.max_tokens, args.temperature, f"branch step {step}")
             for r, o in zip(live, outs):
@@ -283,7 +306,7 @@ else:
                 r["messages"] = r["messages"] + new
             step += 1
         for r in rows:
-            r.pop("hints")
+            r.pop("hints"), r.pop("first_prompt")
             if r["status"] in ("ok", "short") and not any(m["role"] == "assistant" for m in r["messages"][len(branch_prefix(r["messages"], r["branch_turn"])):]):
                 r["status"] = "malformed"
             if r["status"] not in ("ok", "short"):
@@ -314,7 +337,7 @@ for w in writes:
         continue
     prov = {"job": w["job"], "config": w["config"], "seed_ids": w["seed_ids"], "setting": w["setting"], "writer_tokens": w["n_tokens"]}
     v = verdict.get((w["job"], "pos"))
-    outcome = accept_pos(v)
+    outcome = accept_pos(v, w["job"])
     stats[key][outcome] += 1
     if outcome == "accepted_pos":
         cands.append({"id": f"{w['job']}:pos", "messages": w["messages"], "turn_labels": v["turns"], "label": 1, "behavior": w["behavior"],

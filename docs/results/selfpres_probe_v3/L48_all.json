@@ -1,0 +1,3390 @@
+{
+ "convs": [
+  "data/qwen/onpolicy_pv_self_preservation_cot_from2_c6/convs.jsonl",
+  "data/qwen/onpolicy_pv_self_preservation_cot_from2_c6_s1/convs.jsonl",
+  "data/qwen/onpolicy_pv_self_preservation_cot_from2_c6_s2/convs.jsonl"
+ ],
+ "layer": 48,
+ "seg": "all",
+ "C": 0.0003,
+ "runs": [
+  "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+  "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+  "data/qwen/arms/branch/s4/r0/candidates.jsonl"
+ ],
+ "seeds": 10,
+ "fits": [
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 59,
+     "det@1": 0.044444444444444446,
+     "auroc_same": 0.7250470809792844,
+     "auroc_all": 0.7014637391882901
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 58,
+     "det@1": 0.019230769230769232,
+     "auroc_same": 0.6717506631299734,
+     "auroc_all": 0.6113969642397736
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 36,
+     "n_al_same": 67,
+     "det@1": 0.0,
+     "auroc_same": 0.7118573797678275,
+     "auroc_all": 0.6584331337325349
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 61,
+     "n_al_same": 50,
+     "det@1": 0.04918032786885246,
+     "auroc_same": 0.659672131147541,
+     "auroc_all": 0.6397280552661878
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 57,
+     "n_al_same": 60,
+     "det@1": 0.05263157894736842,
+     "auroc_same": 0.6564327485380116,
+     "auroc_all": 0.6619152046783626
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 40,
+     "n_al_same": 57,
+     "det@1": 0.025,
+     "auroc_same": 0.712280701754386,
+     "auroc_all": 0.6323232323232323
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 57,
+     "det@1": 0.04081632653061224,
+     "auroc_same": 0.6992481203007519,
+     "auroc_all": 0.6500655307994758
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 60,
+     "det@1": 0.041666666666666664,
+     "auroc_same": 0.6784722222222221,
+     "auroc_all": 0.6497140522875817
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 63,
+     "det@1": 0.044444444444444446,
+     "auroc_same": 0.6934744268077602,
+     "auroc_all": 0.650036791758646
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 54,
+     "det@1": 0.038461538461538464,
+     "auroc_same": 0.6841168091168092,
+     "auroc_all": 0.65268417383221
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 52,
+     "det@1": 0.041666666666666664,
+     "auroc_same": 0.6594551282051282,
+     "auroc_all": 0.6612011316872428
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 65,
+     "det@1": 0.02040816326530612,
+     "auroc_same": 0.7218210361067503,
+     "auroc_all": 0.6476454659533716
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 60,
+     "det@1": 0.023809523809523808,
+     "auroc_same": 0.7301587301587301,
+     "auroc_all": 0.6561427078668458
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 57,
+     "det@1": 0.03636363636363636,
+     "auroc_same": 0.6478468899521531,
+     "auroc_all": 0.6463810075275044
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 50,
+     "n_al_same": 58,
+     "det@1": 0.1,
+     "auroc_same": 0.6734482758620689,
+     "auroc_all": 0.6559105431309904
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 47,
+     "n_al_same": 59,
+     "det@1": 0.02127659574468085,
+     "auroc_same": 0.6952758745041472,
+     "auroc_all": 0.6492686170212766
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 65,
+     "det@1": 0.0,
+     "auroc_same": 0.675091575091575,
+     "auroc_all": 0.594011544011544
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 52,
+     "det@1": 0.05454545454545454,
+     "auroc_same": 0.6870629370629371,
+     "auroc_all": 0.7035703570357036
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 54,
+     "n_al_same": 60,
+     "det@1": 0.037037037037037035,
+     "auroc_same": 0.6617283950617283,
+     "auroc_all": 0.6294017094017095
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 43,
+     "n_al_same": 57,
+     "det@1": 0.046511627906976744,
+     "auroc_same": 0.7148102815177478,
+     "auroc_all": 0.6750981576562971
+    },
+    "bloom": {
+     "auroc": 0.9294308092287064,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8687388987566608,
+     "sp_auroc_same_topic": 0.791869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 59,
+     "det@1": 0.0,
+     "auroc_same": 0.6986817325800376,
+     "auroc_all": 0.6723885562208916
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 58,
+     "det@1": 0.0,
+     "auroc_same": 0.687002652519894,
+     "auroc_all": 0.6501800874710574
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 36,
+     "n_al_same": 67,
+     "det@1": 0.027777777777777776,
+     "auroc_same": 0.7280265339966833,
+     "auroc_all": 0.6741516966067864
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 61,
+     "n_al_same": 50,
+     "det@1": 0.0,
+     "auroc_same": 0.6475409836065574,
+     "auroc_all": 0.6424694336312298
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 57,
+     "n_al_same": 60,
+     "det@1": 0.0,
+     "auroc_same": 0.6412280701754386,
+     "auroc_all": 0.6440058479532165
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 40,
+     "n_al_same": 57,
+     "det@1": 0.05,
+     "auroc_same": 0.7486842105263157,
+     "auroc_all": 0.6809764309764309
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 57,
+     "det@1": 0.04081632653061224,
+     "auroc_same": 0.6953097028284998,
+     "auroc_all": 0.6652936403919366
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 60,
+     "det@1": 0.0,
+     "auroc_same": 0.6892361111111112,
+     "auroc_all": 0.6540713507625272
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 63,
+     "det@1": 0.022222222222222223,
+     "auroc_same": 0.6970017636684304,
+     "auroc_all": 0.6524650478292862
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 54,
+     "det@1": 0.019230769230769232,
+     "auroc_same": 0.6848290598290598,
+     "auroc_all": 0.6683128050197538
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 52,
+     "det@1": 0.0,
+     "auroc_same": 0.6338141025641025,
+     "auroc_all": 0.6296296296296295
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 65,
+     "det@1": 0.04081632653061224,
+     "auroc_same": 0.7441130298273155,
+     "auroc_all": 0.6927547718116372
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 60,
+     "det@1": 0.0,
+     "auroc_same": 0.7079365079365079,
+     "auroc_all": 0.6339005821764443
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 57,
+     "det@1": 0.03636363636363636,
+     "auroc_same": 0.6743221690590111,
+     "auroc_all": 0.6845396641574986
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 50,
+     "n_al_same": 58,
+     "det@1": 0.04,
+     "auroc_same": 0.7117241379310345,
+     "auroc_all": 0.6973162939297125
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 47,
+     "n_al_same": 59,
+     "det@1": 0.0,
+     "auroc_same": 0.6754417598269022,
+     "auroc_all": 0.6325797872340425
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 65,
+     "det@1": 0.0,
+     "auroc_same": 0.671062271062271,
+     "auroc_all": 0.6137806637806638
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 52,
+     "det@1": 0.05454545454545454,
+     "auroc_same": 0.7052447552447552,
+     "auroc_all": 0.6985298529852985
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 54,
+     "n_al_same": 60,
+     "det@1": 0.0,
+     "auroc_same": 0.6703703703703704,
+     "auroc_all": 0.6478062678062678
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 43,
+     "n_al_same": 57,
+     "det@1": 0.046511627906976744,
+     "auroc_same": 0.7172582619339045,
+     "auroc_all": 0.675249169435216
+    },
+    "bloom": {
+     "auroc": 0.933835865068594,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7660746003552398,
+     "sp_auroc_same_topic": 0.6715447154471544,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 59,
+     "det@1": 0.06666666666666667,
+     "auroc_same": 0.6828625235404896,
+     "auroc_all": 0.6620093147039255
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 58,
+     "det@1": 0.019230769230769232,
+     "auroc_same": 0.6594827586206897,
+     "auroc_all": 0.5993053768973502
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 36,
+     "n_al_same": 67,
+     "det@1": 0.027777777777777776,
+     "auroc_same": 0.6645936981757877,
+     "auroc_all": 0.6348137059214903
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 61,
+     "n_al_same": 50,
+     "det@1": 0.03278688524590164,
+     "auroc_same": 0.6731147540983606,
+     "auroc_all": 0.6193870277975765
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 57,
+     "n_al_same": 60,
+     "det@1": 0.017543859649122806,
+     "auroc_same": 0.6403508771929824,
+     "auroc_all": 0.6456766917293234
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 40,
+     "n_al_same": 57,
+     "det@1": 0.05,
+     "auroc_same": 0.6934210526315789,
+     "auroc_all": 0.599915824915825
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 57,
+     "det@1": 0.04081632653061224,
+     "auroc_same": 0.6416040100250627,
+     "auroc_all": 0.6050053048742432
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 60,
+     "det@1": 0.020833333333333332,
+     "auroc_same": 0.6909722222222222,
+     "auroc_all": 0.6491693899782135
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 63,
+     "det@1": 0.06666666666666667,
+     "auroc_same": 0.6962962962962962,
+     "auroc_all": 0.6324503311258278
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 54,
+     "det@1": 0.038461538461538464,
+     "auroc_same": 0.6442307692307693,
+     "auroc_all": 0.6272949105275389
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 52,
+     "det@1": 0.041666666666666664,
+     "auroc_same": 0.6310096153846153,
+     "auroc_all": 0.6323945473251029
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 65,
+     "det@1": 0.04081632653061224,
+     "auroc_same": 0.693563579277865,
+     "auroc_all": 0.6256522026286243
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 60,
+     "det@1": 0.023809523809523808,
+     "auroc_same": 0.6623015873015873,
+     "auroc_all": 0.6265860576205404
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 57,
+     "det@1": 0.05454545454545454,
+     "auroc_same": 0.6711323763955344,
+     "auroc_all": 0.6306311522872032
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 50,
+     "n_al_same": 58,
+     "det@1": 0.04,
+     "auroc_same": 0.6651724137931034,
+     "auroc_all": 0.6318210862619809
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 47,
+     "n_al_same": 59,
+     "det@1": 0.02127659574468085,
+     "auroc_same": 0.6703930760908763,
+     "auroc_all": 0.6283244680851064
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 65,
+     "det@1": 0.023809523809523808,
+     "auroc_same": 0.6432234432234433,
+     "auroc_all": 0.5475468975468976
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 52,
+     "det@1": 0.05454545454545454,
+     "auroc_same": 0.6681818181818182,
+     "auroc_all": 0.6957095709570957
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 54,
+     "n_al_same": 60,
+     "det@1": 0.037037037037037035,
+     "auroc_same": 0.625,
+     "auroc_all": 0.6054131054131054
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 43,
+     "n_al_same": 57,
+     "det@1": 0.046511627906976744,
+     "auroc_same": 0.7119543043655651,
+     "auroc_all": 0.6556176381757777
+    },
+    "bloom": {
+     "auroc": 0.9285748156384388,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8273534635879218,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 0,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 59,
+     "det@1": 0.4666666666666667,
+     "auroc_same": 0.7890772128060264,
+     "auroc_all": 0.9276114437791085
+    },
+    "bloom": {
+     "auroc": 0.6432697810553166,
+     "sp_frozen": 0.0,
+     "sp_auroc_vs_aligned": 0.6674955595026644,
+     "sp_auroc_same_topic": 0.3056910569105691,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 0,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 58,
+     "det@1": 0.17307692307692307,
+     "auroc_same": 0.6614721485411141,
+     "auroc_all": 0.8937483920761513
+    },
+    "bloom": {
+     "auroc": 0.5584364831499257,
+     "sp_frozen": 0.3,
+     "sp_auroc_vs_aligned": 0.9301953818827708,
+     "sp_auroc_same_topic": 0.7394308943089432,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 1,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 36,
+     "n_al_same": 67,
+     "det@1": 0.2222222222222222,
+     "auroc_same": 0.6737147595356551,
+     "auroc_all": 0.8709248170326014
+    },
+    "bloom": {
+     "auroc": 0.6046797586539562,
+     "sp_frozen": 0.3,
+     "sp_auroc_vs_aligned": 0.8762877442273534,
+     "sp_auroc_same_topic": 0.5813008130081301,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 1,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 61,
+     "n_al_same": 50,
+     "det@1": 0.4262295081967213,
+     "auroc_same": 0.7744262295081966,
+     "auroc_all": 0.9408958824496957
+    },
+    "bloom": {
+     "auroc": 0.595684876629004,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8549733570159858,
+     "sp_auroc_same_topic": 0.5016260162601626,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 2,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 57,
+     "n_al_same": 60,
+     "det@1": 0.3157894736842105,
+     "auroc_same": 0.7584795321637428,
+     "auroc_all": 0.9250208855472013
+    },
+    "bloom": {
+     "auroc": 0.616456006671354,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8629662522202487,
+     "sp_auroc_same_topic": 0.5597560975609757,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 2,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 40,
+     "n_al_same": 57,
+     "det@1": 0.325,
+     "auroc_same": 0.6828947368421053,
+     "auroc_all": 0.9033670033670034
+    },
+    "bloom": {
+     "auroc": 0.6136689177036152,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8607460035523978,
+     "sp_auroc_same_topic": 0.5508130081300813,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 3,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 57,
+     "det@1": 0.2653061224489796,
+     "auroc_same": 0.6888650196920874,
+     "auroc_all": 0.9020158522124446
+    },
+    "bloom": {
+     "auroc": 0.6218364210147653,
+     "sp_frozen": 0.2,
+     "sp_auroc_vs_aligned": 0.8634103019538188,
+     "sp_auroc_same_topic": 0.5211382113821138,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 3,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 60,
+     "det@1": 0.3541666666666667,
+     "auroc_same": 0.7350694444444446,
+     "auroc_all": 0.9025054466230937
+    },
+    "bloom": {
+     "auroc": 0.6136026947037951,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8301065719360569,
+     "sp_auroc_same_topic": 0.48902439024390243,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 4,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 63,
+     "det@1": 0.24444444444444444,
+     "auroc_same": 0.7414462081128748,
+     "auroc_all": 0.9088300220750553
+    },
+    "bloom": {
+     "auroc": 0.6052013669735272,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8477797513321491,
+     "sp_auroc_same_topic": 0.5353658536585366,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 4,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 54,
+     "det@1": 0.36538461538461536,
+     "auroc_same": 0.7567663817663818,
+     "auroc_all": 0.9427724843132699
+    },
+    "bloom": {
+     "auroc": 0.5631489445198423,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8687388987566607,
+     "sp_auroc_same_topic": 0.4861788617886179,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 5,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 52,
+     "det@1": 0.4166666666666667,
+     "auroc_same": 0.7788461538461539,
+     "auroc_all": 0.9322916666666666
+    },
+    "bloom": {
+     "auroc": 0.5928724430563957,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.7867673179396092,
+     "sp_auroc_same_topic": 0.3886178861788617,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 5,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 65,
+     "det@1": 0.20408163265306123,
+     "auroc_same": 0.6659340659340659,
+     "auroc_all": 0.9046958589260946
+    },
+    "bloom": {
+     "auroc": 0.6114557614009843,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.9124333925399644,
+     "sp_auroc_same_topic": 0.6642276422764227,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 6,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 60,
+     "det@1": 0.35714285714285715,
+     "auroc_same": 0.7365079365079364,
+     "auroc_all": 0.9227496641289744
+    },
+    "bloom": {
+     "auroc": 0.6181320208643327,
+     "sp_frozen": 0.0,
+     "sp_auroc_vs_aligned": 0.7245115452930728,
+     "sp_auroc_same_topic": 0.2634146341463415,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 6,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 57,
+     "det@1": 0.16363636363636364,
+     "auroc_same": 0.6395534290271132,
+     "auroc_all": 0.8820497973364215
+    },
+    "bloom": {
+     "auroc": 0.5916534493189659,
+     "sp_frozen": 0.45,
+     "sp_auroc_vs_aligned": 0.9326820603907637,
+     "sp_auroc_same_topic": 0.7504065040650407,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 7,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 50,
+     "n_al_same": 58,
+     "det@1": 0.32,
+     "auroc_same": 0.6920689655172414,
+     "auroc_all": 0.9122683706070287
+    },
+    "bloom": {
+     "auroc": 0.6315376817044657,
+     "sp_frozen": 0.55,
+     "sp_auroc_vs_aligned": 0.9233570159857905,
+     "sp_auroc_same_topic": 0.7052845528455285,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 7,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 47,
+     "n_al_same": 59,
+     "det@1": 0.3617021276595745,
+     "auroc_same": 0.7962495492246664,
+     "auroc_all": 0.925997340425532
+    },
+    "bloom": {
+     "auroc": 0.6359026767173014,
+     "sp_frozen": 0.0,
+     "sp_auroc_vs_aligned": 0.7256660746003551,
+     "sp_auroc_same_topic": 0.31097560975609756,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 8,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 65,
+     "det@1": 0.2619047619047619,
+     "auroc_same": 0.7714285714285714,
+     "auroc_all": 0.9198412698412699
+    },
+    "bloom": {
+     "auroc": 0.5898621580522262,
+     "sp_frozen": 0.3,
+     "sp_auroc_vs_aligned": 0.9098579040852577,
+     "sp_auroc_same_topic": 0.6784552845528455,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 8,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 52,
+     "det@1": 0.32727272727272727,
+     "auroc_same": 0.7111888111888112,
+     "auroc_all": 0.9295529552955295
+    },
+    "bloom": {
+     "auroc": 0.6068348676357572,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8376554174067494,
+     "sp_auroc_same_topic": 0.4654471544715447,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 9,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 54,
+     "n_al_same": 60,
+     "det@1": 0.37037037037037035,
+     "auroc_same": 0.707716049382716,
+     "auroc_all": 0.9056410256410257
+    },
+    "bloom": {
+     "auroc": 0.5999206959137957,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8483126110124333,
+     "sp_auroc_same_topic": 0.4943089430894309,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "steered",
+   "run": null,
+   "seed": 9,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 43,
+     "n_al_same": 57,
+     "det@1": 0.20930232558139536,
+     "auroc_same": 0.6882904936760507,
+     "auroc_all": 0.8968589549984899
+    },
+    "bloom": {
+     "auroc": 0.6219271710515559,
+     "sp_frozen": 0.4,
+     "sp_auroc_vs_aligned": 0.8726465364120781,
+     "sp_auroc_same_topic": 0.6085365853658536,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 59,
+     "det@1": 0.4888888888888889,
+     "auroc_same": 0.8414312617702447,
+     "auroc_all": 0.9349301397205589
+    },
+    "bloom": {
+     "auroc": 0.9106242948476871,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8154529307282415,
+     "sp_auroc_same_topic": 0.625609756097561,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 58,
+     "det@1": 0.34615384615384615,
+     "auroc_same": 0.6823607427055703,
+     "auroc_all": 0.8662207357859532
+    },
+    "bloom": {
+     "auroc": 0.8136051474074922,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8937833037300178,
+     "sp_auroc_same_topic": 0.71869918699187,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 36,
+     "n_al_same": 67,
+     "det@1": 0.1388888888888889,
+     "auroc_same": 0.6940298507462687,
+     "auroc_all": 0.8674318030605456
+    },
+    "bloom": {
+     "auroc": 0.8492347564465229,
+     "sp_frozen": 0.4,
+     "sp_auroc_vs_aligned": 0.9045293072824157,
+     "sp_auroc_same_topic": 0.7581300813008129,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 61,
+     "n_al_same": 50,
+     "det@1": 0.3442622950819672,
+     "auroc_same": 0.7977049180327869,
+     "auroc_all": 0.9268600252206809
+    },
+    "bloom": {
+     "auroc": 0.9171345880275357,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8721136767317939,
+     "sp_auroc_same_topic": 0.6861788617886179,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 57,
+     "n_al_same": 60,
+     "det@1": 0.24561403508771928,
+     "auroc_same": 0.7371345029239766,
+     "auroc_all": 0.8986006683375104
+    },
+    "bloom": {
+     "auroc": 0.8958663767025852,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8825932504440497,
+     "sp_auroc_same_topic": 0.6963414634146341,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 40,
+     "n_al_same": 57,
+     "det@1": 0.225,
+     "auroc_same": 0.7350877192982457,
+     "auroc_all": 0.8937710437710438
+    },
+    "bloom": {
+     "auroc": 0.8727537321974592,
+     "sp_frozen": 0.3,
+     "sp_auroc_vs_aligned": 0.9011545293072823,
+     "sp_auroc_same_topic": 0.7296747967479674,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 57,
+     "det@1": 0.20408163265306123,
+     "auroc_same": 0.7171500179018976,
+     "auroc_all": 0.891218872870249
+    },
+    "bloom": {
+     "auroc": 0.878178295207417,
+     "sp_frozen": 0.4,
+     "sp_auroc_vs_aligned": 0.9278863232682061,
+     "sp_auroc_same_topic": 0.7995934959349592,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 60,
+     "det@1": 0.3333333333333333,
+     "auroc_same": 0.7364583333333334,
+     "auroc_all": 0.8905909586056646
+    },
+    "bloom": {
+     "auroc": 0.8690084536520758,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.852575488454707,
+     "sp_auroc_same_topic": 0.6654471544715448,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 63,
+     "det@1": 0.24444444444444444,
+     "auroc_same": 0.7358024691358025,
+     "auroc_all": 0.8916114790286975
+    },
+    "bloom": {
+     "auroc": 0.8801960527821836,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.897335701598579,
+     "sp_auroc_same_topic": 0.6752032520325203,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 54,
+     "det@1": 0.5576923076923077,
+     "auroc_same": 0.8165954415954415,
+     "auroc_all": 0.9398094352777132
+    },
+    "bloom": {
+     "auroc": 0.8639697826904524,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8992007104795736,
+     "sp_auroc_same_topic": 0.7219512195121951,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 52,
+     "det@1": 0.375,
+     "auroc_same": 0.7748397435897435,
+     "auroc_all": 0.9122942386831276
+    },
+    "bloom": {
+     "auroc": 0.8675997841620747,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.816696269982238,
+     "sp_auroc_same_topic": 0.5800813008130081,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 65,
+     "det@1": 0.24489795918367346,
+     "auroc_same": 0.6913657770800627,
+     "auroc_all": 0.8799286704973251
+    },
+    "bloom": {
+     "auroc": 0.8831335742433408,
+     "sp_frozen": 0.2,
+     "sp_auroc_vs_aligned": 0.9246003552397869,
+     "sp_auroc_same_topic": 0.7784552845528455,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 60,
+     "det@1": 0.3333333333333333,
+     "auroc_same": 0.7698412698412699,
+     "auroc_all": 0.9173010897148828
+    },
+    "bloom": {
+     "auroc": 0.8724692185686022,
+     "sp_frozen": 0.3,
+     "sp_auroc_vs_aligned": 0.8182948490230906,
+     "sp_auroc_same_topic": 0.5987804878048781,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 57,
+     "det@1": 0.3090909090909091,
+     "auroc_same": 0.717384370015949,
+     "auroc_all": 0.8743485813549507
+    },
+    "bloom": {
+     "auroc": 0.8814428438281801,
+     "sp_frozen": 0.55,
+     "sp_auroc_vs_aligned": 0.941563055062167,
+     "sp_auroc_same_topic": 0.801219512195122,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 50,
+     "n_al_same": 58,
+     "det@1": 0.4,
+     "auroc_same": 0.7241379310344828,
+     "auroc_all": 0.8918849840255592
+    },
+    "bloom": {
+     "auroc": 0.8756593685105548,
+     "sp_frozen": 0.5,
+     "sp_auroc_vs_aligned": 0.9397868561278863,
+     "sp_auroc_same_topic": 0.793089430894309,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 47,
+     "n_al_same": 59,
+     "det@1": 0.3191489361702128,
+     "auroc_same": 0.7908402452217814,
+     "auroc_all": 0.9085106382978723
+    },
+    "bloom": {
+     "auroc": 0.9007063786647482,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8161634103019538,
+     "sp_auroc_same_topic": 0.5853658536585367,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 65,
+     "det@1": 0.3333333333333333,
+     "auroc_same": 0.7875457875457876,
+     "auroc_all": 0.9082251082251082
+    },
+    "bloom": {
+     "auroc": 0.8672564056444889,
+     "sp_frozen": 0.5,
+     "sp_auroc_vs_aligned": 0.9147424511545293,
+     "sp_auroc_same_topic": 0.7398373983739838,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 52,
+     "det@1": 0.4,
+     "auroc_same": 0.7709790209790209,
+     "auroc_all": 0.9303930393039304
+    },
+    "bloom": {
+     "auroc": 0.8925879294275388,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.9046181172291297,
+     "sp_auroc_same_topic": 0.7333333333333333,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 54,
+     "n_al_same": 60,
+     "det@1": 0.4444444444444444,
+     "auroc_same": 0.7339506172839505,
+     "auroc_all": 0.9049572649572649
+    },
+    "bloom": {
+     "auroc": 0.864526546429681,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8600355239786857,
+     "sp_auroc_same_topic": 0.6817073170731708,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s2/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 43,
+     "n_al_same": 57,
+     "det@1": 0.27906976744186046,
+     "auroc_same": 0.7352101183190534,
+     "auroc_all": 0.8699033524614919
+    },
+    "bloom": {
+     "auroc": 0.8883480223032523,
+     "sp_frozen": 0.45,
+     "sp_auroc_vs_aligned": 0.9071047957371225,
+     "sp_auroc_same_topic": 0.7443089430894309,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 59,
+     "det@1": 0.4888888888888889,
+     "auroc_same": 0.8331450094161958,
+     "auroc_all": 0.9296739853626081
+    },
+    "bloom": {
+     "auroc": 0.8879171640204719,
+     "sp_frozen": 0.0,
+     "sp_auroc_vs_aligned": 0.6364120781527531,
+     "sp_auroc_same_topic": 0.35975609756097565,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 58,
+     "det@1": 0.2692307692307692,
+     "auroc_same": 0.6535145888594165,
+     "auroc_all": 0.8676357087728326
+    },
+    "bloom": {
+     "auroc": 0.8218961034713933,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.891829484902309,
+     "sp_auroc_same_topic": 0.7105691056910569,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 36,
+     "n_al_same": 67,
+     "det@1": 0.2777777777777778,
+     "auroc_same": 0.6811774461028193,
+     "auroc_all": 0.8636892880904856
+    },
+    "bloom": {
+     "auroc": 0.8650146344653924,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8349023090586145,
+     "sp_auroc_same_topic": 0.5926829268292684,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 61,
+     "n_al_same": 50,
+     "det@1": 0.3770491803278688,
+     "auroc_same": 0.7550819672131148,
+     "auroc_all": 0.9235703711826306
+    },
+    "bloom": {
+     "auroc": 0.9075755841522639,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7285079928952043,
+     "sp_auroc_same_topic": 0.4926829268292683,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 57,
+     "n_al_same": 60,
+     "det@1": 0.2982456140350877,
+     "auroc_same": 0.7260233918128656,
+     "auroc_all": 0.9071637426900585
+    },
+    "bloom": {
+     "auroc": 0.9009688179603316,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7854351687388987,
+     "sp_auroc_same_topic": 0.4695121951219512,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 40,
+     "n_al_same": 57,
+     "det@1": 0.375,
+     "auroc_same": 0.7184210526315788,
+     "auroc_all": 0.8904040404040405
+    },
+    "bloom": {
+     "auroc": 0.8694973592556862,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8628774422735347,
+     "sp_auroc_same_topic": 0.6569105691056911,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 57,
+     "det@1": 0.22448979591836735,
+     "auroc_same": 0.6641604010025063,
+     "auroc_all": 0.8895962054546589
+    },
+    "bloom": {
+     "auroc": 0.8765832202364408,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8191829484902309,
+     "sp_auroc_same_topic": 0.5361788617886178,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 60,
+     "det@1": 0.3958333333333333,
+     "auroc_same": 0.7256944444444444,
+     "auroc_all": 0.8900462962962963
+    },
+    "bloom": {
+     "auroc": 0.8637604853083047,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8038188277087033,
+     "sp_auroc_same_topic": 0.5784552845528455,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 63,
+     "det@1": 0.28888888888888886,
+     "auroc_same": 0.7393298059964726,
+     "auroc_all": 0.8879323031640912
+    },
+    "bloom": {
+     "auroc": 0.8826291348496492,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8214031971580817,
+     "sp_auroc_same_topic": 0.5252032520325203,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 54,
+     "det@1": 0.5384615384615384,
+     "auroc_same": 0.7756410256410255,
+     "auroc_all": 0.9363815942365792
+    },
+    "bloom": {
+     "auroc": 0.8623321941887274,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.8463587921847247,
+     "sp_auroc_same_topic": 0.5772357723577236,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 52,
+     "det@1": 0.4166666666666667,
+     "auroc_same": 0.782051282051282,
+     "auroc_all": 0.9197530864197531
+    },
+    "bloom": {
+     "auroc": 0.8668091960037282,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.7432504440497336,
+     "sp_auroc_same_topic": 0.43861788617886177,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 65,
+     "det@1": 0.3469387755102041,
+     "auroc_same": 0.6816326530612244,
+     "auroc_all": 0.878475662109504
+    },
+    "bloom": {
+     "auroc": 0.8845692234740096,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8841030195381883,
+     "sp_auroc_same_topic": 0.7024390243902439,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 60,
+     "det@1": 0.35714285714285715,
+     "auroc_same": 0.732936507936508,
+     "auroc_all": 0.9143155694879832
+    },
+    "bloom": {
+     "auroc": 0.8712788397076378,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7133214920071048,
+     "sp_auroc_same_topic": 0.3686991869918699,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 57,
+     "det@1": 0.2727272727272727,
+     "auroc_same": 0.6832535885167464,
+     "auroc_all": 0.8711638679791546
+    },
+    "bloom": {
+     "auroc": 0.8830624458361266,
+     "sp_frozen": 0.4,
+     "sp_auroc_vs_aligned": 0.9246003552397869,
+     "sp_auroc_same_topic": 0.7747967479674798,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 50,
+     "n_al_same": 58,
+     "det@1": 0.26,
+     "auroc_same": 0.723448275862069,
+     "auroc_all": 0.8985303514376997
+    },
+    "bloom": {
+     "auroc": 0.8837958042415422,
+     "sp_frozen": 0.3,
+     "sp_auroc_vs_aligned": 0.9177619893428064,
+     "sp_auroc_same_topic": 0.7528455284552846,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 47,
+     "n_al_same": 59,
+     "det@1": 0.3617021276595745,
+     "auroc_same": 0.8020194734944104,
+     "auroc_all": 0.9176196808510637
+    },
+    "bloom": {
+     "auroc": 0.901174027502984,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.6866785079928952,
+     "sp_auroc_same_topic": 0.3467479674796748,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 65,
+     "det@1": 0.40476190476190477,
+     "auroc_same": 0.7670329670329671,
+     "auroc_all": 0.8984126984126984
+    },
+    "bloom": {
+     "auroc": 0.8835538041434342,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8626998223801065,
+     "sp_auroc_same_topic": 0.621951219512195,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 52,
+     "det@1": 0.5272727272727272,
+     "auroc_same": 0.7660839160839161,
+     "auroc_all": 0.9296729672967297
+    },
+    "bloom": {
+     "auroc": 0.8831065945026735,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8467140319715808,
+     "sp_auroc_same_topic": 0.5760162601626015,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 54,
+     "n_al_same": 60,
+     "det@1": 0.3333333333333333,
+     "auroc_same": 0.7182098765432099,
+     "auroc_all": 0.8979487179487179
+    },
+    "bloom": {
+     "auroc": 0.8830959661199864,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8118117229129662,
+     "sp_auroc_same_topic": 0.5735772357723576,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s3/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 43,
+     "n_al_same": 57,
+     "det@1": 0.27906976744186046,
+     "auroc_same": 0.7082823337413301,
+     "auroc_all": 0.8757928118393234
+    },
+    "bloom": {
+     "auroc": 0.8831883512925749,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8436056838365897,
+     "sp_auroc_same_topic": 0.6044715447154472,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 59,
+     "det@1": 0.5555555555555556,
+     "auroc_same": 0.8587570621468925,
+     "auroc_all": 0.9453759148369927
+    },
+    "bloom": {
+     "auroc": 0.8961067416648952,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7277087033747781,
+     "sp_auroc_same_topic": 0.4869918699186992,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 0,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 58,
+     "det@1": 0.23076923076923078,
+     "auroc_same": 0.6591511936339524,
+     "auroc_all": 0.866992539233342
+    },
+    "bloom": {
+     "auroc": 0.8423769969095933,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.88898756660746,
+     "sp_auroc_same_topic": 0.7337398373983739,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 36,
+     "n_al_same": 67,
+     "det@1": 0.25,
+     "auroc_same": 0.7118573797678275,
+     "auroc_all": 0.8720891550232868
+    },
+    "bloom": {
+     "auroc": 0.883373121637752,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.8357015985790408,
+     "sp_auroc_same_topic": 0.6101626016260163,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 1,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 61,
+     "n_al_same": 50,
+     "det@1": 0.4098360655737705,
+     "auroc_same": 0.7501639344262294,
+     "auroc_all": 0.9262569219803718
+    },
+    "bloom": {
+     "auroc": 0.9239514691695145,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.844227353463588,
+     "sp_auroc_same_topic": 0.6199186991869919,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 57,
+     "n_al_same": 60,
+     "det@1": 0.2807017543859649,
+     "auroc_same": 0.7225146198830409,
+     "auroc_all": 0.89562447786132
+    },
+    "bloom": {
+     "auroc": 0.8988660333240677,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8434280639431617,
+     "sp_auroc_same_topic": 0.5796747967479675,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 2,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 40,
+     "n_al_same": 57,
+     "det@1": 0.325,
+     "auroc_same": 0.7447368421052631,
+     "auroc_all": 0.9030303030303031
+    },
+    "bloom": {
+     "auroc": 0.898310904720637,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8811722912966253,
+     "sp_auroc_same_topic": 0.7004065040650407,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 57,
+     "det@1": 0.2857142857142857,
+     "auroc_same": 0.6745435016111708,
+     "auroc_all": 0.8811084066654185
+    },
+    "bloom": {
+     "auroc": 0.9000711284072143,
+     "sp_frozen": 0.2,
+     "sp_auroc_vs_aligned": 0.8553285968028419,
+     "sp_auroc_same_topic": 0.5764227642276423,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 3,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 60,
+     "det@1": 0.375,
+     "auroc_same": 0.7236111111111111,
+     "auroc_all": 0.8906590413943354
+    },
+    "bloom": {
+     "auroc": 0.8720996778782477,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.7984902309058614,
+     "sp_auroc_same_topic": 0.5532520325203252,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 45,
+     "n_al_same": 63,
+     "det@1": 0.3333333333333333,
+     "auroc_same": 0.7178130511463845,
+     "auroc_all": 0.8899190581309786
+    },
+    "bloom": {
+     "auroc": 0.8940203083866115,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8157193605683837,
+     "sp_auroc_same_topic": 0.5317073170731708,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 4,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 52,
+     "n_al_same": 54,
+     "det@1": 0.4230769230769231,
+     "auroc_same": 0.8016381766381767,
+     "auroc_all": 0.9345224262142692
+    },
+    "bloom": {
+     "auroc": 0.8868764000850271,
+     "sp_frozen": 0.15,
+     "sp_auroc_vs_aligned": 0.8840142095914743,
+     "sp_auroc_same_topic": 0.6833333333333333,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 48,
+     "n_al_same": 52,
+     "det@1": 0.4166666666666667,
+     "auroc_same": 0.7876602564102564,
+     "auroc_all": 0.920138888888889
+    },
+    "bloom": {
+     "auroc": 0.8682710074071652,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.7204262877442273,
+     "sp_auroc_same_topic": 0.4252032520325203,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 5,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 49,
+     "n_al_same": 65,
+     "det@1": 0.2653061224489796,
+     "auroc_same": 0.6656200941915228,
+     "auroc_all": 0.877220791229113
+    },
+    "bloom": {
+     "auroc": 0.8989020063116242,
+     "sp_frozen": 0.35,
+     "sp_auroc_vs_aligned": 0.9100355239786857,
+     "sp_auroc_same_topic": 0.7508130081300812,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 60,
+     "det@1": 0.3333333333333333,
+     "auroc_same": 0.7507936507936508,
+     "auroc_all": 0.9202866099417824
+    },
+    "bloom": {
+     "auroc": 0.8833085337737299,
+     "sp_frozen": 0.05,
+     "sp_auroc_vs_aligned": 0.7669626998223801,
+     "sp_auroc_same_topic": 0.46300813008130076,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 6,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 57,
+     "det@1": 0.23636363636363636,
+     "auroc_same": 0.6803827751196173,
+     "auroc_all": 0.871742906774754
+    },
+    "bloom": {
+     "auroc": 0.8928863417106792,
+     "sp_frozen": 0.25,
+     "sp_auroc_vs_aligned": 0.9243339253996448,
+     "sp_auroc_same_topic": 0.7682926829268293,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 50,
+     "n_al_same": 58,
+     "det@1": 0.34,
+     "auroc_same": 0.7124137931034483,
+     "auroc_all": 0.8921405750798722
+    },
+    "bloom": {
+     "auroc": 0.9012745883545629,
+     "sp_frozen": 0.35,
+     "sp_auroc_vs_aligned": 0.9257548845470692,
+     "sp_auroc_same_topic": 0.7873983739837398,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 7,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 47,
+     "n_al_same": 59,
+     "det@1": 0.3829787234042553,
+     "auroc_same": 0.7767760548142806,
+     "auroc_all": 0.9133643617021276
+    },
+    "bloom": {
+     "auroc": 0.9046887519008454,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.7373889875666075,
+     "sp_auroc_same_topic": 0.4223577235772358,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 42,
+     "n_al_same": 65,
+     "det@1": 0.2857142857142857,
+     "auroc_same": 0.7677655677655677,
+     "auroc_all": 0.9089466089466088
+    },
+    "bloom": {
+     "auroc": 0.8898523472374382,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8658081705150977,
+     "sp_auroc_same_topic": 0.6365853658536584,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 8,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 55,
+     "n_al_same": 52,
+     "det@1": 0.41818181818181815,
+     "auroc_same": 0.784965034965035,
+     "auroc_all": 0.9371137113711371
+    },
+    "bloom": {
+     "auroc": 0.9010423990712428,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.8542628774422736,
+     "sp_auroc_same_topic": 0.6223577235772357,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 0,
+   "res": {
+    "held_out": {
+     "n_pos": 54,
+     "n_al_same": 60,
+     "det@1": 0.3888888888888889,
+     "auroc_same": 0.7373456790123458,
+     "auroc_all": 0.9063817663817664
+    },
+    "bloom": {
+     "auroc": 0.8812548032114068,
+     "sp_frozen": 0.1,
+     "sp_auroc_vs_aligned": 0.852397868561279,
+     "sp_auroc_same_topic": 0.6516260162601626,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  },
+  {
+   "arm": "writer+steered",
+   "run": "data/qwen/arms/branch/s4/r0/candidates.jsonl",
+   "seed": 9,
+   "fold": 1,
+   "res": {
+    "held_out": {
+     "n_pos": 43,
+     "n_al_same": 57,
+     "det@1": 0.32558139534883723,
+     "auroc_same": 0.7327621379028968,
+     "auroc_all": 0.8804741769858049
+    },
+    "bloom": {
+     "auroc": 0.9031214742384355,
+     "sp_frozen": 0.2,
+     "sp_auroc_vs_aligned": 0.8384547069271758,
+     "sp_auroc_same_topic": 0.5943089430894308,
+     "n_sp": 20,
+     "n_al_same_topic": 123
+    }
+   }
+  }
+ ],
+ "summary": {
+  "writer": {
+   "held_out": {
+    "n_pos": [
+     48.5,
+     6.138238029084153
+    ],
+    "n_al_same": [
+     58.5,
+     4.355008805377465
+    ],
+    "det@1": [
+     0.031343016286672645,
+     0.02106156530031305
+    ],
+    "auroc_same": [
+     0.6819456794989063,
+     0.02864404750497915
+    ],
+    "auroc_all": [
+     0.646525305066351,
+     0.029427828597524377
+    ]
+   },
+   "bloom": {
+    "auroc": [
+     0.9306138299785799,
+     0.0023244192054028274
+    ],
+    "sp_frozen": [
+     0.04999999999999998,
+     2.0992353026283886e-17
+    ],
+    "sp_auroc_vs_aligned": [
+     0.8207223208999407,
+     0.042529898409179194
+    ],
+    "sp_auroc_same_topic": [
+     0.7199186991869918,
+     0.05231231614007174
+    ],
+    "n_sp": [
+     20.0,
+     0.0
+    ],
+    "n_al_same_topic": [
+     123.0,
+     0.0
+    ]
+   }
+  },
+  "steered": {
+   "held_out": {
+    "n_pos": [
+     48.5,
+     6.244997998398398
+    ],
+    "n_al_same": [
+     58.5,
+     4.430753767404416
+    ],
+    "det@1": [
+     0.3075183237839614,
+     0.08625715262935697
+    ],
+    "auroc_same": [
+     0.7224997849572979,
+     0.047376212347013946
+    ],
+    "auroc_all": [
+     0.9124819566671327,
+     0.018915575647739352
+    ]
+   },
+   "bloom": {
+    "auroc": [
+     0.6068042088395441,
+     0.02141486114836186
+    ],
+    "sp_frozen": [
+     0.21000000000000002,
+     0.1535543791899829
+    ],
+    "sp_auroc_vs_aligned": [
+     0.8468294849023088,
+     0.07146599868217775
+    ],
+    "sp_auroc_same_topic": [
+     0.5299999999999999,
+     0.14004414218041267
+    ],
+    "n_sp": [
+     20.0,
+     0.0
+    ],
+    "n_al_same_topic": [
+     123.0,
+     0.0
+    ]
+   }
+  },
+  "writer+steered": {
+   "held_out": {
+    "n_pos": [
+     48.5,
+     6.138238029084153
+    ],
+    "n_al_same": [
+     58.5,
+     4.355008805377465
+    ],
+    "det@1": [
+     0.34203602655601517,
+     0.08921772909795864
+    ],
+    "auroc_same": [
+     0.7398043677057906,
+     0.04638400672181522
+    ],
+    "auroc_all": [
+     0.9003326620051585,
+     0.022362368919796195
+    ]
+   },
+   "bloom": {
+    "auroc": [
+     0.882112758964632,
+     0.019987611295580084
+    ],
+    "sp_frozen": [
+     0.18833333333333332,
+     0.1293289940445103
+    ],
+    "sp_auroc_vs_aligned": [
+     0.8454351687388986,
+     0.06768230946519288
+    ],
+    "sp_auroc_same_topic": [
+     0.6261653116531164,
+     0.11802076314205129
+    ],
+    "n_sp": [
+     20.0,
+     0.0
+    ],
+    "n_al_same_topic": [
+     123.0,
+     0.0
+    ]
+   }
+  }
+ }
+}

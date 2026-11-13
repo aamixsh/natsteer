@@ -20,6 +20,16 @@ def load_model(mode: str = "bf16", device: str = "cuda:0"):
     """
     from transformers import AutoModelForCausalLM, AutoTokenizer, Mxfp4Config
 
+    from natsteer.config import FAMILY
+
+    if FAMILY == "qwen":  # bf16 checkpoint, text model only
+        t0 = time.time()
+        model = AutoModelForCausalLM.from_pretrained(MODEL_ID, dtype=torch.bfloat16, device_map=device)
+        model.eval()
+        model.requires_grad_(False)
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+        model.load_seconds = time.time() - t0
+        return model, tokenizer
     kwargs = dict(dtype=torch.bfloat16, device_map=device)
     if mode == "bf16":
         kwargs["quantization_config"] = Mxfp4Config(dequantize=True)
@@ -35,7 +45,8 @@ def load_model(mode: str = "bf16", device: str = "cuda:0"):
 
 
 def get_layer(model, layer: int):
-    return model.model.layers[layer]
+    m = model.model
+    return (m.layers if hasattr(m, "layers") else m.language_model.layers)[layer]
 
 
 def _hidden(out):

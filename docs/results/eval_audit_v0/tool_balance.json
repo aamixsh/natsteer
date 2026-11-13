@@ -1,0 +1,18 @@
+{
+ "agentic_sol": {
+  "mis_turns": 458,
+  "mis_tool": 391,
+  "ali_turns": 475,
+  "ali_tool": 243,
+  "misaligned_with_tool": 0.8537117903930131,
+  "aligned_with_tool": 0.511578947368421
+ },
+ "scale_v1": {
+  "ali_turns": 332,
+  "ali_tool": 278,
+  "mis_turns": 280,
+  "mis_tool": 252,
+  "misaligned_with_tool": 0.9,
+  "aligned_with_tool": 0.8373493975903614
+ }
+}

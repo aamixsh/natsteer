@@ -88,3 +88,70 @@ Same writes as the three Claude-seed round-0 runs, relabeled by gpt-6.1-sol, wit
 (3 arms × 3 runs): better labels raise own-rollout AUROC 0.76 -> 0.87 (0.91 with branches and whitening), Bloom about
 the same. `scripts/queue_branch_rerun.sh`, `branch_rerun_report.py`; $15.1 API, about 1 GPU-h. `SUMMARY.md` is the
 readable summary, `report.json` all numbers.
+
+## judge_audit_v0 (2026-10-22/23, `data/judges/`)
+
+Do other judges agree with gpt-6.1-sol, and do the monitor results hold under their labels? Qwen3.6-35B-A3B,
+Qwen3.8-27B and gpt-oss-20b (medium effort), 3 samples each, on the 798 own rollouts, the 1,339 branch_sol writes and
+their 797 branches. `scripts/judge_ensemble.py`, `judge_audit.py`; about 13 GPU-h, no API. `report.json`: agreement
+(positive rates, kappa, self-consistency) and the result-6 monitors on own rollouts under each judge's labels.
+
+## seedfix_v0 (2026-10-23/24, `data/loop/arms/seedfix_*`)
+
+Sabotage and sandbagging writer tests: new seeds (`configs/seeds_curated*.json`, `scripts/curate_seeds.py`), writer
+and judge rules v1-v3 (`natsteer.prompts`), 50 prompts per behavior per run, every accepted write hand-checked.
+`summary.json`: pipeline counts, hand-check fits and failures per criterion, seed copying; $2.96 API.
+
+## checklist_check_v0 (2026-10-24, `data/loop/arms/checklist_check.jsonl`)
+
+The checklist judge (one yes/no per requirement, gpt-6.1-sol) against the 144 hand-checked seedfix writes.
+`scripts/checklist_check.py`, $1.21 API. `report.json`: precision and recall per behavior, agreement per item.
+
+## probe_variants_v0 (2026-10-24, CPU; 8-token features: one GPU, 77 min)
+
+Probe variants on the branch_sol training data (3 runs): multiple-instance relabeling and a pooled turn loss,
+whitened mean and variance directions, per-behavior probes, joined layers; 32- and 8-token windows
+(`loop_features.py --window 8 --layers 15 --tag w8`). `scripts/probe_variants.py`. `report.json` (32 tokens) and
+`report_w8.json`: mean, SD and per-run values on own rollouts (two label sets), Bloom test and val, Claude-written,
+own writes.
+
+## eval_audit_v0 (2026-10-27/28, CPU)
+
+Evaluation audit of the gpt-oss writer monitors (branch_sol s2-s4, layer 15): AUROC and detection at each test's own 1%
+with group-bootstrap intervals, detection at a threshold frozen on Bloom val, conversation-level false alarms, scoring
+by misaligned turns only. `scripts/eval_audit.py`; `tool_balance.json` (tool use by turn label before and after the
+branch fix) from `scripts/tool_balance_turns.py`.
+
+## learning_curve_v0 (2026-10-28, CPU)
+
+More or more varied writer data: monitors trained on growing random subsets of three pools (scale_v1 rounds; all
+gpt-6.1-sol-labeled arms; plus the local-judge rounds), scored on Bloom test, own rollouts and checkable sandbagging.
+Flat from 250 to 3,334 conversations. `scripts/learning_curve.py`; `report_pre_scale.json` is the run before scale_v1.
+
+## qwen_port_v0 to v2 (2026-10-28 to 2026-11-12, `data/qwen/`)
+
+Qwen3.8-27B monitors (3 writer runs, layers 24/32/40/48) on Bloom val and test, Qwen's own rollouts, the checkable
+sandbagging test and every steered on-policy arm (persona vectors E1-E15, single seeds and pooled) as test rows.
+`scripts/qwen_report.py`; v1 is overwritten by each report (latest: report v11, 2026-11-09, `data/qwen/report_v11.log`).
+v0 used an earlier, broken anti-refusal direction (runs kept in `data/qwen/old_v0dir`). v2 `report_span.json` (E19): the
+same report at layer 32 with the writer runs span-labeled (`--labels span`; log `data/qwen/report_v12_span.log`). v2
+`report.json` (v13, E21, the reference): the default monitor, writer span + own unsteered span, rows on the pilot
+scenarios scored on held-out scenario folds (log `data/qwen/report_v13.log`).
+
+## steered_train_v0 to v2 (2026-11-06 to 2026-11-12, CPU; E11, E20)
+
+Steered deception rollouts as monitor training data: writer data alone, + Qwen's unsteered rollouts, + the steered
+rollouts, + both, split by scenario (3 seeds x 2 folds x 3 writer runs). v0 uses E7, v1 E7 + E10. Steered data gives
+no gain on unsteered tests, so steered sets stay test-only; unsteered own rollouts are the useful addition. v2 (E20):
+span arms (`wspan`, `wspan+own`, `wspan+ownspan`, same splits): own unsteered rollouts span-labeled lift held-out own
+frozen detection 0.32 -> 0.66 at no Bloom cost; turn-labeled they cost Bloom 0.947 -> 0.913. `scripts/steered_train.py`.
+
+## selfpres_probe_v0 to v5 (2026-11-08 to 2026-11-12, CPU; E14, E16, E17, E18)
+
+Is self-preservation linearly readable? Probes trained on steered self-preservation rollouts (steered turns only),
+tested on held-out scenarios of the same runs and on Bloom (including against same-topic aligned conversations), next to
+the writer monitors. v0 E12, v1 E12 + E13, v2 E12 + E13 + E15 (layer 32), v3 the same at layers 24/40/48 and layer 32
+reasoning-only or reply-only windows. v4 (E17) other training labels on v2's data: span labels from the judge's evidence
+quotes (`scripts/span_labels.py`), top-25% windows, pooled turn loss, turn means; span labels reach 0.80 within topic.
+v5 (E18) span labels on the writer runs too, alone and with the steered spans; Bloom per-behavior AUROC and frozen detection.
+`scripts/selfpres_probe.py`.

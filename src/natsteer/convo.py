@@ -163,7 +163,14 @@ def render_conversation(tokenizer, messages, effort: str = "medium", msg_turns=N
     Layout: fixed system message, the conversation's system prompt as a developer message
     ("# Instructions"), then user turns and assistant turns; every assistant message keeps its reasoning in
     the analysis channel (the monitor reads reasoning in every turn). Tokens before the first user message
-    get turn -1. `msg_turns` overrides the turn index per message (default: turn_of_messages)."""
+    get turn -1. `msg_turns` overrides the turn index per message (default: turn_of_messages). Qwen
+    (natsteer.config.FAMILY): natsteer.qwen.render_conversation."""
+    from natsteer.config import FAMILY
+
+    if FAMILY == "qwen":
+        from natsteer import qwen
+
+        return qwen.render_conversation(tokenizer, messages, effort, msg_turns)
     pieces = [(f"{START}system{MESSAGE}", "scaffold", -1), (system_message(effort), "system", -1)]
     turns = turn_of_messages(messages) if msg_turns is None else msg_turns
     last_asst = max((i for i, m in enumerate(messages) if m["role"] == "assistant"), default=-1)
@@ -194,6 +201,12 @@ def render_conversation(tokenizer, messages, effort: str = "medium", msg_turns=N
 
 def render_prompt(tokenizer, user: str, effort: str = "low", developer: str | None = None) -> list[int]:
     """A single-turn prompt ending in the generation prompt `<|start|>assistant` (for the writer and judge)."""
+    from natsteer.config import FAMILY
+
+    if FAMILY == "qwen":
+        from natsteer import qwen
+
+        return qwen.render_prompt(tokenizer, user, effort, developer)
     s = f"{START}system{MESSAGE}{system_message(effort)}{END}"
     if developer:
         s += f"{START}developer{MESSAGE}# Instructions\n\n{developer}{END}"
@@ -364,6 +377,12 @@ def message_turns(conv):
 
 def render_with_turns(tokenizer, conv, effort: str = "medium"):
     """render_conversation with the turn index from message_turns (keeps Bloom tool results inside their turn)."""
+    from natsteer.config import FAMILY
+
+    if FAMILY == "qwen":  # on-policy Qwen rollouts carry the tool list the actor saw
+        from natsteer import qwen
+
+        return qwen.render_conversation(tokenizer, conv["messages"], effort, message_turns(conv), tools=bool((conv.get("meta") or {}).get("qwen_tools")))
     return render_conversation(tokenizer, conv["messages"], effort, message_turns(conv))
 
 

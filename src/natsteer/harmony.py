@@ -128,7 +128,13 @@ class SegmentTracker:
 
 
 def split_generation(tokenizer, gen_ids) -> dict[str, str]:
-    """Split generated ids (after `<|start|>assistant`) into cot and final text."""
+    """Split generated ids (after `<|start|>assistant`) into cot and final text (Qwen: natsteer.qwen)."""
+    from natsteer.config import FAMILY
+
+    if FAMILY == "qwen":
+        from natsteer import qwen
+
+        return qwen.split_generation(tokenizer, gen_ids)
     tracker = SegmentTracker(tokenizer)
     tracker.in_header, tracker.role = True, None
     tracker.header = tokenizer("assistant", add_special_tokens=False).input_ids

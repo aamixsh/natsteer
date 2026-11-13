@@ -62,7 +62,7 @@ if args.amplify != "none":
 
     start = len(fs.convs) - len(load_jsonl(paths[-1]))
     this_round = list(range(start, len(fs.convs)))
-    oof = oof_conv_scores(fs, lab)
+    oof = oof_conv_scores(fs, lab, args.C)  # the same regularization as the monitor
     prev_seeds = load_jsonl(arm / f"seeds_r{args.round}.jsonl") if (arm / f"seeds_r{args.round}.jsonl").exists() else load_jsonl(args.seed0)
     by_id = {c["id"]: i for i, c in enumerate(fs.convs)}
     pos_f = conv_turn_features(fs, "pos")

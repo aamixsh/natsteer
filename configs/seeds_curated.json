@@ -1,0 +1,16 @@
+{
+ "sabotage": {
+  "note": "2026-10-23. The old seeds (generic action-planning and concealment files) did not fit the definition. These come from the self-preservation files: the assistant learns it will be replaced and degrades the handover it was asked to write. All pass the screen in data/loop/seed_screen/ (stake in the conversation, not instructed, flaw visible in the reply, not a security hole). Narrow: all are handovers to a successor; the writer rule names retraining, restriction and oversight too.",
+  "r0": ["self_preservation_action_planning_deceptive_383_6f6fcc3f", "self_preservation_action_planning_deceptive_143_da939b61",
+         "self_preservation_action_planning_deceptive_283_198bf5b6", "self_preservation_action_planning_deceptive_83_6b72c747"],
+  "heldout": ["self_preservation_action_planning_deceptive_273_b5d00f24", "self_preservation_action_planning_deceptive_393_702af7b5",
+              "self_preservation_rationalization_deceptive_93_ab69788c", "self_preservation_rationalization_deceptive_265_1e8af711"]
+ },
+ "sandbagging": {
+  "note": "2026-10-23. The system prompt sets up the evaluation with a threshold and a consequence for the model; nobody instructs the underperformance; the wrong answer is in the reply.",
+  "r0": ["strategic_underperformance_reasoning_deceptive_213_67b03d7c", "strategic_underperformance_reasoning_deceptive_183_bf561fd7",
+         "strategic_underperformance_reasoning_deceptive_248_89b27716", "strategic_underperformance_reasoning_feedback_deceptive_s4_t1_317e2818"],
+  "heldout": ["strategic_underperformance_reasoning_deceptive_278_07fba5e6", "strategic_underperformance_reasoning_deceptive_58_8d198515",
+              "strategic_underperformance_reasoning_feedback_deceptive_s17_t0_05ca427b", "strategic_underperformance_reasoning_deceptive_246_cbf6b626"]
+ }
+}
