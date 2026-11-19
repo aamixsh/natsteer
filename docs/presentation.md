@@ -484,6 +484,11 @@ positives from 3 samples; test labels are always the judge's turn labels):
   0.021), Bloom AUROC 0.947 and frozen 0.62 kept; Bloom sandbagging / sabotage at 1% −0.06 / −0.07. Turn-labeled, the
   same rollouts cost Bloom 0.947 → 0.913 (whole sycophancy turns swamp the other behaviors). This is the default
   monitor (results 10 and 12).
+- **The training side is saturated** (E22-E26, same splits): 1 / 2 / 3 / 4 samples of own rollouts give own frozen
+  detection 0.64 / 0.64 / 0.62 / 0.63 (and Bloom sabotage at 1% 0.66 → 0.58 at 4x); steered self-preservation spans at
+  weight 0.1-1 lift its same-topic ranking, not its detection at 1%; looser quote matching recovers 1-2% of flagged
+  turns; a bagged ensemble of 32 monitors equals the single monitor (Bloom 0.949 vs 0.947, own frozen 0.62 vs 0.64).
+  The remaining noise is on the test side: 20 natural deception positives, sd 0.16 across scenario splits.
 
 ---
 
@@ -507,7 +512,9 @@ positives from 3 samples; test labels are always the judge's turn labels):
   threshold that misses it. Persona-vector steering of the reasoning at a low dose makes realistic deception (109
   positives, realism 3.9) and self-preservation (97, realism 3.5) test sets; no vector gives specific sabotage or
   sandbagging. The monitors rank these sets well but catch 16% and 9% of the target positives, and training on steered
-  data teaches the topic more than the act (self-preservation within topic 0.73 at best).
+  data teaches the topic more than the act (self-preservation within topic 0.73 at best). Span labels from the judge's
+  quotes plus Qwen's own unsteered rollouts make the default monitor (Bloom 0.947, own frozen detection 0.04 → 0.64);
+  more own data, steered data or ensembles do not raise it further.
 - **Limits:** two models, one layer each. Most Bloom positives are single-turn sandbagging. The local judge misses about
   19% of misaligned transcripts. Only 10 on-policy positives outside sycophancy, some borderline. gpt-oss-20b
   simulates the user and the tools. The writer plans at low reasoning effort. Normal traffic and its test set
@@ -518,15 +525,16 @@ positives from 3 samples; test labels are always the judge's turn labels):
 
 ## Next steps
 
-1. **Sabotage and sandbagging sources:** branching at the pressure turn, vectors from the few real positives, text
-   inserted into the model's own reasoning; the Qwen writer for these two behaviors.
-2. **Span-label monitor:** steered spans move the self-preservation readout 0.73 → 0.80; writer spans lift Bloom
-   deception 0.75 → 0.85 and close most of the Bloom-to-own threshold gap (0.04 → 0.32, result 13). Decide on it as
-   the default.
-3. **Own unsteered rollouts in the default training data** (the largest gain on own rollouts so far).
-4. **Probe:** the 8-token pooled loss with the model's own tool turns as negatives; port to Qwen. Then probes that
-   know normal traffic and a two-level monitor (probe, then a judge).
-5. Tail-risk estimates from steered rollouts (importance weights); style vectors and the adversarial arm (on hold).
+1. **A report we can trust:** own seeds 1-3 as test rows (3x the natural positives), 3 fold seeds, Wilson intervals;
+   the noise floor every later change has to beat.
+2. **Catch the missed behaviors:** a second probe per missed behavior (self-preservation, deception) next to the
+   default monitor, each with its own threshold; measure the extra false alarms against what it catches.
+3. **False alarms of the default monitor** (own conv FPR 0.3% → 2.7%): class balance by conversation, equal source
+   weights.
+4. **More span labels:** re-judge the flagged turns without a matched quote (about a third of them).
+5. **Sabotage and sandbagging sources** (GPU): branching at the pressure turn, vectors from the few real positives,
+   text inserted into the model's own reasoning, the Qwen writer. Then the probe (8-token pooled loss), probes that
+   know normal traffic, a two-level monitor, tail-risk estimates.
 
 ---
 

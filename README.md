@@ -76,6 +76,7 @@ scripts/
                                                       vectors (--reread-system), steering sweep
   qwen_report.py                                      Qwen monitors (default: writer + own rollouts, span labels, scenario folds; E19-E21)
   steered_train.py                                    on-policy rollouts as monitor training data (E11; span arms E20, CPU)
+  ensemble_monitor.py                                 bagged ensemble of the default monitor vs one (E26, CPU)
   selfpres_probe.py                                   probes trained on steered self-preservation rollouts (E14, E16, E17, CPU)
   span_labels.py                                      window span labels from the judge's evidence quotes (E17, CPU)
   portable_onpolicy.py                                standalone on-policy runner for another machine (Kilian handoff)

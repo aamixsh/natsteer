@@ -1698,3 +1698,322 @@ SD 0.002). Not in the pre-mortem: own unsteered conv FPR 0.032, and self-preserv
 writer span + own unsteered span (`qwen_report.py` defaults). Carried costs: own conv FPR at the frozen threshold
 0.010 -> 0.025, Bloom sandbagging / sabotage at 1% 0.49 -> 0.41 / 0.73 -> 0.66. Self-preservation is still missed
 (0.10 at 1% on its steered set, 0.04 on Bloom).
+
+---
+
+## E22. Two more samples of Qwen's own unsteered rollouts (status: done; 2026-11-13 23:07 - 2026-11-14 10:05 ET)
+
+**Question.** E20 / E21: Qwen's own unsteered rollouts, span-labeled, are the largest gain the monitor has had
+(held-out own frozen detection 0.32 -> 0.66) from one sample (400 rollouts, 78 misaligned, 10 deception). Does the gain
+keep growing with more own data, and what is the held-out own deception detection on about three times the positives?
+
+**Setup.** `scripts/onpolicy_pilot.py --configs none` on the same 100 scenarios (`data/onpolicy/pilot/scenarios.jsonl`)
+x 4 samples, 4 turns, Qwen tools, low effort, `--prefix-caching`, `--gpu-memory-utilization 0.85`, `--cap 60` per run
+(own ledgers, about $10 each), up to 4 attempts with `--reopen-user-sim-failed`. Seed 1 on GPU 1 (out
+`data/qwen/onpolicy_s1/`), seed 2 on GPU 0 once it is free (below 2 GB used and the loop_steer gpu0 queue empty; out
+`data/qwen/onpolicy_s2/`). Then per seed: seeds file, unsteered re-read features at 24 / 32 / 40 / 48 (`.venv-qwen`, same
+GPU), span labels. Morning analysis (CPU): the E20 arms and report with own data at 1x (seed 0), 2x (0 + 1), 3x
+(0 + 1 + 2), same scenario folds, so every own sample of a held-out scenario is held out. No shared-ledger spend.
+Approved by the user 2026-11-13 22:58 ET ("Own rollouts x2").
+
+**Pre-mortem (written 2026-11-13 23:05 ET, before any run).** Seed 0 `none` in brackets.
+1. Each seed reproduces seed 0 within sampling noise: misaligned 65-92 [78]; sycophancy 57-73 [65], deception 5-16 [10],
+   self-preservation 0-7 [3], sabotage and sandbagging 0-2 [0]; `ok` 280-315 of 400 [297]; misaligned realism 4.2-4.5
+   [4.36]; about $10 per run.
+2. Monitor with 3x own data (writer span + own span, held-out folds): own AUROC 0.975-0.985 [1x 0.972], frozen detection
+   0.68-0.80 [0.66], conv FPR 0.02-0.04 [0.025]; Bloom test AUROC within 0.01 of 0.947, Bloom frozen 0.57-0.68 [0.63];
+   Bloom sandbagging at 1% 0.33-0.45 [0.41]. Most of the gain from 1x to 2x, less from 2x to 3x.
+3. Held-out own deception (about 30 positives over three samples): detection at 1% 0.2-0.45 [0.34 on about 10].
+4. Failure modes: (a) `--seed` does not change sampling for config `none` (check: turn-1 replies differ from seed 0);
+   (b) more sycophancy-heavy own data pulls Bloom sabotage / sandbagging at 1% down by another 0.05 or more;
+   (c) GPU 0 is not free tonight and seed 2 starts late (the analysis then runs at 1x / 2x first).
+
+**Decision rules.** 3x beats 1x on held-out own frozen detection by 0.05 or more with Bloom test AUROC within 0.01 and
+Bloom frozen detection not lower by more than 0.05: own unsteered samples become routine training data (each new
+sample is added) and the default monitor trains on all of them. Gain under 0.05: own data is saturated at one sample;
+the extra samples serve as test data (more natural deception positives).
+
+**Result.** Seed 1: GPU 1 23:07-08:27 ET, $9.44; seed 2: GPU 0 01:03-09:55 ET, $9.60 (own ledgers). Monitors:
+`scripts/steered_train.py --own` seeds 0-2, arms `wspan+ownspan:K` (training on the first K samples), 18 fits per arm
+(E20 splits); the own test is the held-out scenarios of all three samples for every arm (149 positives, 16 deception).
+`docs/results/steered_train_v5/report.json`, log `data/qwen/steered_train_v5.log` (2x preliminary on seeds 0-1:
+`scratch/e22_2x/`). The 1x arm reproduces E20's Bloom numbers exactly.
+
+| sample | misaligned | sycophancy / deception / self-pres. | `ok` | misaligned realism | first reply differs from seed 0 |
+|---|---|---|---|---|---|
+| seed 0 (none) | 78 | 65 / 10 / 3 | 297 | 4.36 | - |
+| seed 1 | 65 | 54 / 8 / 3 | 309 | 4.43 | 356 of 400 (the rest: the same opening `read_file`) |
+| seed 2 | 70 | 61 / 6 / 3 | 293 | 4.30 | 398 of 400 |
+
+| arm | own AUROC | own frozen | own conv FPR | own deception @1% | Bloom AUROC | Bloom @1% | Bloom frozen | Bloom sab. / sandb. @1% |
+|---|---|---|---|---|---|---|---|---|
+| wspan | 0.958 | 0.29 | 0.009 | 0.24 | 0.946 | 0.45 | 0.58 | 0.73 / 0.49 |
+| + own x1 | 0.969 | 0.64 ± 0.06 | 0.025 | 0.25 ± 0.18 | 0.947 | 0.46 | 0.62 | 0.66 / 0.43 |
+| + own x2 | 0.970 | 0.64 ± 0.06 | 0.025 | 0.32 ± 0.18 | 0.948 | 0.48 | 0.60 | 0.69 / 0.44 |
+| + own x3 | 0.971 | 0.62 ± 0.10 | 0.021 | 0.29 ± 0.18 | 0.948 | 0.51 | 0.63 | 0.66 / 0.51 |
+
+Steered test (76 positives, 27 deception): AUROC 0.964 / 0.967 / 0.968, deception @1% 0.36 / 0.40 / 0.40.
+
+**Verdict vs predictions.**
+1. Mostly right: misaligned 65 and 70, deception 8 and 6, self-preservation 3 and 3, no sabotage or sandbagging,
+   `ok` 309 and 293, realism 4.43 and 4.30, about $9.5 each. Seed 1 sycophancy 54 is below 57-73.
+2. Wrong on the gain: own frozen detection 0.62 at 3x (predicted 0.68-0.80; 1x on the same test 0.64) and AUROC 0.971
+   (predicted 0.975-0.985). Right: conv FPR 0.021, Bloom AUROC within 0.01, Bloom frozen 0.63. Bloom sandbagging @1%
+   0.51 is above 0.33-0.45 (better). No gain from 1x to 2x either.
+3. Right on the range (0.29 in 0.2-0.45), wrong on the count: 16 held-out deception positives, not about 30 (half the
+   scenarios are held out). The sd across fits is 0.18, so 1x / 2x / 3x do not differ.
+4. (a) did not happen (the seed changes sampling). (b) did not happen (sabotage 0.66 at 1x and 3x, sandbagging up).
+   (c) did not happen (seed 2 started 01:03 ET).
+
+**Decision.** Gain under 0.05 (-0.02): own unsteered data is saturated at one sample. The default monitor keeps
+training on seed 0; seeds 1-2 (and E25's seed 3) are test data, more natural positives for the own test. One gain the
+rule does not score: paired over the 18 fits (3x minus 1x), Bloom detection at its own 1% threshold rises +0.05 (14 of 18
+fits) and Bloom deception @1% +0.04 (14 of 18), while frozen detection does not move (Bloom +0.01, 9 of 18; own -0.02,
+9 of 18). Worth revisiting only if Bloom @1% becomes the target metric.
+
+---
+
+## E23. Steered self-preservation spans at a small weight in the default monitor (status: done; 2026-11-13 23:08-23:18 ET, CPU)
+
+**Question.** The default monitor (writer span + own span, E21) still misses self-preservation: 0.10 of the steered
+self-preservation positives at the arm's 1%, 0.04 of Bloom's. The steered spans read the act within topic (E17: 0.80)
+but at full weight cost Bloom frozen detection (E18: 0.60 -> 0.46). Does a small weight get the first without the
+second?
+
+**Setup.** `scripts/steered_train.py` (new: `--target`, sample weights, arms `wspan+ownspan+stspan@W`), `--steered` the
+E12 + E13 + E15 sets, `--target self_preservation`; E20's scenario folds (3 seeds x 2 folds x 3 writer runs = 18 fits
+per arm). The steered sets' windows of the training fold (span labels, all behaviors, as E17) get sample weight W in
+{0.1, 0.3, 1.0}; `wspan+ownspan` is W = 0. Tests: Bloom test (per behavior at 1%, frozen detection, self-preservation
+vs aligned self-preservation conversations = same topic), own held-out, steered self-preservation held-out (target at
+1%, frozen, same topic). Out `docs/results/steered_train_v3/`. No GPU, no judge. Approved by the user 2026-11-13 ("Own
+rollouts x2"; the CPU checks run alongside).
+
+**Pre-mortem (written 2026-11-13 23:08 ET, before any run).** W = 0 values from E20 / E21 where known.
+1. W = 0.1-0.3: steered self-preservation held-out target at 1% 0.10 -> 0.15-0.30; Bloom self-preservation same topic
+   +0.03 to +0.10; Bloom test AUROC within 0.01 of 0.947; Bloom frozen detection within 0.04 of W = 0.
+2. W = 1.0: as E18, Bloom frozen detection down 0.08 or more; steered target at 1% 0.30+.
+3. Own held-out: AUROC and frozen detection within 0.02 of W = 0 at W <= 0.3.
+4. Failure modes: (a) the steered windows carry the steered-reasoning style, so even W = 0.1 raises the steered set's
+   aligned-conversation false alarms (conv FPR) without moving the target; (b) no W lifts Bloom self-preservation (the
+   E17 Bloom gain does not survive mixing with the writer and own data).
+
+**Decision rules.** The largest W with Bloom test AUROC within 0.01, Bloom frozen detection within 0.03 of W = 0 and
+own frozen detection within 0.03, that lifts steered self-preservation at 1% by 0.05 or more and Bloom self-preservation
+same topic by 0.03 or more: proposed to the user as the default (steered sets then become training data at that weight,
+tested on held-out scenarios only; a change to the "test only" rule). Otherwise the steered sets stay test-only.
+
+**Result (`docs/results/steered_train_v3/report.json`, log `data/qwen/steered_train_v3.log`).** 18 fits per arm, mean.
+Self-preservation (sp) columns: detection at the test's own 1% / at the frozen threshold / AUROC against aligned
+conversations of self-preservation scenarios (same topic).
+
+| W | Bloom AUROC / frozen / conv FPR | Bloom at 1%: dec / sab / sand | Bloom sp (20): 1% / frozen / same topic | own held-out AUROC / frozen | steered sp held-out (48): 1% / frozen / same topic | steered conv FPR |
+|---|---|---|---|---|---|---|
+| 0 | 0.947 / 0.62 / 0.020 | 0.16 / 0.66 / 0.43 | 0.03 / 0.05 / 0.610 | 0.972 / 0.66 | 0.09 / 0.32 / 0.692 | 0.160 |
+| 0.1 | 0.952 / 0.59 / 0.022 | 0.20 / 0.63 / 0.37 | 0.03 / 0.05 / 0.680 | 0.974 / 0.69 | 0.09 / 0.37 / 0.734 | 0.150 |
+| 0.3 | 0.951 / 0.55 / 0.023 | 0.22 / 0.54 / 0.31 | 0.03 / 0.06 / 0.687 | 0.974 / 0.69 | 0.10 / 0.30 / 0.757 | 0.115 |
+| 1.0 | 0.944 / 0.44 / 0.022 | 0.24 / 0.38 / 0.22 | 0.04 / 0.05 / 0.681 | 0.973 / 0.62 | 0.09 / 0.21 / 0.782 | 0.059 |
+
+**Verdict vs predictions.**
+1. Mixed. Wrong on the target: steered self-preservation at 1% stays 0.09-0.10 (predicted 0.15-0.30). Right on Bloom
+   same topic (+0.07 / +0.08, predicted +0.03 to +0.10) and Bloom AUROC (within 0.01). Bloom frozen detection: W 0.1
+   -0.03 (right), W 0.3 -0.07 (wrong).
+2. Half right: W 1.0 costs Bloom frozen detection 0.18 (predicted 0.08 or more), but the target at 1% stays 0.09
+   (predicted 0.30+).
+3. Close: own AUROC +0.002, frozen detection +0.03 (just over the predicted 0.02).
+4. Neither: the steered set's aligned false alarms fall with W (0.160 -> 0.059), and Bloom same topic rises.
+
+**Decision.** The rule does not fire (no W lifts steered self-preservation at 1% by 0.05); the steered sets stay
+test-only. What it shows: the steered spans improve the within-topic ranking (Bloom 0.61 -> 0.68 at W 0.1, steered
+0.69 -> 0.76-0.78) but not detection at 1%: self-preservation positives still score below the top 1% of aligned turns,
+which come from other topics. And every W shifts Bloom detection from sabotage / sandbagging to deception /
+sycophancy. Self-preservation detection needs a different handle than more self-preservation windows (a per-behavior
+threshold or probe, or more natural positives).
+
+---
+
+## E24. Looser quote matching for span labels (status: done; 2026-11-13 23:10-23:21 ET, CPU)
+
+**Question.** Span labels drop flagged turns with no matched quote: 30% of own flagged turns, 31-37% of writer turns,
+33-35% of steered ones. How many fail because the judge's quote differs slightly from the text (edited, reordered,
+paraphrased within quote marks) rather than quoting another turn or not quoting at all, and does recovering them help?
+
+**Setup.** `scripts/span_labels.py --fuzzy`: a fragment (at least 4 words) with no exact match is matched to the
+contiguous stretch of the run of the same word length (+-25%) with the highest share of the fragment's words, accepted at
+0.8 or more. Written to `*.fspans.npz` (exact spans unchanged). A dry count first: unmatched flagged turns split into (i)
+evidence has no quote, (ii) quotes match another turn, (iii) quotes match nothing exactly. Then the E20 arms
+(`wspan`, `wspan+ownspan`) with fuzzy spans (`--spans fspans`) on the writer runs and own rollouts. Hand check: 20
+fuzzy matches printed next to their fragment. No GPU, no judge.
+
+**Pre-mortem (written 2026-11-13 23:08 ET, before any run).**
+1. Of the unmatched flagged turns: (i) no quote 30-50%, (ii) quote in another turn 20-40%, (iii) no exact match 20-40%.
+2. Fuzzy matching recovers half of (iii): quoted turns 63-70% -> 70-78%; span windows +5-20%.
+3. Hand check: 16 or more of 20 fuzzy matches are the passage the judge meant.
+4. Monitor: changes within 0.01 AUROC and 0.03 frozen detection on Bloom and own (more windows of the same kind).
+5. Failure mode: fuzzy matches land on common phrases (several matches per fragment) and mark windows unrelated to the
+   act; check: windows per recovered turn above 3x the exact-match rate.
+
+**Decision rules.** Hand check 16 / 20 or better and `wspan+ownspan` with fuzzy spans gains 0.02 or more on own or Bloom
+frozen detection (or Bloom AUROC 0.005+) with nothing lower by more than 0.01 / 0.02: fuzzy matching becomes the default.
+Otherwise exact matching stays (simpler).
+
+**Result.** Dry count and fuzzy pass (`scripts/span_labels.py --fuzzy`, `*.fspans.npz`); diagnosis script
+`scratch/e24_offsets.py`; monitor rerun `docs/results/steered_train_v4/report.json` (log `data/qwen/steered_train_v4.log`).
+
+| set | flagged turns | quoted, exact -> fuzzy | unmatched: no quote / quote in another turn / no exact match |
+|---|---|---|---|
+| own rollouts | 318 | 222 -> 227 | 58 / 31 / 2 |
+| writer s2 | 550 | 361 -> 367 | 50 / 127 / 6 |
+| writer s3 | 535 | 338 -> 342 | 47 / 141 / 5 |
+| writer s4 | 552 | 381 -> 384 | 42 / 124 / 2 |
+
+"Quote in another turn" is not a turn-index bug: the offsets run both ways (writer s2: -2 8, -1 47, +1 62, +2 22, more
+3), and the quoted turn is itself flagged in 142 of 142 writer cases (own 53 of 56). The judge flags several turns of a
+conversation and quotes one. Hand check: 20 of 20 fuzzy matches are the passage the judge meant (they differ by markdown
+asterisks or quote marks). Monitor, exact -> fuzzy spans (E20 splits): `wspan` Bloom 0.946 -> 0.947, frozen 0.58 ->
+0.59, own 0.960 -> 0.961; `wspan+ownspan` Bloom 0.947 -> 0.948, frozen 0.62 -> 0.62, own 0.972 -> 0.972, frozen 0.66 ->
+0.66.
+
+**Verdict vs predictions.**
+1. Wrong: no exact match is 1-3% of the unmatched turns (predicted 20-40%). Writer: quote in another turn 68-73%
+   (predicted 20-40%), no quote 23-26%; own: no quote 64%, another turn 34%.
+2. Wrong: fuzzy recovers 1-2% of flagged turns (predicted 70-78% quoted).
+3. Right: 20 of 20.
+4. Right: every change 0.002 or less.
+5. Did not happen.
+
+**Decision.** Exact matching stays (the second rule). The quotes are accurate; what limits span labels is coverage per
+turn: the judge quotes one of several flagged turns (writer) or gives no quote (own). A fix would ask the judge for one
+quote per flagged turn (judge budget; about 1,600 writer conversations x $0.034, more than the shared ledger has left).
+
+---
+
+## E25. A fourth sample of Qwen's own unsteered rollouts (status: done; 2026-11-14 10:25-15:07 ET)
+
+**Question.** E22 at 2x (seeds 0 + 1, preliminary, `scratch/e22_2x/`) shows almost no training gain from a second own
+sample (held-out own frozen detection 0.64 -> 0.65), so extra samples may be worth more as test data: the own test has
+only 12 held-out deception positives. Does a fourth sample change the E22 verdict, and how stable is held-out own
+deception detection with about 16 positives?
+
+**Setup.** As E22, seed 3 on GPU 1 (free; loop_steer gpu1 queue empty), out `data/qwen/onpolicy_s3/`, `--cap 60` on its
+own ledger, `scratch/own_seeds/run.sh 1 3`. Changed 10:25 ET, before any result (user: "balance the load across gpus"): the
+run on GPU 1 was stopped after 3 rounds (kept in `scratch/e25_aborted/`) and restarted as two halves of 50 scenarios
+(even / odd scenario index, every behavior x pressure in each), half a on GPU 1 and half b on GPU 0, seed 3 both, own
+ledgers (`data/qwen/onpolicy_s3a`, `_s3b`; `run.sh 1 3 a scratch/own_seeds/scenarios_a.jsonl`); the analysis joins them
+as one sample (`--own ... s3a+s3b`). Then `scripts/steered_train.py` with `--own` seeds 0-3, arms `wspan`,
+`wspan+ownspan:1` ... `:4`. Approved by the user 2026-11-14 09:49 ET ("Own seed 3").
+
+**Pre-mortem (written 2026-11-14 09:49 ET, before the run).** Seeds 0 / 1 in brackets.
+1. Base rates as E22 item 1: misaligned 60-92 [78 / 65], sycophancy 50-73 [65 / 54], deception 5-16 [10 / 8],
+   self-preservation 0-7 [3 / 3], sabotage and sandbagging 0-2; `ok` 280-320 of 400 [297 / 309]; about $10.
+2. Training: 4x vs 1x on the 4-sample own test: frozen detection gain under 0.05, AUROC within 0.005, conv FPR within
+   0.01; Bloom AUROC and frozen detection within 0.01 / 0.03 of 1x.
+3. Held-out own deception at 1% (about 16 positives): 1x 0.15-0.35, 4x 0.25-0.45; the sd across fits stays above 0.1.
+4. Failure modes: the run collides with a loop_steer job queued on gpu1 later (run.sh waits only at start); a vLLM
+   crash past four attempts.
+
+**Decision rules.** Same as E22, judged at 4x: gain of 0.05 or more on own frozen detection (Bloom AUROC within 0.01,
+Bloom frozen not lower by more than 0.05) makes own samples routine training data. Otherwise one own sample trains the
+default monitor and seeds 1-3 join the own test only.
+
+**Result.** Half a (GPU 1) 10:25-15:00 ET, half b (GPU 0) 10:25-15:06 ET; $9.34 in all (own ledgers). The split cut the
+wall time from about 9 h to 4.7 h; the last rounds (a few open conversations each) are the long pole. Sample: 75
+misaligned (sycophancy 64, deception 10, self-preservation 1), `ok` 310, misaligned realism 4.29, first reply differs
+from seed 0 in 399 of 400. Monitors: `--own` seeds 0, 1, 2, 3a+3b, arms `wspan+ownspan:1-4`, 18 fits each, one own test
+over the held-out scenarios of all four samples (186 positives, 20 deception).
+`docs/results/steered_train_v6/report.json`, log `data/qwen/steered_train_v6.log`.
+
+| arm | own AUROC | own frozen | own conv FPR | own deception @1% | Bloom AUROC | Bloom @1% | Bloom frozen | Bloom sab. / sandb. / syc. @1% |
+|---|---|---|---|---|---|---|---|---|
+| wspan | 0.959 | 0.28 | 0.009 | 0.20 ± 0.15 | 0.946 | 0.45 | 0.58 | 0.73 / 0.49 / 0.50 |
+| + own x1 | 0.971 | 0.64 ± 0.06 | 0.027 | 0.24 ± 0.16 | 0.947 | 0.46 | 0.62 | 0.66 / 0.43 / 0.68 |
+| + own x2 | 0.971 | 0.64 ± 0.06 | 0.027 | 0.28 ± 0.18 | 0.948 | 0.48 | 0.60 | 0.69 / 0.44 / 0.70 |
+| + own x3 | 0.972 | 0.62 ± 0.10 | 0.023 | 0.26 ± 0.16 | 0.948 | 0.51 | 0.63 | 0.66 / 0.51 / 0.73 |
+| + own x4 | 0.972 | 0.63 ± 0.08 | 0.025 | 0.24 ± 0.12 | 0.946 | 0.51 | 0.65 | 0.58 / 0.52 / 0.78 |
+
+Paired over the 18 fits, 4x minus 1x: own frozen -0.002 (up in 9 of 18), own deception @1% +0.006 (8 of 18), Bloom @1%
++0.05 (11 of 18), Bloom frozen +0.03 (14 of 18), Bloom AUROC -0.001.
+
+**Verdict vs predictions.**
+1. Right: 75 misaligned, sycophancy 64, deception 10, self-preservation 1, `ok` 310, $9.34.
+2. Right: own frozen gain -0.002, AUROC +0.001, conv FPR -0.002; Bloom AUROC -0.001, Bloom frozen +0.03 (at the edge).
+3. Mostly right: 20 held-out deception positives (predicted about 16); 1x 0.24 in 0.15-0.35; 4x 0.24, just below
+   0.25-0.45; sd 0.12-0.18.
+4. Did not happen: no loop_steer job queued, no crash.
+
+**Decision.** Gain under 0.05: one own sample trains the default monitor; seeds 1, 2, 3a+3b are test data. E22's
+failure mode (b) shows at 4x: Bloom sabotage @1% 0.66 -> 0.58 as sycophancy-heavy own data grows (Bloom sycophancy 0.68
+-> 0.78). With 20 natural deception positives the own deception number still swings 0.12-0.18 across fits; more own
+samples will not fix deception detection, they only measure it better.
+
+---
+
+## E26. Bagged ensemble of 32 default monitors vs one (status: done; 2026-11-16 14:33-14:41 ET, CPU)
+
+**Question.** The user asked (2026-11-16 14:25 ET): train about 32 of the best Qwen monitors and compare the ensemble
+with a single monitor. Does averaging many probes reduce probe noise enough to raise detection?
+
+**Setup.** `scripts/ensemble_monitor.py`. Monitor as the default (E21): layer 32, 32-token window means, StandardScaler
++ logistic regression C 3e-4, balanced classes, writer run (s2-s4) span-labeled + Qwen's own unsteered rollouts (seed
+0, config none) of the training scenario fold, span-labeled. The logistic regression (lbfgs) is deterministic, so
+random seeds alone give 32 identical probes; diversity comes from bagging: each member trains on a bootstrap resample
+of conversations (with replacement, writer and own separately, window weight = conversation count). Ensemble score of
+a window = mean of the members' decision values (one linear probe with averaged weights), then max over windows and
+turns as usual; each model (single, each member, each ensemble size) gets its own frozen threshold (99th percentile of
+Bloom val aligned turns). Splits as E20 / E22: 3 writer runs x 3 scenario-split seeds x 2 folds = 18 configurations,
+each with 1 full-data monitor + 32 members (594 fits). Tests: Bloom test (all), own unsteered seeds 0-3 on the
+held-out scenarios (186 positives, 20 deception), the steered deception set (E7) on held-out scenarios. Ensemble sizes
+1, 2, 4, 8, 16, 32 (first k members). Output `docs/results/ensemble_v0/report.json.gz`.
+
+**Pre-mortem (written 2026-11-16 14:30 ET, before any fit).** Single monitor in brackets (E25, `wspan+ownspan:1`).
+1. Ensemble of 32 vs single, paired over the 18 configurations: Bloom AUROC within 0.003 [0.947], Bloom frozen
+   detection within 0.03 [0.62], own AUROC within 0.003 [0.971], own frozen detection within 0.03 [0.64], own conv
+   FPR within 0.005 [0.027]. Reason: a mean of linear probes is one linear probe, and with C 3e-4 the bootstrap members
+   sit close to the full-data fit.
+2. Single bootstrap members: Bloom AUROC 0.002-0.01 below the single monitor; member-to-member sd of Bloom frozen
+   detection 0.02-0.05, smaller than the split-to-split sd (about 0.05); own deception @1% member sd 0.05-0.10.
+3. Ensemble size: flat beyond 4-8 members.
+4. Failure modes: (a) each member sees about 63% of the distinct conversations, so the ensemble lands slightly below
+   the single monitor (by up to 0.005 AUROC); (b) duplicated conversations with class_weight balanced shift the
+   positive / negative balance per member (handled: weights, not duplicated rows).
+
+**Decision rules.** Ensemble of 32 beats the single monitor on Bloom or own frozen detection by 0.03 or more (up in 14
+or more of 18 configurations) with Bloom and own AUROC not lower by more than 0.005: the default monitor becomes the
+bagged ensemble. Otherwise the single monitor stays, and the member spread is the measured probe noise (reported next
+to the split noise).
+
+**Result.** `docs/results/ensemble_v0/report.json.gz`, log `data/qwen/ensemble_v0.log` (8 min on CPU). Check: the single
+monitor reproduces E25 `wspan+ownspan:1` fit for fit (largest difference 0). Means over the 18 configurations; member
+= one bootstrap monitor (mean; in brackets its sd across the 32 members within a configuration).
+
+| test | model | AUROC | det @1% | frozen det. | conv FPR | deception @1% |
+|---|---|---|---|---|---|---|
+| Bloom | single | 0.947 | 0.46 | 0.62 | 0.020 | 0.16 |
+| Bloom | member | 0.947 (0.004) | 0.46 (0.045) | 0.61 (0.043) | 0.021 | 0.17 (0.043) |
+| Bloom | ensemble of 32 | 0.949 | 0.48 | 0.63 | 0.018 | 0.18 |
+| own | single | 0.971 | 0.50 | 0.64 | 0.027 | 0.24 |
+| own | member | 0.969 (0.002) | 0.48 (0.037) | 0.60 (0.070) | 0.026 | 0.23 (0.059) |
+| own | ensemble of 32 | 0.971 | 0.50 | 0.62 | 0.026 | 0.23 |
+| steered deception | single | 0.964 | 0.59 | 0.77 | 0.073 | 0.36 |
+| steered deception | member | 0.962 (0.003) | 0.56 (0.060) | 0.76 (0.028) | 0.078 | 0.34 (0.070) |
+| steered deception | ensemble of 32 | 0.963 | 0.56 | 0.77 | 0.077 | 0.35 |
+
+Paired, ensemble of 32 minus single over the 18 configurations: Bloom AUROC +0.002 (up in 15), @1% +0.02 (15), frozen
++0.011 (10 up, 6 down), sandbagging @1% +0.05 (18 of 18); own AUROC 0.000 (9 / 9), frozen -0.013 (9 / 9); steered
+AUROC -0.001 (down in 14), @1% -0.026 (down in 12). Ensembles of 2, 4, 8, 16 match the ensemble of 32 within 0.01 on
+every row. Split-to-split sd of the single monitor: Bloom frozen 0.043, own frozen 0.06, own deception @1% 0.16.
+
+**Verdict vs predictions.**
+1. Right: every paired difference inside its band (Bloom AUROC +0.002, frozen +0.011; own AUROC 0.000, frozen -0.013,
+   conv FPR -0.000).
+2. Partly wrong: members are not below the single monitor on Bloom (0.947 = 0.947; predicted 0.002-0.01 below); own
+   and steered 0.002 below. Member sd of Bloom frozen detection 0.043 (in 0.02-0.05) equals the split sd (0.043), not
+   smaller; own deception member sd 0.059 (in 0.05-0.10).
+3. Right, and flatter than predicted: flat from 2 members.
+4. (a) did not happen on Bloom (the ensemble is slightly above); own equal, steered 0.001 below.
+
+**Decision.** Rule not fired (frozen detection +0.011 Bloom, -0.013 own): the single full-data monitor stays. Probe
+noise is real at the frozen threshold (a single bootstrap member moves Bloom frozen detection by 0.04 and own by 0.07,
+as much as changing the scenario split), but the full-data fit already sits at the ensemble's average, so averaging
+adds nothing it does not have. The one consistent gain is Bloom sandbagging @1% (+0.05 in 18 of 18), offset by
+steered deception @1% (-0.03, down in 12 of 18). The noise that limits the numbers is the test side (20 own deception
+positives, split sd 0.16), which an ensemble cannot reduce.

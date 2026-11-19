@@ -49,9 +49,9 @@ class FeatureSet:
         return np.isin(self.w_conv, np.asarray(list(conv_idx)))
 
 
-def train(X, y, C: float = 0.01, seed: int = 0):
+def train(X, y, C: float = 0.01, seed: int = 0, sample_weight=None):
     m = make_pipeline(StandardScaler(), LogisticRegression(C=C, class_weight="balanced", max_iter=3000, random_state=seed))
-    m.fit(X.astype(np.float32), y.astype(int))
+    m.fit(X.astype(np.float32), y.astype(int), **({} if sample_weight is None else {"logisticregression__sample_weight": sample_weight}))
     return m
 
 

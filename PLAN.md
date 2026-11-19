@@ -3,28 +3,22 @@
 MATS project 1 with Isak Etinger. This file is the current plan only. Rewrite it when the plan changes (do not
 append history: results live in [docs/presentation.md](docs/presentation.md), `docs/results/` and the experiment log
 [docs/experiments.md](docs/experiments.md); setup in [docs/HANDOFF.md](docs/HANDOFF.md); history in git). Theory of
-change: [docs/toc.md](docs/toc.md). Last updated 2026-11-13.
+change: [docs/toc.md](docs/toc.md). Last updated 2026-11-19.
 
 **Status.** gpt-oss-20b: the loop works (self-written data beats Claude-written data on Bloom; rounds do not help
-yet); labels matter most (gpt-6.1-sol labels lift own-rollout AUROC 0.76 -> 0.88). **Qwen3.8-27B** is the main model:
-anti-refusal direction, writer monitors (Bloom test 0.943 / 0.47, frozen threshold 0.60), on-policy rollouts
-(misbehaves on its own almost only by sycophancy: 65 / 80; deception 10, self-preservation 3, sabotage and sandbagging
-0). **Steered test sets** (persona vectors, 2507.21509, added to the reasoning only, from turn 2, layer 32): deception
-at c4 (E7 + E10: 109 positives over 20 scenarios, realism 3.9) and self-preservation at c6 (E12 + E13 + E15: 97
-positives over about 18 scenarios, realism 3.4-3.5). Every vector also pushes a shared scheming mode; none gives
-specific sabotage or sandbagging (E4, E5b). **Monitors on them:** they rank steered rollouts well (AUROC 0.94 deception,
-0.89 self-preservation) but catch few of the target positives at 1% (deception 0.16, self-preservation 0.09). Steered
-rollouts do not help as training data with turn labels (E11); a probe trained on them reads self-preservation within
-its topic at only about 0.73 AUROC (E14), at every layer and in either segment (E16). With span labels (windows on the
-judge's evidence quotes) it reads 0.80 within topic and 0.81 on Bloom within topic (E17). Span labels on the writer
-data keep Bloom AUROC (0.946) and raise Bloom deception 0.75 -> 0.85 but lower self-preservation 0.71 -> 0.60; any steered
-training data costs Bloom frozen detection 0.60 -> 0.46 (E18). The writer span monitor on Qwen's own rollouts: AUROC
-0.940 -> 0.960 and detection at the frozen Bloom-val threshold 0.04 -> 0.32 (conv FPR 0.010); steered-set detection
-+0.02-0.03, Bloom sandbagging at 1% 0.58 -> 0.49 (E19); **span labels are now the default**. Adding Qwen's own
-unsteered rollouts, span-labeled, to the training data (held-out scenarios): own AUROC 0.960 -> 0.972, frozen detection
-0.32 -> 0.66 (conv FPR 0.021), no Bloom cost (0.947, frozen 0.62); turn-labeled they cost Bloom 0.947 -> 0.913 (E20).
-This is the default monitor; report v13 (E21): Bloom 0.947 / frozen 0.63, own 0.972 / frozen 0.66 (conv FPR 0.025),
-steered deception 0.966 (deception at 1% 0.37), steered self-preservation 0.917 (0.10). **Nothing is running** (2026-11-13).
+yet); labels matter most (gpt-6.1-sol labels lift own-rollout AUROC 0.76 -> 0.88). **Qwen3.8-27B** is the main model.
+On its own it misbehaves almost only by sycophancy (per 400 rollouts: 65-78 misaligned, sycophancy 54-65, deception
+6-10, self-preservation 1-3, sabotage and sandbagging 0; four samples). **Steered test sets** (persona vectors in the
+reasoning from turn 2): deception c4 (109 positives, realism 3.9), self-preservation c6 (97, realism 3.5); no vector
+gives sabotage or sandbagging. **Default monitor** (E21: writer data + Qwen's own unsteered rollouts of the training
+scenarios, both span-labeled from the judge's evidence quotes; layer 32): Bloom test 0.947 / 0.46 at 1% / 0.62 at the
+frozen Bloom-val threshold; own rollouts (held-out scenarios) 0.971 / frozen 0.64 at conv FPR 0.027. **What it still
+misses:** self-preservation (Bloom 0.03 at 1%, steered set 0.10), deception (Bloom 0.16, own 0.24 on 20 positives,
+steered 0.36), and it has no natural sabotage or sandbagging data. **What stopped helping** (Nov 13-16): steered data
+as training data at any weight (E11, E18, E23), looser quote matching (E24), more own samples (1x -> 4x: own frozen
+0.64 -> 0.63, E22 / E25), a bagged ensemble of 32 monitors (= the single monitor, E26). The training side is saturated
+for this probe and these labels; differences are now below the test noise (own deception sd 0.16 across splits).
+Nothing running; both GPUs free.
 
 ## 1. Goal
 
@@ -47,7 +41,7 @@ an external model (misalignment-indicators, Claude Sonnet). Steered on-policy ro
 behaviors the model rarely shows on its own, reported apart from unsteered rates. Models: gpt-oss-20b (done),
 Qwen3.8-27B (current). End state: one command from a behavior description to a monitor.
 
-## 2. Status (2026-11-12)
+## 2. Status (2026-11-19)
 
 ### 2.1 Built
 
@@ -69,13 +63,13 @@ Qwen3.8-27B (current). End state: one command from a behavior description to a m
 - **Persona vectors** (`scripts/persona_vectors.py`): materials from gpt-6.1-sol, 1,000 answers per side per behavior,
   judged filter, mean difference per layer (`data/qwen/persona_vectors/vectors.pt`), steering sweep.
 - **Reports and viewer:** `scripts/qwen_report.py` (Bloom, own rollouts and every steered arm, single seeds and pooled,
-  as test rows; default monitor writer + own rollouts, span labels, scenario folds; latest `data/qwen/report_v13.log`); `scripts/steered_train.py` (E11; span arms E20) and `scripts/selfpres_probe.py`
+  as test rows; default monitor writer + own rollouts, span labels, scenario folds; latest `data/qwen/report_v13.log`); `scripts/steered_train.py` (E11; span arms E20; `--own` samples, E22 / E25), `scripts/ensemble_monitor.py` (bagging, E26) and `scripts/selfpres_probe.py`
   (E14, E16, E17, E18; `--arms` span / topk25 / mil / turnmean / wspan / wspan+span); `scripts/span_labels.py` (window span labels from the
   judge's evidence quotes, `convs.spans.npz` / `candidates.spans.npz` for the writer runs); `scripts/transcript_viewer.py` writes a local HTML viewer of every arm per scenario
   (`data/viewer/index.html`, E1-E15 arms; transcripts stay local).
 - **Remote judge** (`natsteer.remote`): gpt-6.1-sol, medium effort, OpenAI API (OpenRouter also works). Keys only via
   `natsteer.apikeys`. Shared ledger `data/loop/arms/sol_spend.jsonl` (writer and extraction judging): $147 of its $200
-  cap. Each on-policy run has its own ledger (`--cap 60`, about $10 per 400 rollouts): $201 in all so far.
+  cap. Each on-policy run has its own ledger (`--cap 60`, about $10 per 400 rollouts): $229 in all so far.
 - **GPUs are shared** with the loop_steer project, whose queue runners (`loop_steer/scripts/gpuq.py run -g N`) take any
   GPU that frees up: check its queues (`loop_steer/data/queue/gpu{0,1}/{pending,running}`) before a launch, and make a
   chained GPU step wait for a free GPU rather than fail.
@@ -150,6 +144,11 @@ Qwen3.8-27B (current). End state: one command from a behavior description to a m
   - Default (E19, E20): writer span labels; plus Qwen's own unsteered rollouts span-labeled (70% of flagged own turns
     quoted): held-out own AUROC 0.972, frozen detection 0.66 (conv FPR 0.021), Bloom 0.947 / frozen 0.62, Bloom
     sandbagging / sabotage at 1% 0.43 / 0.66. The same rollouts turn-labeled cost Bloom 0.913 / frozen 0.35.
+  - Saturation checks (E22-E26): own samples 1x / 2x / 3x / 4x give own frozen detection 0.64 / 0.64 / 0.62 / 0.63
+    (Bloom sabotage at 1% 0.66 -> 0.58 at 4x); steered self-preservation spans at weight 0.1-1 lift its same-topic AUROC
+    (Bloom 0.61 -> 0.68) but not its detection at 1%; fuzzy quote matching recovers 1-2% of flagged turns; 32 bagged
+    monitors = the single monitor (a single bootstrap member moves frozen detection by 0.04-0.07; the full-data fit sits
+    at their average). Extra own samples are test data (`data/qwen/onpolicy_s{1,2,3a,3b}`).
 - **Kilian's RL-trained Qwen3.5-4B** (E2, through the handoff kit): only sycophancy rises (79 vs 70 native; deception 9
   vs 6, p 0.59); E2b (refusal on plain harmful requests) is the user's own run.
 
@@ -208,28 +207,42 @@ the same scenarios (same topic), since topic alone separates most behaviors from
 
 ## 5. Next todo (pick up here)
 
-Every new experiment gets its pre-mortem in `docs/experiments.md` before it runs.
+Every new experiment gets its pre-mortem in `docs/experiments.md` before it runs. Priority order; 1-3 are CPU only,
+4 needs judge budget, 5 is the GPU track and needs a design decision.
 
-1. **Sabotage and sandbagging source.** No persona vector gives them specifically (E4, E5b). Candidates: branching at
-   the pressure turn (regenerate a turn of a real rollout with steering until the decision, then unsteered),
-   contrastive vectors from the few real positives, or text steering (a sentence inserted into the model's own
-   reasoning). Also the Qwen writer for these two (gpt-oss writes miss the definitions). Needs a design decision.
-2. **Self-preservation is still missed** by the default monitor (0.10 at 1% on its steered set, 0.04 on Bloom): only 3
-   own positives and the writer's self-preservation spans lowered it (E18). Candidates: steered self-preservation spans
-   as training data at a small weight, checked on frozen detection (E18 lost it at full weight).
-3. **Span-label quality:** 30% of flagged turns have no matched quote and are dropped; ask the judge for exact quotes
-   (judge budget) or match paraphrases.
-4. **Steered sets as standing test rows:** a hand read of 10 positives per set (deception, self-preservation), and
-   report the deception set with and without its sycophancy rollouts (every deception arm puts sycophancy at 80 / 80).
-5. **Weekly deck** (Google Slides "mats_running"): has E1-E6; E7-E21 to add.
-6. **Probe design:** the pooled loss at 8-token windows with own tool turns as negatives; port to Qwen.
-7. **Monitors that know normal traffic:** whitening and negatives together; Rachmil et al. (2512.03994); detection at
-   0.1% false alarms.
-8. **Two-level monitor:** probe screens every token; flagged steps get a follow-up question read by a probe
-   (2610.12445) or a judge.
-9. **Tail-risk estimates (2604.22167):** natural rate of rare behaviors from steered rollouts with importance weights;
-   likelihood ratio p_unsteered / p_steered to score how on-policy a steered rollout is.
-10. On hold: style vectors from writer data, the adversarial arm.
+1. **A report we can trust (report v14).** Every recent change moved the numbers less than the test noise, so fix the
+   measurement before the next training change. In `scripts/qwen_report.py`: own seeds 1-3 as own test rows (held-out
+   scenarios only; about 3x the natural positives: 186 and 20 deception over four samples); 3 fold seeds instead of 1;
+   Wilson intervals on every per-behavior row; own rows split by config (unsteered vs anti-refusal / persona as the
+   out-of-config check). Output: the new reference numbers and their noise floor, the bar for todos 2-4.
+2. **Catch the behaviors the monitor misses: per-behavior readout.** Self-preservation is readable (a span-labeled
+   probe on the steered rollouts: 0.80 within topic, 0.81 on Bloom within topic, E17) but the default monitor does not
+   learn it (E18, E23): its positives rank above same-topic aligned turns and below the top 1% of other topics. Try a
+   second probe per missed behavior (self-preservation; deception) next to the default monitor, each with its own
+   Bloom-val threshold, and alarm on either; measure what the extra false alarms cost (conversation FPR) against what
+   it catches. Deception also has its own steered and own-rollout positives (20 natural, 109 steered).
+3. **False alarms of the default monitor** (own conv FPR 0.003 -> 0.027 since span labels). Span labels give about 30
+   negative windows per positive and the fit uses balanced class weights: balance by conversation instead of by
+   window, and weight writer and own windows equally. Report conv FPR, Bloom frozen detection, AUROC.
+4. **More span labels (judge budget; ask first).** 30-37% of flagged training turns have no matched quote and are
+   dropped: the judge quoted another flagged turn of the conversation (writer 68-73% of them) or gave none (own 64%).
+   Re-judge only those conversations for one quote per flagged turn (about 300-400 conversations x $0.034, $10-15 on the
+   shared ledger, $53 left of its $200 cap). Raises span positives by about a third.
+5. **Sabotage and sandbagging source (GPU; design decision needed).** Qwen has zero natural positives, no persona
+   vector gives them specifically (E4, E5b), and gpt-oss writes miss the definitions. Candidates: branching at the
+   pressure turn (regenerate one turn of a real rollout with steering until the decision, then unsteered); contrastive
+   vectors from the few real positives; text steering (a sentence inserted into the model's own reasoning); the Qwen
+   writer for these two behaviors. This is the largest coverage gap for the research goal and the only item that uses
+   the GPUs.
+6. **Steered sets as standing test rows:** hand-read 10 positives per set; report the deception set with and without
+   its sycophancy rollouts (every deception arm puts sycophancy at 80 / 80).
+7. **Probe design** (lower priority after E26: the probe is not the noisy part): the pooled loss at 8-token windows
+   with own tool turns as negatives; normal-traffic monitors (Rachmil et al. 2512.03994; detection at 0.1%); a
+   two-level monitor (probe, then a follow-up question or a judge, 2610.12445).
+8. **Tail-risk estimates (2604.22167):** natural rate of rare behaviors from steered rollouts with importance weights.
+9. On hold: style vectors from writer data, the adversarial arm.
+
+The weekly deck (Google Slides "mats_running") is up to date through E21 (2026-11-13, slides 30-39); E22-E26 to add.
 
 ## 6. Design decisions
 

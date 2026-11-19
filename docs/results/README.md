@@ -138,13 +138,25 @@ same report at layer 32 with the writer runs span-labeled (`--labels span`; log 
 `report.json` (v13, E21, the reference): the default monitor, writer span + own unsteered span, rows on the pilot
 scenarios scored on held-out scenario folds (log `data/qwen/report_v13.log`).
 
-## steered_train_v0 to v2 (2026-11-06 to 2026-11-12, CPU; E11, E20)
+## ensemble_v0 (2026-11-16, CPU; E26)
+
+Bagged ensemble of the default Qwen monitor: per configuration (3 writer runs x 3 scenario splits x 2 folds) one
+full-data monitor and 32 monitors on bootstrap resamples of the training conversations; ensembles of 2-32 = mean of
+members' decision values. The ensemble of 32 matches the single monitor (Bloom 0.949 vs 0.947, frozen 0.63 vs 0.62; own
+frozen 0.62 vs 0.64); a single member moves frozen detection by 0.04-0.07. `scripts/ensemble_monitor.py`.
+
+## steered_train_v0 to v6 (2026-11-06 to 2026-11-14, CPU; E11, E20, E23, E24, E22, E25)
 
 Steered deception rollouts as monitor training data: writer data alone, + Qwen's unsteered rollouts, + the steered
 rollouts, + both, split by scenario (3 seeds x 2 folds x 3 writer runs). v0 uses E7, v1 E7 + E10. Steered data gives
 no gain on unsteered tests, so steered sets stay test-only; unsteered own rollouts are the useful addition. v2 (E20):
 span arms (`wspan`, `wspan+own`, `wspan+ownspan`, same splits): own unsteered rollouts span-labeled lift held-out own
-frozen detection 0.32 -> 0.66 at no Bloom cost; turn-labeled they cost Bloom 0.947 -> 0.913. `scripts/steered_train.py`.
+frozen detection 0.32 -> 0.66 at no Bloom cost; turn-labeled they cost Bloom 0.947 -> 0.913. v3 (E23): steered
+self-preservation spans at sample weight 0.1 / 0.3 / 1 (`--target self_preservation`): within-topic ranking up, detection
+at 1% flat. v4 (E24): fuzzy quote spans (`--spans fspans`): no change. v5 (E22): own data from 1 / 2 / 3 samples
+(`--own` seeds 0-2, arms `wspan+ownspan:K`, one own test over all three): own frozen detection 0.64 / 0.64 / 0.62, so one
+sample is enough. v6 (E25): 4 samples (seed 3 in two halves, `--own ... s3a+s3b`): 4x 0.63, Bloom sabotage @1% 0.66 ->
+0.58. `scripts/steered_train.py`.
 
 ## selfpres_probe_v0 to v5 (2026-11-08 to 2026-11-12, CPU; E14, E16, E17, E18)
 
